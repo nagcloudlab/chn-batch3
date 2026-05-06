@@ -1,6 +1,7 @@
 package com.npci.service;
 
 import com.npci.model.Account;
+import com.npci.notification.Notification;
 import com.npci.repository.AccountRepository;
 
 /**
@@ -12,12 +13,13 @@ public class TransferServiceImpl implements TransferService {
    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TransferServiceImpl.class);
 
    private final AccountRepository accountRepository;
+   private final Notification notification;
 
-   public TransferServiceImpl(AccountRepository accountRepository) {
+   public TransferServiceImpl(AccountRepository accountRepository, Notification notification) {
       this.accountRepository = accountRepository;
-      logger.info("TransferServiceImpl instance created with AccountRepository: {}",
-            accountRepository.getClass().getSimpleName());
-      logger.info("TransferServiceImpl instance created.");
+      this.notification = notification;
+      logger.info("TransferServiceImpl initialized with AccountRepository: {} and Notification: {}",
+            accountRepository.getClass().getSimpleName(), notification.getClass().getSimpleName());
    }
 
    public void transfer(double amount, String fromAccount, String toAccount) {
@@ -51,6 +53,9 @@ public class TransferServiceImpl implements TransferService {
       accountRepository.updateAccount(from);
       accountRepository.updateAccount(to);
       logger.info("Transfer of ${} from {} to {} completed successfully.", amount, fromAccount, toAccount);
+      // Send notification
+      notification.sendNotification(
+            "Transfer of $" + amount + " from " + fromAccount + " to " + toAccount + " completed successfully.");
    }
 
 }

@@ -2,6 +2,8 @@ package com.npci;
 
 import org.slf4j.Logger;
 
+import com.npci.notification.EmailNotification;
+import com.npci.notification.Notification;
 import com.npci.repository.AccountRepository;
 import com.npci.repository.AccountRepositoryFactory;
 import com.npci.service.TransferService;
@@ -26,7 +28,8 @@ public class MoneyTransferSystem {
         AccountRepository jdbcAccountRepository = AccountRepositoryFactory.getAccountRepository("jdbc");
         AccountRepository jpaAccountRepository = AccountRepositoryFactory.getAccountRepository("jpa");
         // Step 2: Inject dependency via constructor (DI)
-        TransferService transferService = new TransferServiceImpl(jpaAccountRepository);
+        Notification emailNotification = new EmailNotification();
+        TransferService transferService = new TransferServiceImpl(jdbcAccountRepository, emailNotification);
         logger.info("Money Transfer System initialized.");
         logger.info("-".repeat(50));
 
