@@ -2,96 +2,141 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>v3 — Money Transfer System Architecture (Spring XML)</title>
+<title>v3 — Money Transfer System Architecture (Spring Annotations)</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #1e1e2e; color: #cdd6f4; font-family: 'Segoe UI', sans-serif; padding: 40px; }
   h1 { text-align: center; font-size: 28px; margin-bottom: 10px; color: #94e2d5; }
   .subtitle { text-align: center; font-size: 14px; color: #6c7086; margin-bottom: 50px; }
-  .section-title { font-size: 20px; color: #89b4fa; margin-bottom: 30px; font-weight: 600; }
+  .section-title { font-size: 20px; color: #89b4fa; margin-bottom: 30px; font-weight: 600; max-width: 1100px; margin-left: auto; margin-right: auto; margin-bottom: 30px; }
+
+  /* Timeline */
+  .timeline { max-width: 1100px; margin: 0 auto 50px; }
+  .timeline h2 { color: #89b4fa; font-size: 18px; margin-bottom: 20px; }
+  .timeline-flow { display: flex; align-items: center; justify-content: center; gap: 0; }
+  .tl-box { padding: 16px 24px; border-radius: 10px; text-align: center; min-width: 200px; }
+  .tl-box h4 { font-size: 14px; margin-bottom: 4px; }
+  .tl-box p { font-size: 10px; opacity: 0.7; }
+  .tl-box code { font-size: 10px; }
+  .tl-v1 { background: #5a1a1a; border: 1px solid #f38ba8; } .tl-v1 h4 { color: #f38ba8; }
+  .tl-v2 { background: #5a3a1a; border: 1px solid #fab387; } .tl-v2 h4 { color: #fab387; }
+  .tl-v3 { background: #1a4a2a; border: 2px solid #a6e3a1; } .tl-v3 h4 { color: #a6e3a1; }
+  .tl-arrow { font-size: 24px; color: #6c7086; margin: 0 12px; }
 
   /* Architecture */
-  .architecture { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: 20px; }
+  .architecture { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: 30px; flex-wrap: wrap; }
   .layer-label { text-align: center; font-size: 11px; color: #6c7086; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
   .layer { display: flex; flex-direction: column; align-items: center; }
-  .box { padding: 18px 24px; border-radius: 10px; text-align: center; min-width: 160px; }
-  .box .name { font-size: 15px; font-weight: 700; }
+  .box { padding: 16px 22px; border-radius: 10px; text-align: center; min-width: 150px; }
+  .box .name { font-size: 14px; font-weight: 700; }
   .box .desc { font-size: 10px; margin-top: 4px; opacity: 0.7; }
+  .box .anno { font-size: 11px; color: #f9e2af; font-family: monospace; margin-top: 4px; }
   .caller { background: #313244; border: 1px solid #45475a; }
   .spring-box { background: #2d4a1a; border: 2px solid #a6e3a1; }
+  .config-box { background: #2a2a4a; border: 2px solid #cba6f7; }
   .service { background: #45379a; border: 1px solid #6c5ce7; }
   .repo { background: #1a6b5a; border: 1px solid #2ecc71; }
-  .notif { background: #5a3a1a; border: 1px solid #fab387; }
+  .notif-box { background: #5a3a1a; border: 1px solid #fab387; }
   .db { background: #313244; border: 1px solid #45475a; }
   .iface { background: transparent; border: 2px dashed #89b4fa; }
-  .iface .name { color: #89b4fa; font-style: italic; }
-  .arrow { font-size: 26px; color: #6c7086; margin: 0 8px; padding-top: 20px; }
-
+  .iface .name { color: #89b4fa; font-style: italic; font-size: 13px; }
+  .arrow { font-size: 24px; color: #6c7086; margin: 0 8px; padding-top: 20px; }
   .impl-group { display: flex; gap: 8px; margin-top: 8px; }
   .impl-box { padding: 10px 14px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 600; }
-  .impl-jdbc { background: #1a6b5a; border: 1px solid #2ecc71; }
-  .impl-jpa { background: #2d5a1a; border: 1px solid #66bb6a; }
-  .impl-label { font-size: 10px; color: #6c7086; margin-top: 4px; }
 
-  /* Spring Container Box */
-  .spring-container-wrapper { max-width: 1100px; margin: 0 auto 50px; }
-  .spring-container { border: 3px solid #a6e3a1; border-radius: 20px; padding: 30px; background: #1a2e1a22; position: relative; }
-  .spring-container-label { position: absolute; top: -14px; left: 30px; background: #a6e3a1; color: #1e1e2e; font-weight: 800; font-size: 13px; padding: 4px 16px; border-radius: 20px; }
-  .beans-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
-  .bean { padding: 14px 20px; border-radius: 10px; text-align: center; min-width: 140px; }
-  .bean .bean-id { font-size: 11px; color: #f9e2af; margin-bottom: 4px; font-family: monospace; }
-  .bean .bean-class { font-size: 14px; font-weight: 700; }
-  .bean .bean-detail { font-size: 10px; opacity: 0.7; margin-top: 3px; }
-  .bean-arrow { font-size: 20px; color: #a6e3a1; }
-  .bean-arrow-label { font-size: 9px; color: #a6e3a1; }
-  .bean-arrow-container { display: flex; flex-direction: column; align-items: center; }
+  /* Annotation Hierarchy */
+  .anno-section { max-width: 1100px; margin: 0 auto 50px; }
+  .anno-section h2 { color: #89b4fa; font-size: 20px; margin-bottom: 24px; }
+  .anno-tree { background: #181825; border: 1px solid #313244; border-radius: 14px; padding: 30px 40px; }
+  .anno-root { text-align: center; margin-bottom: 20px; }
+  .anno-badge { display: inline-block; padding: 8px 20px; border-radius: 8px; font-family: monospace; font-size: 14px; font-weight: 700; }
+  .badge-component { background: #313244; border: 2px solid #cdd6f4; color: #cdd6f4; }
+  .badge-repo { background: #1a6b5a33; border: 2px solid #2ecc71; color: #2ecc71; }
+  .badge-service { background: #45379a33; border: 2px solid #6c5ce7; color: #6c5ce7; }
+  .badge-controller { background: #5a3a1a33; border: 2px solid #fab387; color: #fab387; }
+  .badge-config { background: #2a2a4a33; border: 2px solid #cba6f7; color: #cba6f7; }
+  .anno-children { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+  .anno-child { text-align: center; }
+  .anno-child .anno-badge { font-size: 13px; padding: 6px 16px; }
+  .anno-child .anno-uses { font-size: 10px; color: #6c7086; margin-top: 6px; }
+  .anno-connector { color: #45475a; font-size: 14px; margin: 8px 0; }
 
-  /* v2 vs v3 comparison */
-  .comparison { max-width: 1100px; margin: 0 auto 50px; }
-  .comparison h2 { color: #89b4fa; font-size: 20px; margin-bottom: 24px; }
-  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .compare-panel { background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 24px; }
-  .compare-panel h3 { margin-bottom: 14px; font-size: 15px; }
-  .panel-v2 h3 { color: #fab387; }
-  .panel-v3 h3 { color: #a6e3a1; }
-  .panel-v2 { border-color: #fab38744; }
-  .panel-v3 { border-color: #a6e3a144; }
+  /* DI Types */
+  .di-section { max-width: 1100px; margin: 0 auto 50px; }
+  .di-section h2 { color: #89b4fa; font-size: 20px; margin-bottom: 24px; }
+  .di-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .di-card { background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 24px; }
+  .di-card h3 { font-size: 15px; margin-bottom: 12px; }
+  .di-card-req h3 { color: #a6e3a1; }
+  .di-card-opt h3 { color: #f9e2af; }
+  .di-card-req { border-color: #a6e3a144; }
+  .di-card-opt { border-color: #f9e2af44; }
   .code-block { font-family: 'Fira Code','Consolas', monospace; font-size: 12px; line-height: 1.7; }
   .comment { color: #6c7086; }
   .keyword { color: #cba6f7; }
   .type { color: #89b4fa; }
+  .anno-code { color: #f9e2af; }
   .string { color: #a6e3a1; }
-  .highlight-old { background: #fab38715; border-left: 3px solid #fab387; padding-left: 8px; display: block; }
-  .highlight-new { background: #a6e3a115; border-left: 3px solid #a6e3a1; padding-left: 8px; display: block; }
+  .good-line { background: #a6e3a115; border-left: 3px solid #a6e3a1; padding-left: 8px; display: block; }
+  .opt-line { background: #f9e2af15; border-left: 3px solid #f9e2af; padding-left: 8px; display: block; }
+
+  /* Spring Container */
+  .spring-container-wrapper { max-width: 1100px; margin: 0 auto 50px; }
+  .spring-container { border: 3px solid #a6e3a1; border-radius: 20px; padding: 30px; background: #1a2e1a22; position: relative; }
+  .spring-container-label { position: absolute; top: -14px; left: 30px; background: #a6e3a1; color: #1e1e2e; font-weight: 800; font-size: 13px; padding: 4px 16px; border-radius: 20px; }
+  .beans-flow { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .bean { padding: 14px 18px; border-radius: 10px; text-align: center; min-width: 130px; }
+  .bean .bean-anno { font-size: 11px; color: #f9e2af; font-family: monospace; margin-bottom: 3px; }
+  .bean .bean-class { font-size: 13px; font-weight: 700; }
+  .bean .bean-detail { font-size: 9px; opacity: 0.7; margin-top: 3px; }
+  .bean-arrow { font-size: 18px; color: #a6e3a1; }
+  .bean-arrow-down { color: #a6e3a1; text-align: center; font-size: 14px; margin: 4px 0; }
+
+  /* Comparison: XML vs Annotation vs Java Config */
+  .config-compare { max-width: 1100px; margin: 0 auto 50px; }
+  .config-compare h2 { color: #89b4fa; font-size: 20px; margin-bottom: 24px; }
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .config-panel { background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 20px; }
+  .config-panel h3 { font-size: 14px; margin-bottom: 12px; }
+  .panel-xml h3 { color: #6c7086; }
+  .panel-anno h3 { color: #a6e3a1; }
+  .panel-java h3 { color: #cba6f7; }
+  .panel-xml { border-color: #6c708644; opacity: 0.7; }
+  .panel-anno { border-color: #a6e3a144; }
+  .panel-java { border-color: #cba6f744; }
+  .config-panel .code-block { font-size: 11px; line-height: 1.6; }
   .xml-tag { color: #89b4fa; }
   .xml-attr { color: #f9e2af; }
   .xml-val { color: #a6e3a1; }
-
-  /* Key Concept */
-  .concept-section { max-width: 1100px; margin: 0 auto 50px; }
-  .concept-section h2 { color: #89b4fa; font-size: 20px; margin-bottom: 24px; }
-  .concept-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-  .concept-card { background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 22px; text-align: center; }
-  .concept-card h3 { color: #cba6f7; font-size: 14px; margin-bottom: 10px; }
-  .concept-card p { font-size: 12px; color: #a6adc8; line-height: 1.6; }
-  .concept-card code { background: #1e1e2e; padding: 1px 6px; border-radius: 3px; color: #f9e2af; font-size: 11px; }
+  .strikethrough { text-decoration: line-through; opacity: 0.4; }
 
   /* What Spring Does */
   .spring-role { max-width: 1100px; margin: 0 auto 50px; }
   .spring-role h2 { color: #a6e3a1; font-size: 20px; margin-bottom: 20px; }
   .role-steps { display: flex; gap: 0; align-items: stretch; }
-  .role-step { flex: 1; background: #181825; border: 1px solid #313244; padding: 22px; text-align: center; position: relative; }
+  .role-step { flex: 1; background: #181825; border: 1px solid #313244; padding: 20px; text-align: center; }
   .role-step:first-child { border-radius: 12px 0 0 12px; }
   .role-step:last-child { border-radius: 0 12px 12px 0; }
   .role-step h3 { color: #94e2d5; font-size: 13px; margin-bottom: 8px; }
-  .role-step p { font-size: 12px; color: #a6adc8; line-height: 1.5; }
+  .role-step p { font-size: 11px; color: #a6adc8; line-height: 1.5; }
   .role-step .step-num { background: #94e2d5; color: #1e1e2e; font-weight: 800; font-size: 11px; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
-  .role-arrow { font-size: 24px; color: #94e2d5; display: flex; align-items: center; padding: 0 4px; background: #181825; border-top: 1px solid #313244; border-bottom: 1px solid #313244; }
+  .role-arrow { font-size: 22px; color: #94e2d5; display: flex; align-items: center; padding: 0 3px; background: #181825; border-top: 1px solid #313244; border-bottom: 1px solid #313244; }
 
-  /* XML Config Diagram */
-  .xml-section { max-width: 1100px; margin: 0 auto 50px; }
-  .xml-section h2 { color: #89b4fa; font-size: 18px; margin-bottom: 16px; }
-  .xml-block { background: #181825; border: 1px solid #313244; border-radius: 10px; padding: 24px; font-family: 'Fira Code','Consolas', monospace; font-size: 12px; line-height: 1.8; overflow-x: auto; }
+  /* Qualifier */
+  .qualifier-section { max-width: 1100px; margin: 0 auto 50px; }
+  .qualifier-section h2 { color: #89b4fa; font-size: 18px; margin-bottom: 20px; }
+  .qualifier-diagram { background: #181825; border: 1px solid #313244; border-radius: 14px; padding: 30px; text-align: center; }
+  .q-row { display: flex; align-items: center; justify-content: center; gap: 0; margin: 12px 0; }
+  .q-box { padding: 12px 18px; border-radius: 8px; text-align: center; }
+  .q-box .q-name { font-size: 13px; font-weight: 700; }
+  .q-box .q-anno { font-size: 10px; font-family: monospace; }
+  .q-arrow { font-size: 18px; margin: 0 10px; }
+  .q-iface { border: 2px dashed #89b4fa; background: transparent; }
+  .q-iface .q-name { color: #89b4fa; font-style: italic; }
+  .q-active { border: 2px solid #a6e3a1; }
+  .q-active .q-name { color: #a6e3a1; }
+  .q-inactive { border: 1px solid #45475a; opacity: 0.5; }
+  .q-qualifier { color: #f9e2af; font-size: 12px; font-family: monospace; font-weight: 600; }
 
   /* Lifecycle */
   .lifecycle { max-width: 1100px; margin: 0 auto 50px; }
@@ -100,13 +145,24 @@
   .lc-box { padding: 16px 22px; border-radius: 10px; text-align: center; }
   .lc-box h4 { font-size: 13px; margin-bottom: 4px; }
   .lc-box p { font-size: 10px; opacity: 0.7; }
-  .lc-init { background: #2d4a1a; border: 1px solid #a6e3a1; }
-  .lc-init h4 { color: #a6e3a1; }
-  .lc-use { background: #45379a; border: 1px solid #6c5ce7; }
-  .lc-use h4 { color: #cba6f7; }
-  .lc-shut { background: #5a1a1a; border: 1px solid #f38ba8; }
-  .lc-shut h4 { color: #f38ba8; }
+  .lc-init { background: #2d4a1a; border: 1px solid #a6e3a1; } .lc-init h4 { color: #a6e3a1; }
+  .lc-use { background: #45379a; border: 1px solid #6c5ce7; } .lc-use h4 { color: #cba6f7; }
+  .lc-shut { background: #5a1a1a; border: 1px solid #f38ba8; } .lc-shut h4 { color: #f38ba8; }
   .lc-arrow { font-size: 24px; color: #6c7086; margin: 0 10px; }
+
+  /* Key Concepts */
+  .concept-section { max-width: 1100px; margin: 0 auto 50px; }
+  .concept-section h2 { color: #89b4fa; font-size: 20px; margin-bottom: 24px; }
+  .concept-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .concept-card { background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 22px; text-align: center; }
+  .concept-card h3 { color: #cba6f7; font-size: 14px; margin-bottom: 10px; }
+  .concept-card p { font-size: 12px; color: #a6adc8; line-height: 1.6; }
+  .concept-card code { background: #1e1e2e; padding: 1px 6px; border-radius: 3px; color: #f9e2af; font-size: 11px; }
+
+  /* Principle */
+  .principle-box { max-width: 700px; margin: 0 auto 40px; border: 2px dashed #6c7086; border-radius: 14px; padding: 24px 36px; text-align: center; }
+  .principle-box h3 { font-size: 18px; color: #cdd6f4; margin-bottom: 8px; }
+  .principle-box p { font-size: 14px; color: #a6adc8; }
 
   /* Benefits */
   .benefits { background: #1a2e1a; border: 2px solid #a6e3a1; border-radius: 14px; padding: 28px 40px; max-width: 1100px; margin: 0 auto 40px; }
@@ -117,59 +173,37 @@
   .benefit-text strong { color: #a6e3a1; }
   .benefit-text { color: #a6adc8; line-height: 1.5; }
 
-  /* Principle */
-  .principle-box { max-width: 700px; margin: 0 auto 40px; border: 2px dashed #6c7086; border-radius: 14px; padding: 24px 36px; text-align: center; }
-  .principle-box h3 { font-size: 18px; color: #cdd6f4; margin-bottom: 8px; }
-  .principle-box p { font-size: 14px; color: #a6adc8; }
-
-  /* Version Timeline */
-  .timeline { max-width: 1100px; margin: 0 auto 50px; }
-  .timeline h2 { color: #89b4fa; font-size: 18px; margin-bottom: 20px; }
-  .timeline-flow { display: flex; align-items: center; justify-content: center; gap: 0; }
-  .tl-box { padding: 16px 24px; border-radius: 10px; text-align: center; min-width: 200px; }
-  .tl-box h4 { font-size: 14px; margin-bottom: 4px; }
-  .tl-box p { font-size: 10px; opacity: 0.7; }
-  .tl-v1 { background: #5a1a1a; border: 1px solid #f38ba8; }
-  .tl-v1 h4 { color: #f38ba8; }
-  .tl-v2 { background: #5a3a1a; border: 1px solid #fab387; }
-  .tl-v2 h4 { color: #fab387; }
-  .tl-v3 { background: #1a4a2a; border: 2px solid #a6e3a1; }
-  .tl-v3 h4 { color: #a6e3a1; }
-  .tl-arrow { font-size: 24px; color: #6c7086; margin: 0 12px; }
-
   .footer { text-align: center; margin-top: 50px; color: #45475a; font-size: 12px; }
 </style>
 </head>
 <body>
 
 <h1>v3 — Money Transfer System</h1>
-<p class="subtitle">Spring XML Configuration | ApplicationContext | Bean Lifecycle | HikariCP DataSource | IoC Container</p>
+<p class="subtitle">Spring Annotation Config | @Configuration + @ComponentScan | @Service, @Repository, @Autowired, @Qualifier</p>
 
 <!-- Version Timeline -->
 <div class="timeline">
   <h2>Evolution: v1 &rarr; v2 &rarr; v3</h2>
   <div class="timeline-flow">
     <div class="tl-box tl-v1">
-      <h4>v1 — Problems</h4>
+      <h4>v1 &mdash; Problems</h4>
       <p>Tight coupling<br><code style="color:#f38ba8">new</code> inside service</p>
     </div>
     <div class="tl-arrow">&rarr;</div>
     <div class="tl-box tl-v2">
-      <h4>v2 — Manual DI</h4>
+      <h4>v2 &mdash; Manual DI</h4>
       <p>Interfaces + Factory<br>main() is assembler</p>
     </div>
     <div class="tl-arrow">&rarr;</div>
     <div class="tl-box tl-v3">
-      <h4>v3 — Spring Container</h4>
-      <p>XML config + ApplicationContext<br>Spring is the assembler</p>
+      <h4>v3 &mdash; Spring Annotations</h4>
+      <p>@Configuration + @ComponentScan<br>Spring is the assembler</p>
     </div>
   </div>
 </div>
 
-<!-- Architecture -->
-<div style="max-width:1100px; margin: 0 auto;">
-  <div class="section-title">Layered Architecture — Spring Managed</div>
-</div>
+<!-- Architecture Diagram -->
+<div class="section-title">Layered Architecture &mdash; Spring Annotation Managed</div>
 <div class="architecture">
   <div class="layer">
     <div class="layer-label">Caller</div>
@@ -181,9 +215,14 @@
   <div class="arrow">&rarr;</div>
   <div class="layer">
     <div class="layer-label">Spring Container</div>
-    <div class="box spring-box">
-      <div class="name">ApplicationContext</div>
-      <div class="desc">Reads mts-config.xml<br>Creates &amp; wires all beans</div>
+    <div class="box spring-box" style="margin-bottom:8px;">
+      <div class="name">AnnotationConfig<br>ApplicationContext</div>
+      <div class="desc">Scans @Component classes<br>Creates &amp; wires all beans</div>
+    </div>
+    <div class="box config-box">
+      <div class="name">MtsConfiguration</div>
+      <div class="anno">@Configuration + @ComponentScan</div>
+      <div class="desc">@Bean: hikariConfig, dataSource</div>
     </div>
   </div>
   <div class="arrow">&rarr;</div>
@@ -194,7 +233,8 @@
     </div>
     <div class="box service">
       <div class="name">TransferServiceImpl</div>
-      <div class="desc">Business logic</div>
+      <div class="anno">@Service</div>
+      <div class="desc">constructor: @Qualifier repo<br>setter: @Autowired(required=false) notif</div>
     </div>
   </div>
   <div class="arrow">&rarr;</div>
@@ -205,8 +245,14 @@
         <div class="name">&laquo;AccountRepository&raquo;</div>
       </div>
       <div class="impl-group">
-        <div class="impl-box impl-jdbc">JdbcAccountRepo</div>
-        <div class="impl-box impl-jpa">JpaAccountRepo</div>
+        <div class="impl-box" style="background:#1a6b5a;border:1px solid #2ecc71;">
+          <div style="font-size:10px;color:#f9e2af;font-family:monospace;">@Repository</div>
+          JdbcAccountRepo
+        </div>
+        <div class="impl-box" style="background:#2d5a1a;border:1px solid #66bb6a;">
+          <div style="font-size:10px;color:#f9e2af;font-family:monospace;">@Repository</div>
+          JpaAccountRepo
+        </div>
       </div>
     </div>
     <div>
@@ -215,67 +261,218 @@
         <div class="name">&laquo;NotificationService&raquo;</div>
       </div>
       <div class="impl-group">
-        <div class="impl-box" style="background:#5a3a1a;border:1px solid #fab387;">EmailNotification</div>
+        <div class="impl-box" style="background:#5a3a1a;border:1px solid #fab387;">
+          <div style="font-size:10px;color:#f9e2af;font-family:monospace;">@Service</div>
+          EmailNotification
+        </div>
       </div>
     </div>
   </div>
   <div class="arrow">&rarr;</div>
   <div class="layer">
     <div class="layer-label">Persistence</div>
-    <div class="box db" style="margin-bottom:12px;">
+    <div class="box db">
       <div class="name">PostgreSQL</div>
       <div class="desc">via HikariCP DataSource</div>
+      <div class="anno">@Bean in MtsConfiguration</div>
     </div>
   </div>
 </div>
 
-<!-- Spring Container Detail -->
+<!-- @Component Hierarchy -->
+<div class="anno-section">
+  <h2>Stereotype Annotation Hierarchy</h2>
+  <div class="anno-tree">
+    <div class="anno-root">
+      <div class="anno-badge badge-component">@Component</div>
+      <div class="anno-connector">&#9474;<br>&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</div>
+    </div>
+    <div class="anno-children">
+      <div class="anno-child">
+        <div class="anno-badge badge-repo">@Repository</div>
+        <div class="anno-uses">Persistence layer<br><strong>JdbcAccountRepo, JpaAccountRepo</strong></div>
+      </div>
+      <div class="anno-child">
+        <div class="anno-badge badge-service">@Service</div>
+        <div class="anno-uses">Business logic<br><strong>TransferServiceImpl, EmailNotification</strong></div>
+      </div>
+      <div class="anno-child">
+        <div class="anno-badge badge-controller">@Controller</div>
+        <div class="anno-uses">Presentation layer<br><em>(future: TransferController)</em></div>
+      </div>
+      <div class="anno-child">
+        <div class="anno-badge badge-config">@Configuration</div>
+        <div class="anno-uses">Config + @Bean methods<br><strong>MtsConfiguration</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Spring Container Beans -->
 <div class="spring-container-wrapper">
   <div class="spring-container">
-    <div class="spring-container-label">Spring IoC Container — Bean Definitions (mts-config.xml)</div>
-    <div class="beans-row">
-      <div class="bean db">
-        <div class="bean-id">id="hikariConfig"</div>
+    <div class="spring-container-label">Spring IoC Container &mdash; Beans (discovered by @ComponentScan + @Bean)</div>
+    <div class="beans-flow">
+      <div class="bean config-box">
+        <div class="bean-anno">@Bean</div>
         <div class="bean-class">HikariConfig</div>
         <div class="bean-detail">url, user, pass, pool</div>
       </div>
-      <div class="bean-arrow-container">
-        <div class="bean-arrow">&rarr;</div>
-        <div class="bean-arrow-label">ref</div>
+      <div class="bean-arrow">&rarr;</div>
+      <div class="bean config-box">
+        <div class="bean-anno">@Bean</div>
+        <div class="bean-class">DataSource</div>
+        <div class="bean-detail">HikariDataSource</div>
       </div>
-      <div class="bean db">
-        <div class="bean-id">id="dataSource"</div>
-        <div class="bean-class">HikariDataSource</div>
-        <div class="bean-detail">connection pool</div>
-      </div>
-      <div class="bean-arrow-container">
-        <div class="bean-arrow">&rarr;</div>
-        <div class="bean-arrow-label">ref</div>
-      </div>
+      <div class="bean-arrow">&rarr;</div>
       <div class="bean repo">
-        <div class="bean-id">id="jdbcAccountRepository"</div>
+        <div class="bean-anno">@Repository</div>
         <div class="bean-class">JdbcAccountRepo</div>
-        <div class="bean-detail">constructor-arg: dataSource</div>
+        <div class="bean-detail">@Autowired DataSource</div>
       </div>
-      <div class="bean-arrow-container">
-        <div class="bean-arrow">&rarr;</div>
-        <div class="bean-arrow-label">ref</div>
-      </div>
+      <div class="bean-arrow">&rarr;</div>
       <div class="bean service" style="min-width:180px;">
-        <div class="bean-id">id="transferService"</div>
+        <div class="bean-anno">@Service</div>
         <div class="bean-class">TransferServiceImpl</div>
-        <div class="bean-detail">args: repo + notification</div>
+        <div class="bean-detail">constructor: @Qualifier repo<br>setter: @Autowired notif</div>
       </div>
     </div>
-    <div class="beans-row" style="margin-top:14px;">
-      <div class="bean notif">
-        <div class="bean-id">id="emailNotificationService"</div>
-        <div class="bean-class">EmailNotificationService</div>
-        <div class="bean-detail">sendNotification()</div>
+    <div class="beans-flow" style="margin-top:14px;">
+      <div class="bean repo" style="opacity:0.5;">
+        <div class="bean-anno">@Repository</div>
+        <div class="bean-class">JpaAccountRepo</div>
+        <div class="bean-detail">available but not selected</div>
       </div>
-      <div class="bean-arrow-container">
-        <div class="bean-arrow">&nearr;</div>
-        <div class="bean-arrow-label">ref &rarr; transferService</div>
+      <div style="width:40px"></div>
+      <div class="bean notif-box">
+        <div class="bean-anno">@Service</div>
+        <div class="bean-class">EmailNotification</div>
+        <div class="bean-detail">optional &rarr; setter injected</div>
+      </div>
+      <div class="bean-arrow" style="color:#f9e2af;">&#8599;</div>
+      <div style="font-size:11px;color:#f9e2af;">@Autowired(required=false)<br>setter &rarr; TransferServiceImpl</div>
+    </div>
+  </div>
+</div>
+
+<!-- @Qualifier Disambiguation -->
+<div class="qualifier-section">
+  <h2>@Qualifier &mdash; Resolving Multiple Implementations</h2>
+  <div class="qualifier-diagram">
+    <p style="font-size:13px;color:#a6adc8;margin-bottom:16px;">Two beans implement <span style="color:#89b4fa;">AccountRepository</span> &mdash; Spring needs to know which one to inject</p>
+    <div class="q-row">
+      <div class="q-box service" style="padding:14px 20px;">
+        <div class="q-anno" style="color:#f9e2af;">@Service</div>
+        <div class="q-name" style="color:#cdd6f4;">TransferServiceImpl</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="q-arrow" style="color:#f9e2af;">&mdash; @Qualifier("jdbcAccountRepository") &rarr;</div>
+      </div>
+      <div class="q-box q-iface" style="padding:14px 20px;">
+        <div class="q-name">&laquo;AccountRepository&raquo;</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="q-arrow" style="color:#a6e3a1;">&larr; implements &mdash;</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="q-box q-active repo" style="padding:10px 16px;">
+          <div class="q-anno" style="color:#f9e2af;font-size:9px;">@Repository("jdbcAccountRepository")</div>
+          <div class="q-name" style="font-size:12px;color:#a6e3a1;">JdbcAccountRepo &#10004;</div>
+        </div>
+        <div class="q-box q-inactive" style="padding:10px 16px;background:#2d5a1a;">
+          <div class="q-anno" style="font-size:9px;">@Repository("jpaAccountRepository")</div>
+          <div class="q-name" style="font-size:12px;">JpaAccountRepo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DI Types: Constructor vs Setter -->
+<div class="di-section">
+  <h2>Dependency Injection &mdash; Constructor vs Setter</h2>
+  <div class="di-cards">
+    <div class="di-card di-card-req">
+      <h3>Constructor Injection (Required)</h3>
+      <div class="code-block">
+        <span class="anno-code">@Service("transferService")</span><br>
+        <span class="keyword">public class</span> <span class="type">TransferServiceImpl</span> {<br><br>
+        &nbsp;&nbsp;<span class="keyword">private</span> <span class="type">AccountRepository</span> repo;<br><br>
+        <span class="good-line">&nbsp;&nbsp;<span class="comment">// constructor injection &mdash; required dep</span></span>
+        <span class="good-line">&nbsp;&nbsp;<span class="keyword">public</span> TransferServiceImpl(</span>
+        <span class="good-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="anno-code">@Qualifier("jdbcAccountRepository")</span></span>
+        <span class="good-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="type">AccountRepository</span> repo) {</span>
+        <span class="good-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.repo = repo;</span>
+        <span class="good-line">&nbsp;&nbsp;}</span>
+        <br>
+        }
+      </div>
+      <p style="font-size:11px;color:#a6e3a1;margin-top:12px;">
+        &#10003; Immutable &nbsp; &#10003; Required at creation &nbsp; &#10003; No @Autowired needed (single constructor)
+      </p>
+    </div>
+    <div class="di-card di-card-opt">
+      <h3>Setter Injection (Optional)</h3>
+      <div class="code-block">
+        &nbsp;&nbsp;<span class="keyword">private</span> <span class="type">NotificationService</span> notification;<br><br>
+        <span class="opt-line">&nbsp;&nbsp;<span class="anno-code">@Autowired(required = false)</span></span>
+        <span class="opt-line">&nbsp;&nbsp;<span class="keyword">public void</span> setNotification(</span>
+        <span class="opt-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="type">NotificationService</span> notification) {</span>
+        <span class="opt-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.notification = notification;</span>
+        <span class="opt-line">&nbsp;&nbsp;}</span>
+        <br><br>
+        <span class="comment">// usage: null-safe check</span><br>
+        <span class="keyword">if</span> (notification != <span class="keyword">null</span>) {<br>
+        &nbsp;&nbsp;notification.sendNotification(...);<br>
+        }
+      </div>
+      <p style="font-size:11px;color:#f9e2af;margin-top:12px;">
+        &#10003; Optional dependency &nbsp; &#10003; Can be absent at runtime &nbsp; &#10003; Needs @Autowired
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- 3 Config Styles Comparison -->
+<div class="config-compare">
+  <h2>Three Styles of Spring Configuration</h2>
+  <div class="config-grid">
+    <div class="config-panel panel-xml">
+      <h3>XML Config <span style="font-size:10px;">(v3 initial)</span></h3>
+      <div class="code-block">
+        <span class="xml-tag">&lt;bean</span> <span class="xml-attr">id=</span><span class="xml-val">"transferService"</span><br>
+        &nbsp;&nbsp;<span class="xml-attr">class=</span><span class="xml-val">"...TransferServiceImpl"</span><span class="xml-tag">&gt;</span><br>
+        &nbsp;&nbsp;<span class="xml-tag">&lt;constructor-arg</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="xml-attr">ref=</span><span class="xml-val">"jdbcAccountRepo"</span><span class="xml-tag">/&gt;</span><br>
+        <span class="xml-tag">&lt;/bean&gt;</span><br><br>
+        <span class="comment strikethrough">ClassPathXmlApplicationContext</span>
+      </div>
+    </div>
+    <div class="config-panel panel-anno">
+      <h3>Annotation Config <span style="font-size:10px;">(v3 current)</span></h3>
+      <div class="code-block">
+        <span class="anno-code">@Service("transferService")</span><br>
+        <span class="keyword">public class</span> <span class="type">TransferServiceImpl</span><br>
+        &nbsp;&nbsp;<span class="keyword">implements</span> <span class="type">TransferService</span> {<br><br>
+        &nbsp;&nbsp;<span class="keyword">public</span> TransferServiceImpl(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="anno-code">@Qualifier("jdbc...")</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="type">AccountRepository</span> repo) {}<br>
+        }<br><br>
+        <span class="comment">AnnotationConfigApplicationContext</span>
+      </div>
+    </div>
+    <div class="config-panel panel-java">
+      <h3>Java @Bean Config <span style="font-size:10px;">(MtsConfiguration)</span></h3>
+      <div class="code-block">
+        <span class="anno-code">@Configuration</span><br>
+        <span class="anno-code">@ComponentScan("com.npci")</span><br>
+        <span class="keyword">public class</span> <span class="type">MtsConfiguration</span> {<br><br>
+        &nbsp;&nbsp;<span class="anno-code">@Bean</span><br>
+        &nbsp;&nbsp;<span class="keyword">public</span> <span class="type">DataSource</span> dataSource(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="type">HikariConfig</span> cfg) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return new</span> <span class="type">HikariDataSource</span>(cfg);<br>
+        &nbsp;&nbsp;}<br>
+        }
       </div>
     </div>
   </div>
@@ -283,151 +480,82 @@
 
 <!-- What Spring Does -->
 <div class="spring-role">
-  <h2>What Spring Container Does (that main() did in v2)</h2>
+  <h2>What Spring Does at Startup</h2>
   <div class="role-steps">
     <div class="role-step">
-      <div class="step-num">1. Read</div>
-      <h3>Parse XML Config</h3>
-      <p>Reads <code style="color:#f9e2af">mts-config.xml</code><br>Discovers bean definitions</p>
+      <div class="step-num">1. Scan</div>
+      <h3>@ComponentScan</h3>
+      <p>Scans <code style="color:#f9e2af">com.npci</code> packages<br>Finds @Service, @Repository,<br>@Configuration classes</p>
     </div>
     <div class="role-arrow">&rarr;</div>
     <div class="role-step">
       <div class="step-num">2. Create</div>
       <h3>Instantiate Beans</h3>
-      <p>Creates objects in the right order<br>(DataSource &rarr; Repo &rarr; Service)</p>
+      <p>Creates singletons:<br>@Bean methods first (DataSource)<br>then scanned components</p>
     </div>
     <div class="role-arrow">&rarr;</div>
     <div class="role-step">
       <div class="step-num">3. Wire</div>
       <h3>Inject Dependencies</h3>
-      <p>Uses <code style="color:#f9e2af">constructor-arg ref</code><br>to connect beans together</p>
+      <p>Constructor args auto-resolved<br>@Qualifier picks the right bean<br>@Autowired setters called next</p>
     </div>
     <div class="role-arrow">&rarr;</div>
     <div class="role-step">
-      <div class="step-num">4. Manage</div>
-      <h3>Lifecycle</h3>
-      <p>Singleton by default<br><code style="color:#f9e2af">destroy-method</code> on shutdown</p>
+      <div class="step-num">4. Ready</div>
+      <h3>Application Ready</h3>
+      <p>All beans wired &amp; initialized<br>getBean() returns<br>fully configured objects</p>
     </div>
   </div>
 </div>
 
-<!-- v2 vs v3 Code Comparison -->
-<div class="comparison">
-  <h2>v2 vs v3 — Who is the Assembler?</h2>
-  <div class="compare-grid">
-    <div class="compare-panel panel-v2">
-      <h3>v2 — main() is the Assembler</h3>
-      <div class="code-block">
-        <span class="comment">// YOU create and wire everything</span><br>
-        <span class="highlight-old"><span class="type">AccountRepository</span> repo =</span>
-        <span class="highlight-old">&nbsp;&nbsp;AccountRepositoryFactory.getAccountRepository(<span class="string">"jdbc"</span>);</span>
-        <span class="highlight-old"><span class="type">Notification</span> notif = <span class="keyword">new</span> <span class="type">EmailNotification</span>();</span>
-        <span class="highlight-old"><span class="type">TransferService</span> svc =</span>
-        <span class="highlight-old">&nbsp;&nbsp;<span class="keyword">new</span> <span class="type">TransferServiceImpl</span>(repo, notif);</span>
-        <br>
-        <span class="comment">// Then use it</span><br>
-        svc.transfer(100.0, <span class="string">"ACC123"</span>, <span class="string">"ACC456"</span>);
-      </div>
-    </div>
-    <div class="compare-panel panel-v3">
-      <h3>v3 — Spring is the Assembler</h3>
-      <div class="code-block">
-        <span class="comment">// Spring creates and wires everything</span><br>
-        <span class="highlight-new"><span class="type">ConfigurableApplicationContext</span> ctx =</span>
-        <span class="highlight-new">&nbsp;&nbsp;<span class="keyword">new</span> <span class="type">ClassPathXmlApplicationContext</span>(<span class="string">"mts-config.xml"</span>);</span>
-        <br><br>
-        <span class="comment">// Just ask for the bean and use it</span><br>
-        <span class="highlight-new"><span class="type">TransferService</span> svc =</span>
-        <span class="highlight-new">&nbsp;&nbsp;ctx.getBean(<span class="string">"transferService"</span>, <span class="type">TransferService</span>.class);</span>
-        <br>
-        svc.transfer(100.0, <span class="string">"ACC123"</span>, <span class="string">"ACC456"</span>);<br>
-        <br>
-        <span class="comment">// Spring handles shutdown too</span><br>
-        ctx.close();
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- XML Config Visual -->
-<div class="xml-section">
-  <h2>Spring XML Configuration — mts-config.xml</h2>
-  <div class="xml-block">
-    <span class="comment">&lt;!-- Infrastructure bean: connection pool config --&gt;</span><br>
-    <span class="xml-tag">&lt;bean</span> <span class="xml-attr">id=</span><span class="xml-val">"hikariConfig"</span> <span class="xml-attr">class=</span><span class="xml-val">"com.zaxxer.hikari.HikariConfig"</span><span class="xml-tag">&gt;</span><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;<span class="xml-tag">&lt;property</span> <span class="xml-attr">name=</span><span class="xml-val">"jdbcUrl"</span> <span class="xml-attr">value=</span><span class="xml-val">"jdbc:postgresql://localhost:5432/mydatabase"</span><span class="xml-tag">/&gt;</span><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">...</span><br>
-    <span class="xml-tag">&lt;/bean&gt;</span><br><br>
-
-    <span class="comment">&lt;!-- Infrastructure bean: DataSource (connection pool) --&gt;</span><br>
-    <span class="xml-tag">&lt;bean</span> <span class="xml-attr">id=</span><span class="xml-val">"dataSource"</span> <span class="xml-attr">class=</span><span class="xml-val">"com.zaxxer.hikari.HikariDataSource"</span> <span class="xml-attr">destroy-method=</span><span class="xml-val">"close"</span><span class="xml-tag">&gt;</span><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;<span class="xml-tag">&lt;constructor-arg</span> <span class="xml-attr">ref=</span><span class="xml-val">"hikariConfig"</span><span class="xml-tag">/&gt;</span> <span class="comment">&lt;!-- DI: inject config --&gt;</span><br>
-    <span class="xml-tag">&lt;/bean&gt;</span><br><br>
-
-    <span class="comment">&lt;!-- Application bean: Repository --&gt;</span><br>
-    <span class="xml-tag">&lt;bean</span> <span class="xml-attr">id=</span><span class="xml-val">"jdbcAccountRepository"</span> <span class="xml-attr">class=</span><span class="xml-val">"...JdbcAccountRepository"</span><span class="xml-tag">&gt;</span><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;<span class="xml-tag">&lt;constructor-arg</span> <span class="xml-attr">ref=</span><span class="xml-val">"dataSource"</span><span class="xml-tag">/&gt;</span> <span class="comment">&lt;!-- DI: inject datasource --&gt;</span><br>
-    <span class="xml-tag">&lt;/bean&gt;</span><br><br>
-
-    <span class="comment">&lt;!-- Application bean: Notification --&gt;</span><br>
-    <span class="xml-tag">&lt;bean</span> <span class="xml-attr">id=</span><span class="xml-val">"emailNotificationService"</span> <span class="xml-attr">class=</span><span class="xml-val">"...EmailNotificationService"</span><span class="xml-tag">/&gt;</span><br><br>
-
-    <span class="comment">&lt;!-- Application bean: Service (wired with repo + notification) --&gt;</span><br>
-    <span class="xml-tag">&lt;bean</span> <span class="xml-attr">id=</span><span class="xml-val">"transferService"</span> <span class="xml-attr">class=</span><span class="xml-val">"...TransferServiceImpl"</span><span class="xml-tag">&gt;</span><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;<span class="xml-tag">&lt;constructor-arg</span> <span class="xml-attr">ref=</span><span class="xml-val">"jdbcAccountRepository"</span><span class="xml-tag">/&gt;</span> <span class="comment">&lt;!-- DI: inject repo --&gt;</span><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;<span class="xml-tag">&lt;constructor-arg</span> <span class="xml-attr">ref=</span><span class="xml-val">"emailNotificationService"</span><span class="xml-tag">/&gt;</span> <span class="comment">&lt;!-- DI: inject notif --&gt;</span><br>
-    <span class="xml-tag">&lt;/bean&gt;</span>
-  </div>
-</div>
-
-<!-- Application Lifecycle -->
+<!-- Lifecycle -->
 <div class="lifecycle">
-  <h2>Application Lifecycle — Managed by Spring</h2>
+  <h2>Application Lifecycle</h2>
   <div class="lifecycle-flow">
     <div class="lc-box lc-init">
       <h4>Init / Boot</h4>
-      <p>new ClassPathXmlApplicationContext<br>&rarr; reads XML &rarr; creates beans<br>&rarr; injects dependencies</p>
+      <p>new AnnotationConfigApplicationContext<br>(MtsConfiguration.class)<br>&rarr; scan &rarr; create &rarr; wire</p>
     </div>
     <div class="lc-arrow">&rarr;</div>
     <div class="lc-box lc-use">
       <h4>Use</h4>
-      <p>ctx.getBean("transferService")<br>&rarr; use the wired bean<br>&rarr; all deps already injected</p>
+      <p>ctx.getBean("transferService")<br>&rarr; fully wired bean<br>&rarr; repo + notification injected</p>
     </div>
     <div class="lc-arrow">&rarr;</div>
     <div class="lc-box lc-shut">
       <h4>Shutdown</h4>
-      <p>ctx.close()<br>&rarr; calls destroy-method<br>&rarr; HikariDataSource.close()</p>
+      <p>ctx.close()<br>&rarr; destroys beans<br>&rarr; HikariDataSource.close()</p>
     </div>
   </div>
 </div>
 
 <!-- Key Concepts -->
 <div class="concept-section">
-  <h2>Key Spring Concepts Introduced in v3</h2>
+  <h2>Key Concepts in v3</h2>
   <div class="concept-cards">
     <div class="concept-card">
-      <h3>IoC Container</h3>
-      <p><code>ApplicationContext</code> is the container. It takes over creating and wiring objects. Your code just declares what it needs.</p>
+      <h3>@ComponentScan</h3>
+      <p>Tells Spring to scan packages and auto-discover classes annotated with <code>@Component</code> and its specializations.</p>
     </div>
     <div class="concept-card">
-      <h3>Bean</h3>
-      <p>An object managed by Spring. Defined in XML with <code>&lt;bean&gt;</code>. Spring controls its creation, wiring, and destruction.</p>
+      <h3>Stereotype Annotations</h3>
+      <p><code>@Repository</code>, <code>@Service</code>, <code>@Controller</code>, <code>@Configuration</code> &mdash; all specializations of <code>@Component</code> with semantic meaning.</p>
     </div>
     <div class="concept-card">
-      <h3>Dependency Injection</h3>
-      <p><code>&lt;constructor-arg ref="..."&gt;</code> tells Spring to inject one bean into another. No <code>new</code> in your code.</p>
+      <h3>@Autowired</h3>
+      <p>Tells Spring to inject a dependency. Not needed on single constructor. Use <code>required=false</code> for optional deps.</p>
     </div>
     <div class="concept-card">
-      <h3>Configuration Metadata</h3>
-      <p><code>mts-config.xml</code> is the recipe. It tells Spring what beans to create and how to wire them.</p>
+      <h3>@Qualifier</h3>
+      <p>When multiple beans match an interface, <code>@Qualifier("name")</code> tells Spring which specific bean to inject.</p>
     </div>
     <div class="concept-card">
-      <h3>Singleton Scope</h3>
-      <p>By default, Spring creates one instance per bean. All requests for <code>transferService</code> return the same object.</p>
+      <h3>@Bean</h3>
+      <p>Used in <code>@Configuration</code> classes to manually define beans (like DataSource) that can't be annotated with @Component.</p>
     </div>
     <div class="concept-card">
-      <h3>Lifecycle Management</h3>
-      <p><code>destroy-method="close"</code> ensures HikariDataSource connection pool is properly shut down.</p>
+      <h3>Mixed Config</h3>
+      <p><code>@ComponentScan</code> for your classes + <code>@Bean</code> for third-party libs (HikariCP). Best of both worlds.</p>
     </div>
   </div>
 </div>
@@ -435,42 +563,42 @@
 <!-- Principle -->
 <div class="principle-box">
   <h3>Inversion of Control (IoC)</h3>
-  <p>In v2, <strong>your code</strong> controlled object creation and wiring.<br>
-  In v3, <strong>Spring</strong> controls it — you just describe what you need in XML.</p>
+  <p>In v2, <strong>your main()</strong> created and wired objects manually.<br>
+  In v3, <strong>Spring scans annotations</strong> and does it automatically &mdash; you just declare intent.</p>
 </div>
 
 <!-- Benefits -->
 <div class="benefits">
-  <h2>What v3 Gains Over v2</h2>
+  <h2>What v3 (Annotations) Gains Over XML Config</h2>
   <div class="benefits-grid">
     <div class="benefit-item">
-      <div class="benefit-icon">&#127981;</div>
-      <div class="benefit-text"><strong>No Factory Needed</strong><br>Spring replaces AccountRepositoryFactory</div>
+      <div class="benefit-icon">&#128221;</div>
+      <div class="benefit-text"><strong>No XML</strong><br>Config lives next to the code it configures</div>
     </div>
     <div class="benefit-item">
-      <div class="benefit-icon">&#128203;</div>
-      <div class="benefit-text"><strong>Declarative Config</strong><br>XML describes the wiring, not Java code</div>
+      <div class="benefit-icon">&#128269;</div>
+      <div class="benefit-text"><strong>Type-Safe</strong><br>Compiler catches errors, not XML parser</div>
     </div>
     <div class="benefit-item">
-      <div class="benefit-icon">&#9851;&#65039;</div>
-      <div class="benefit-text"><strong>Singleton by Default</strong><br>One instance per bean — efficient</div>
+      <div class="benefit-icon">&#9889;</div>
+      <div class="benefit-text"><strong>Auto-Discovery</strong><br>@ComponentScan finds beans automatically</div>
     </div>
     <div class="benefit-item">
-      <div class="benefit-icon">&#128268;</div>
-      <div class="benefit-text"><strong>Swap via Config</strong><br>Change JDBC to JPA in XML, zero code change</div>
+      <div class="benefit-icon">&#127919;</div>
+      <div class="benefit-text"><strong>@Qualifier</strong><br>Precise control over which impl to inject</div>
     </div>
     <div class="benefit-item">
-      <div class="benefit-icon">&#129529;</div>
-      <div class="benefit-text"><strong>Lifecycle Managed</strong><br>destroy-method cleans up resources</div>
+      <div class="benefit-icon">&#128296;</div>
+      <div class="benefit-text"><strong>Required vs Optional</strong><br>Constructor DI + @Autowired(required=false)</div>
     </div>
     <div class="benefit-item">
-      <div class="benefit-icon">&#128279;</div>
-      <div class="benefit-text"><strong>Real DataSource</strong><br>HikariCP connection pool wired by Spring</div>
+      <div class="benefit-icon">&#129520;</div>
+      <div class="benefit-text"><strong>Mixed Strategy</strong><br>@Component for yours, @Bean for third-party</div>
     </div>
   </div>
 </div>
 
-<div class="footer">money-transfer-system-v3 | Spring XML Config | Next: v4 — Annotation-based config (@Component, @Autowired)</div>
+<div class="footer">money-transfer-system-v3 | Spring Annotation Config | @Configuration + @ComponentScan + @Service + @Repository + @Autowired + @Qualifier</div>
 
 </body>
 </html>
