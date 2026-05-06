@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>v2 — Money Transfer System Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1e1e2e; color: #cdd6f4; font-family: 'Segoe UI', sans-serif; padding: 40px; }
+  h1 { text-align: center; font-size: 28px; margin-bottom: 10px; color: #a6e3a1; }
+  .subtitle { text-align: center; font-size: 14px; color: #6c7086; margin-bottom: 50px; }
+
+  .section-title { font-size: 20px; color: #89b4fa; margin-bottom: 30px; font-weight: 600; }
+
+  /* Architecture */
+  .architecture { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: 60px; }
+  .layer-label { text-align: center; font-size: 12px; color: #6c7086; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .layer { display: flex; flex-direction: column; align-items: center; }
+  .box { padding: 20px 28px; border-radius: 10px; text-align: center; min-width: 180px; }
+  .box .name { font-size: 16px; font-weight: 700; }
+  .box .desc { font-size: 11px; margin-top: 4px; opacity: 0.7; }
+  .caller { background: #313244; border: 1px solid #45475a; }
+  .service { background: #45379a; border: 1px solid #6c5ce7; }
+  .repo { background: #1a6b5a; border: 1px solid #2ecc71; }
+  .db { background: #313244; border: 1px solid #45475a; }
+  .iface { background: transparent; border: 2px dashed #89b4fa; }
+  .iface .name { color: #89b4fa; font-style: italic; }
+  .arrow { font-size: 28px; color: #6c7086; margin: 0 10px; padding-top: 20px; }
+
+  /* Repo stack */
+  .repo-stack { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .impl-label { font-size: 10px; color: #6c7086; margin-top: 4px; }
+  .impl-group { display: flex; gap: 10px; }
+  .impl-box { padding: 12px 18px; border-radius: 8px; text-align: center; font-size: 13px; font-weight: 600; }
+  .impl-jdbc { background: #1a6b5a; border: 1px solid #2ecc71; }
+  .impl-jpa { background: #2d5a1a; border: 1px solid #66bb6a; }
+
+  /* Evolution */
+  .evolution { max-width: 1000px; margin: 0 auto 50px; }
+  .evolution h2 { color: #89b4fa; font-size: 20px; margin-bottom: 24px; }
+  .steps { display: flex; gap: 20px; }
+  .step { flex: 1; background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 24px; position: relative; }
+  .step-num { position: absolute; top: -14px; left: 20px; background: #89b4fa; color: #1e1e2e; font-weight: 800; font-size: 13px; padding: 4px 12px; border-radius: 20px; }
+  .step h3 { color: #cba6f7; font-size: 15px; margin: 10px 0 10px; }
+  .step p { font-size: 12px; color: #a6adc8; line-height: 1.7; }
+  .step code { background: #1e1e2e; padding: 1px 6px; border-radius: 3px; color: #f9e2af; font-size: 12px; }
+  .step .tag { display: inline-block; margin-top: 10px; font-size: 10px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+  .tag-design { background: #cba6f733; color: #cba6f7; }
+  .tag-perf { background: #a6e3a133; color: #a6e3a1; }
+  .tag-solid { background: #89b4fa33; color: #89b4fa; }
+
+  /* Dependency Diagram */
+  .dep-section { max-width: 1000px; margin: 0 auto 50px; text-align: center; }
+  .dep-section h2 { color: #89b4fa; font-size: 18px; margin-bottom: 24px; }
+  .dep-container { display: flex; align-items: center; justify-content: center; gap: 0; }
+  .dep-box { padding: 16px 22px; border-radius: 8px; text-align: center; }
+  .dep-box .cls { font-size: 14px; font-weight: 700; }
+  .dep-box .detail { font-size: 10px; opacity: 0.7; margin-top: 3px; }
+  .dep-iface { background: transparent; border: 2px dashed #89b4fa; }
+  .dep-iface .cls { color: #89b4fa; font-style: italic; }
+  .dep-impl { background: #1a6b5a; border: 1px solid #2ecc71; }
+  .dep-service { background: #45379a; border: 1px solid #6c5ce7; }
+  .dep-main { background: #313244; border: 1px solid #45475a; }
+  .dep-arrow { font-size: 22px; margin: 0 8px; }
+  .dep-arrow-green { color: #a6e3a1; }
+  .dep-arrow-blue { color: #89b4fa; }
+  .dep-arrow-label { font-size: 10px; text-align: center; margin-top: -2px; }
+
+  .dep-row { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; gap: 0; }
+  .vs-label { color: #45475a; font-size: 12px; margin: 20px 0; }
+
+  /* DIP Box */
+  .principle-box { max-width: 700px; margin: 0 auto 40px; border: 2px dashed #6c7086; border-radius: 14px; padding: 24px 36px; text-align: center; }
+  .principle-box h3 { font-size: 18px; color: #cdd6f4; margin-bottom: 8px; }
+  .principle-box p { font-size: 14px; color: #a6adc8; }
+
+  /* Code Comparison */
+  .code-compare { max-width: 1000px; margin: 0 auto 50px; }
+  .code-compare h2 { color: #89b4fa; font-size: 18px; margin-bottom: 16px; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .code-panel { background: #181825; border: 1px solid #313244; border-radius: 10px; padding: 20px; font-family: 'Fira Code','Consolas', monospace; font-size: 12px; line-height: 1.7; }
+  .code-panel h3 { font-family: 'Segoe UI', sans-serif; margin-bottom: 12px; font-size: 14px; }
+  .panel-bad h3 { color: #f38ba8; }
+  .panel-good h3 { color: #a6e3a1; }
+  .panel-bad { border-color: #f38ba855; }
+  .panel-good { border-color: #a6e3a155; }
+  .bad-line { background: #f38ba815; border-left: 3px solid #f38ba8; padding-left: 8px; display: block; }
+  .good-line { background: #a6e3a115; border-left: 3px solid #a6e3a1; padding-left: 8px; display: block; }
+  .comment { color: #6c7086; }
+  .keyword { color: #cba6f7; }
+  .type { color: #89b4fa; }
+
+  /* Benefits */
+  .benefits { background: #1a2e1a; border: 2px solid #a6e3a1; border-radius: 14px; padding: 28px 40px; max-width: 900px; margin: 0 auto 40px; }
+  .benefits h2 { color: #a6e3a1; font-size: 20px; margin-bottom: 18px; }
+  .benefits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .benefit-item { display: flex; align-items: start; gap: 10px; font-size: 13px; }
+  .benefit-icon { font-size: 18px; }
+  .benefit-text strong { color: #a6e3a1; }
+  .benefit-text { color: #a6adc8; line-height: 1.5; }
+
+  /* SOLID */
+  .solid-section { max-width: 900px; margin: 0 auto 40px; }
+  .solid-section h2 { color: #89b4fa; font-size: 18px; margin-bottom: 16px; }
+  .solid-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+  .solid-item { padding: 12px 18px; border-radius: 8px; font-size: 13px; text-align: center; min-width: 150px; }
+  .solid-active { background: #89b4fa22; border: 1px solid #89b4fa; color: #89b4fa; }
+  .solid-inactive { background: #31324455; border: 1px solid #313244; color: #45475a; }
+  .solid-item .letter { font-size: 22px; font-weight: 800; }
+  .solid-item .desc { font-size: 10px; margin-top: 4px; }
+
+  .footer { text-align: center; margin-top: 50px; color: #45475a; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>v2 — Money Transfer System</h1>
+<p class="subtitle">Interfaces | Factory Pattern | Constructor Dependency Injection | Loose Coupling</p>
+
+<!-- Architecture -->
+<div style="max-width:1000px; margin: 0 auto;">
+  <div class="section-title">Layered Architecture</div>
+</div>
+<div class="architecture">
+  <div class="layer">
+    <div class="layer-label">Caller / Assembler</div>
+    <div class="box caller">
+      <div class="name">main()</div>
+      <div class="desc">Creates & wires components</div>
+    </div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="layer">
+    <div class="layer-label">Service Layer</div>
+    <div class="box iface" style="margin-bottom: 8px;">
+      <div class="name">&laquo;TransferService&raquo;</div>
+      <div class="desc">interface</div>
+    </div>
+    <div class="box service">
+      <div class="name">TransferServiceImpl</div>
+      <div class="desc">Business logic</div>
+    </div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="layer">
+    <div class="layer-label">Repository Layer</div>
+    <div class="repo-stack">
+      <div class="box iface">
+        <div class="name">&laquo;AccountRepository&raquo;</div>
+        <div class="desc">interface</div>
+      </div>
+      <div class="impl-label">implementations</div>
+      <div class="impl-group">
+        <div class="impl-box impl-jdbc">JdbcAccountRepo</div>
+        <div class="impl-box impl-jpa">JpaAccountRepo</div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="layer">
+    <div class="layer-label">Persistence</div>
+    <div class="box db">
+      <div class="name">Database</div>
+      <div class="desc">SQL</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 Steps Evolution -->
+<div class="evolution">
+  <h2>v1 → v2 : Three Steps of Improvement</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">Step 1</div>
+      <h3>Introduce Interfaces</h3>
+      <p>
+        Define <code>AccountRepository</code> and <code>TransferService</code> interfaces.<br><br>
+        Service depends on <strong>abstraction</strong>, not concrete class. Enables multiple implementations.
+      </p>
+      <span class="tag tag-design">Design fix</span>
+      <span class="tag tag-solid">OCP</span>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 2</div>
+      <h3>Use Factory</h3>
+      <p>
+        <code>AccountRepositoryFactory</code> creates the right implementation by type.<br><br>
+        Service no longer does <code>new JdbcAccountRepository()</code> inside its methods.
+      </p>
+      <span class="tag tag-design">Decouples creation</span>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 3</div>
+      <h3>Constructor DI</h3>
+      <p>
+        Dependency is <strong>injected</strong> via constructor by the assembler (<code>main</code>).<br><br>
+        Service doesn't create or lookup — it just <strong>receives</strong>.
+      </p>
+      <span class="tag tag-perf">Performance fix</span>
+      <span class="tag tag-solid">DIP</span>
+    </div>
+  </div>
+</div>
+
+<!-- Dependency Diagram: v1 vs v2 -->
+<div class="dep-section">
+  <h2>Dependency Flow — Before vs After</h2>
+
+  <p style="color: #f38ba8; font-size: 13px; margin-bottom: 10px;">v1 — Tight coupling (concrete → concrete)</p>
+  <div class="dep-row">
+    <div class="dep-box dep-service">
+      <div class="cls">TransferServiceImpl</div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div class="dep-arrow" style="color:#f38ba8;">— new →</div>
+      <div class="dep-arrow-label" style="color:#f38ba8;">creates directly</div>
+    </div>
+    <div class="dep-box dep-impl">
+      <div class="cls">JdbcAccountRepository</div>
+    </div>
+  </div>
+
+  <div class="vs-label">— — — vs — — —</div>
+
+  <p style="color: #a6e3a1; font-size: 13px; margin-bottom: 10px;">v2 — Loose coupling (concrete → interface ← concrete)</p>
+  <div class="dep-row">
+    <div class="dep-box dep-service">
+      <div class="cls">TransferServiceImpl</div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div class="dep-arrow dep-arrow-blue">— depends →</div>
+      <div class="dep-arrow-label" style="color:#89b4fa;">uses interface</div>
+    </div>
+    <div class="dep-box dep-iface">
+      <div class="cls">&laquo;AccountRepository&raquo;</div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div class="dep-arrow dep-arrow-green">← implements —</div>
+      <div class="dep-arrow-label" style="color:#a6e3a1;">can be swapped</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div class="dep-box dep-impl" style="padding:10px 16px;">
+        <div class="cls" style="font-size:12px;">JdbcAccountRepo</div>
+      </div>
+      <div class="dep-box" style="padding:10px 16px; background:#2d5a1a; border:1px solid #66bb6a;">
+        <div class="cls" style="font-size:12px;">JpaAccountRepo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIP Principle Box -->
+<div class="principle-box">
+  <h3>Dependency Inversion Principle</h3>
+  <p>Service depends on <strong>AccountRepository interface</strong> — not the JDBC or JPA implementation</p>
+</div>
+
+<!-- Code Comparison -->
+<div class="code-compare">
+  <h2>Code Comparison — TransferServiceImpl</h2>
+  <div class="compare-grid">
+    <div class="code-panel panel-bad">
+      <h3>v1 — Tight Coupling</h3>
+      <span class="keyword">public void</span> <span class="type">transfer</span>(...) {<br>
+      <span class="bad-line">&nbsp;&nbsp;<span class="type">JdbcAccountRepository</span> repo =</span>
+      <span class="bad-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">new</span> <span class="type">JdbcAccountRepository</span>();</span>
+      <br>
+      &nbsp;&nbsp;Account from = repo.loadAccount(...);<br>
+      &nbsp;&nbsp;<span class="comment">// ...</span><br>
+      }
+    </div>
+    <div class="code-panel panel-good">
+      <h3>v2 — Constructor DI</h3>
+      <span class="keyword">private final</span> <span class="type">AccountRepository</span> repo;<br><br>
+      <span class="good-line"><span class="keyword">public</span> <span class="type">TransferServiceImpl</span>(<span class="type">AccountRepository</span> repo) {</span>
+      <span class="good-line">&nbsp;&nbsp;<span class="keyword">this</span>.repo = repo;</span>
+      <span class="good-line">}</span>
+      <br>
+      <span class="keyword">public void</span> <span class="type">transfer</span>(...) {<br>
+      &nbsp;&nbsp;Account from = repo.loadAccount(...);<br>
+      &nbsp;&nbsp;<span class="comment">// ...</span><br>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Benefits -->
+<div class="benefits">
+  <h2>Benefits of v2</h2>
+  <div class="benefits-grid">
+    <div class="benefit-item">
+      <div class="benefit-icon">🔓</div>
+      <div class="benefit-text"><strong>Swappable</strong><br>Switch JDBC to JPA by changing one line in main()</div>
+    </div>
+    <div class="benefit-item">
+      <div class="benefit-icon">🧪</div>
+      <div class="benefit-text"><strong>Testable</strong><br>Inject a mock repository for unit testing</div>
+    </div>
+    <div class="benefit-item">
+      <div class="benefit-icon">⚡</div>
+      <div class="benefit-text"><strong>Efficient</strong><br>Single repo instance shared across all calls</div>
+    </div>
+    <div class="benefit-item">
+      <div class="benefit-icon">🧩</div>
+      <div class="benefit-text"><strong>Extensible</strong><br>Add new repo impl without touching service code</div>
+    </div>
+  </div>
+</div>
+
+<!-- SOLID applied -->
+<div class="solid-section">
+  <h2>SOLID Principles Applied in v2</h2>
+  <div class="solid-grid">
+    <div class="solid-item solid-inactive">
+      <div class="letter">S</div>
+      <div class="desc">Single Responsibility</div>
+    </div>
+    <div class="solid-item solid-active">
+      <div class="letter">O</div>
+      <div class="desc">Open-Closed</div>
+    </div>
+    <div class="solid-item solid-active">
+      <div class="letter">L</div>
+      <div class="desc">Liskov Substitution</div>
+    </div>
+    <div class="solid-item solid-inactive">
+      <div class="letter">I</div>
+      <div class="desc">Interface Segregation</div>
+    </div>
+    <div class="solid-item solid-active">
+      <div class="letter">D</div>
+      <div class="desc">Dependency Inversion</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">money-transfer-system-v2 | Next: v3 — Spring container automates the assembler role</div>
+
+</body>
+</html>

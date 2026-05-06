@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>v1 — Money Transfer System Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1e1e2e; color: #cdd6f4; font-family: 'Segoe UI', sans-serif; padding: 40px; }
+  h1 { text-align: center; font-size: 28px; margin-bottom: 10px; color: #f5c2e7; }
+  .subtitle { text-align: center; font-size: 14px; color: #6c7086; margin-bottom: 50px; }
+
+  /* Layered Architecture */
+  .section-title { font-size: 20px; color: #89b4fa; margin-bottom: 30px; font-weight: 600; }
+  .architecture { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 60px; }
+  .layer-label { text-align: center; font-size: 12px; color: #6c7086; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .layer { display: flex; flex-direction: column; align-items: center; }
+  .box { padding: 20px 30px; border-radius: 10px; text-align: center; min-width: 180px; position: relative; }
+  .box .name { font-size: 16px; font-weight: 700; }
+  .box .desc { font-size: 11px; margin-top: 4px; opacity: 0.7; }
+  .caller { background: #313244; border: 1px solid #45475a; }
+  .service { background: #45379a; border: 1px solid #6c5ce7; }
+  .repo { background: #1a6b5a; border: 1px solid #2ecc71; }
+  .db { background: #313244; border: 1px solid #45475a; }
+  .arrow { font-size: 28px; color: #6c7086; margin: 0 10px; padding-top: 20px; }
+
+  /* Problems Section */
+  .problems { background: #302030; border: 2px dashed #f38ba8; border-radius: 14px; padding: 30px 40px; margin-bottom: 40px; max-width: 900px; margin-left: auto; margin-right: auto; }
+  .problems h2 { color: #f38ba8; font-size: 20px; margin-bottom: 20px; }
+  .problem { margin-bottom: 24px; }
+  .problem h3 { color: #fab387; font-size: 15px; margin-bottom: 6px; }
+  .problem p { font-size: 13px; color: #a6adc8; line-height: 1.6; }
+  .problem code { background: #1e1e2e; padding: 2px 8px; border-radius: 4px; color: #f38ba8; font-size: 13px; }
+
+  /* Code Snapshot */
+  .code-section { max-width: 900px; margin: 0 auto 40px; }
+  .code-section h2 { color: #89b4fa; font-size: 18px; margin-bottom: 14px; }
+  .code-block { background: #181825; border: 1px solid #313244; border-radius: 10px; padding: 20px 24px; font-family: 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; }
+  .code-block .comment { color: #6c7086; }
+  .code-block .keyword { color: #cba6f7; }
+  .code-block .type { color: #89b4fa; }
+  .code-block .string { color: #a6e3a1; }
+  .code-block .bad { background: #f38ba822; border-left: 3px solid #f38ba8; padding-left: 8px; display: inline-block; width: 100%; }
+  .code-block .highlight-label { color: #f38ba8; font-weight: bold; font-size: 12px; }
+
+  /* Dependency Diagram */
+  .dep-diagram { max-width: 900px; margin: 0 auto 40px; text-align: center; }
+  .dep-diagram h2 { color: #89b4fa; font-size: 18px; margin-bottom: 20px; }
+  .dep-flow { display: flex; align-items: center; justify-content: center; gap: 0; }
+  .dep-box { padding: 16px 24px; border-radius: 8px; text-align: center; }
+  .dep-box .cls { font-size: 15px; font-weight: 700; }
+  .dep-box .detail { font-size: 11px; opacity: 0.7; margin-top: 3px; }
+  .dep-concrete { background: #45379a; border: 2px solid #6c5ce7; }
+  .dep-concrete-repo { background: #1a6b5a; border: 2px solid #2ecc71; }
+  .dep-arrow { font-size: 24px; color: #f38ba8; margin: 0 8px; }
+  .dep-arrow-label { font-size: 11px; color: #f38ba8; text-align: center; margin-top: -4px; }
+  .dep-arrow-container { display: flex; flex-direction: column; align-items: center; }
+
+  /* Impact */
+  .impact { background: #1e1e2e; border: 2px solid #f9e2af; border-radius: 14px; padding: 24px 36px; max-width: 900px; margin: 0 auto 40px; }
+  .impact h2 { color: #f9e2af; font-size: 18px; margin-bottom: 14px; }
+  .impact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .impact-item { display: flex; align-items: start; gap: 10px; font-size: 13px; }
+  .impact-icon { font-size: 18px; }
+  .impact-text strong { color: #f9e2af; }
+  .impact-text { color: #a6adc8; line-height: 1.5; }
+
+  .footer { text-align: center; margin-top: 50px; color: #45475a; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>v1 — Money Transfer System</h1>
+<p class="subtitle">Plain Java | No Interfaces | No DI | Tight Coupling</p>
+
+<!-- Architecture -->
+<div style="max-width:900px; margin: 0 auto;">
+  <div class="section-title">Layered Architecture</div>
+</div>
+<div class="architecture">
+  <div class="layer">
+    <div class="layer-label">Caller</div>
+    <div class="box caller">
+      <div class="name">Console</div>
+      <div class="desc">main() — User input</div>
+    </div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="layer">
+    <div class="layer-label">Service Layer</div>
+    <div class="box service">
+      <div class="name">TransferServiceImpl</div>
+      <div class="desc">Business logic</div>
+    </div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="layer">
+    <div class="layer-label">Repository Layer</div>
+    <div class="box repo">
+      <div class="name">JdbcAccountRepository</div>
+      <div class="desc">Data access (JDBC)</div>
+    </div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="layer">
+    <div class="layer-label">Persistence</div>
+    <div class="box db">
+      <div class="name">Database</div>
+      <div class="desc">SQL</div>
+    </div>
+  </div>
+</div>
+
+<!-- Dependency Diagram -->
+<div class="dep-diagram">
+  <h2>Dependency — Tight Coupling</h2>
+  <br>
+  <div class="dep-flow">
+    <div class="dep-box dep-concrete">
+      <div class="cls">TransferServiceImpl</div>
+      <div class="detail">concrete class</div>
+    </div>
+    <div class="dep-arrow-container">
+      <div class="dep-arrow">— new →</div>
+      <div class="dep-arrow-label">creates directly</div>
+    </div>
+    <div class="dep-box dep-concrete-repo">
+      <div class="cls">JdbcAccountRepository</div>
+      <div class="detail">concrete class</div>
+    </div>
+  </div>
+</div>
+
+<!-- Code Snapshot -->
+<div class="code-section">
+  <h2>The Problem in Code</h2>
+  <div class="code-block">
+    <span class="keyword">public void</span> <span class="type">transfer</span>(<span class="keyword">double</span> amount, String from, String to) {<br>
+    <br>
+    <span class="bad">
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight-label">// ❌ Problem: creating dependency inside the method</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="type">JdbcAccountRepository</span> repo = <span class="keyword">new</span> <span class="type">JdbcAccountRepository</span>();
+    </span><br>
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;Account fromAcc = repo.loadAccount(from);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;Account toAcc = repo.loadAccount(to);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// ... transfer logic ...</span><br>
+    }
+  </div>
+</div>
+
+<!-- Problems -->
+<div class="problems">
+  <h2>Problems</h2>
+  <div class="problem">
+    <h3>1. Tight Coupling (Design Issue)</h3>
+    <p>
+      <code>TransferServiceImpl</code> directly depends on <code>JdbcAccountRepository</code>.<br>
+      Cannot swap to JPA, MongoDB, or mock without changing service code.<br>
+      Unit testing is difficult — can't isolate the service layer.
+    </p>
+  </div>
+  <div class="problem">
+    <h3>2. Wasteful Object Creation (Performance Issue)</h3>
+    <p>
+      Every <code>transfer()</code> call creates a <strong>new</strong> <code>JdbcAccountRepository</code>.<br>
+      Wastes memory, connections, and increases latency.
+    </p>
+  </div>
+  <div class="problem">
+    <h3>3. Root Cause</h3>
+    <p>
+      The dependent (<code>TransferServiceImpl</code>) creates its own dependency using <code>new</code>.<br>
+      It controls <strong>what</strong> to use and <strong>when</strong> to create — no flexibility.
+    </p>
+  </div>
+</div>
+
+<!-- Impact -->
+<div class="impact">
+  <h2>Impact</h2>
+  <div class="impact-grid">
+    <div class="impact-item">
+      <div class="impact-icon">🔒</div>
+      <div class="impact-text"><strong>Locked to JDBC</strong><br>Can't switch to JPA or any other impl</div>
+    </div>
+    <div class="impact-item">
+      <div class="impact-icon">🧪</div>
+      <div class="impact-text"><strong>Hard to Test</strong><br>Can't mock the repository</div>
+    </div>
+    <div class="impact-item">
+      <div class="impact-icon">🐌</div>
+      <div class="impact-text"><strong>Slow & Wasteful</strong><br>New object per method call</div>
+    </div>
+    <div class="impact-item">
+      <div class="impact-icon">🔧</div>
+      <div class="impact-text"><strong>Hard to Maintain</strong><br>Change repo = change service code</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">money-transfer-system-v1 | Next: v2 solves these with Interfaces + Factory + Constructor DI</div>
+
+</body>
+</html>
