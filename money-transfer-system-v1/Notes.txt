@@ -1,0 +1,5 @@
+
+
+how to run this Application?
+-----------------------------
+mvn clean compile exec:java -Dexec.mainClass="com.npci.MoneyTransferSystem"
