@@ -1,32 +1,18 @@
 
 
 
-taskkill /F /IM "Docker Desktop Installer.exe"
-taskkill /F /IM "Docker Desktop.exe"
-
-
-Remove-Item "C:\Program Files\Docker" -Recurse -Force -ErrorAction SilentlyContinue
-
-Remove-Item "C:\ProgramData\Docker" -Recurse -Force -ErrorAction SilentlyContinue
-
-Remove-Item "C:\ProgramData\DockerDesktop" -Recurse -Force -ErrorAction SilentlyContinue
-
-Remove-Item "$env:LOCALAPPDATA\Docker" -Recurse -Force -ErrorAction SilentlyContinue
-
-Remove-Item "$env:APPDATA\Docker" -Recurse -Force -ErrorAction SilentlyContinue
-
-Remove-Item "$env:APPDATA\Docker Desktop" -Recurse -Force -ErrorAction SilentlyContinue
-
-
-mkdir "C:\ProgramData\DockerDesktop"
-
-
-takeown /F "C:\ProgramData\DockerDesktop" /R /D Y
-
-icacls "C:\ProgramData\DockerDesktop" /inheritance:e
-
-icacls "C:\ProgramData\DockerDesktop" /grant "Administrators:(OI)(CI)F" /T
-
-icacls "C:\ProgramData\DockerDesktop" /setowner "Administrators" /T
-
+Remove-Item "C:\ProgramData\DockerDesktop" -Force -Recurse -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path "C:\ProgramData\DockerDesktop"
+icacls "C:\ProgramData\DockerDesktop" /setowner "Administrators"
+icacls "C:\ProgramData\DockerDesktop" /grant Administrators:F /T
 (Get-Acl "C:\ProgramData\DockerDesktop").Owner
+
+
+cmd /c 'icacls "C:\ProgramData\DockerDesktop" /setowner "BUILTIN\Administrators"'
+
+
+cd C:\Temp
+.\DockerDesktopInstaller.exe install
+
+
+(Get-Acl "C:\ProgramData").Owner
