@@ -1,4 +1,5 @@
 /Users/nag/chn-batch3/money-transfer-system-v3/src/main/java/com/npci/MoneyTransferSystem.java
+/Users/nag/chn-batch3/money-transfer-system-v3/src/main/java/com/npci/config/MtsConfiguration.java
 /Users/nag/chn-batch3/money-transfer-system-v3/src/main/java/com/npci/model/Account.java
 /Users/nag/chn-batch3/money-transfer-system-v3/src/main/java/com/npci/notification/EmailNotificationService.java
 /Users/nag/chn-batch3/money-transfer-system-v3/src/main/java/com/npci/notification/NotificationService.java

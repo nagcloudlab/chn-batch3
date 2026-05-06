@@ -1,11 +1,15 @@
 package com.npci.repository;
 
+import org.springframework.stereotype.Repository;
+
 import com.npci.model.Account;
 
 /**
  * author: npci-dev1/team1
  */
 
+// @Component("jpaAccountRepository")
+@Repository("jpaAccountRepository")
 public class JpaAccountRepository implements AccountRepository {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JpaAccountRepository.class);

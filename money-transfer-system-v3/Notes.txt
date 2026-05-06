@@ -2,7 +2,7 @@
 
 how to run  Application?
 -----------------------------
-mvn clean compile exec:java -Dexec.mainClass="com.npci.MoneyTransferSystem"
+mvn -Duser.timezone='UTC' clean compile exec:java -Dexec.mainClass="com.npci.MoneyTransferSystem"
 
 
 step-1 : know the data-model
@@ -94,3 +94,29 @@ postgres database setup with docker
 docker run --name postgres-container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres -e POSTGRES_DB=mydatabase -p 5432:5432 -d postgres:latest
 docker ps
 docker exec -it postgres-container psql -U postgres -d mydatabase
+
+
+
+
+------------------------------------------------
+spring framework - DI ( wiring dependencies )
+------------------------------------------------
+
+
+- @Component
+   - @Repository => specialization of @Component for persistence layer
+     - JdbcAccountRepository
+   - @Service => specialization of @Component for service layer
+     - TransferServiceImpl
+   - @Controller => specialization of @Component for presentation layer
+     - TransferController
+   - @Configuration => specialization of @Component for configuration classes
+     - MtsConfiguration
+
+- @Autowired 
+   - constructor injection (recommended) 
+   - setter injection
+   - field injection (not recommended)
+
+   @Autowired no need to be used on constructor if there is only one constructor. 
+   Spring will automatically use it for injection.

@@ -1,5 +1,10 @@
 package com.npci.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 import com.npci.model.Account;
 import com.npci.notification.NotificationService;
 import com.npci.repository.AccountRepository;
@@ -8,18 +13,27 @@ import com.npci.repository.AccountRepository;
  * author: npci-dev1/team1
  */
 
+// @Component("transferService")
+@Service("transferService")
 public class TransferServiceImpl implements TransferService {
 
    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TransferServiceImpl.class);
 
-   private final AccountRepository accountRepository;
-   private final NotificationService notification;
+   private AccountRepository accountRepository;
+   private NotificationService notification;
 
-   public TransferServiceImpl(AccountRepository accountRepository, NotificationService notification) {
+   // @Autowired
+   public TransferServiceImpl(@Qualifier("jdbcAccountRepository") AccountRepository accountRepository) {
       this.accountRepository = accountRepository;
+      logger.info("TransferServiceImpl initialized with AccountRepository: {}",
+            accountRepository.getClass().getSimpleName());
+   }
+
+   @Autowired(required = false)
+   public void setNotification(NotificationService notification) {
       this.notification = notification;
-      logger.info("TransferServiceImpl initialized with AccountRepository: {} and Notification: {}",
-            accountRepository.getClass().getSimpleName(), notification.getClass().getSimpleName());
+      logger.info("NotificationService injected: {}",
+            notification.getClass().getSimpleName());
    }
 
    public void transfer(double amount, String fromAccount, String toAccount) {
@@ -54,8 +68,10 @@ public class TransferServiceImpl implements TransferService {
       accountRepository.updateAccount(to);
       logger.info("Transfer of ${} from {} to {} completed successfully.", amount, fromAccount, toAccount);
       // Send notification
-      notification.sendNotification(
-            "Transfer of $" + amount + " from " + fromAccount + " to " + toAccount + " completed successfully.");
+      if (notification != null) {
+         notification.sendNotification(
+               "Transfer of $" + amount + " from " + fromAccount + " to " + toAccount + " completed successfully.");
+      }
    }
 
 }

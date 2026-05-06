@@ -2,8 +2,9 @@ package com.npci;
 
 import org.slf4j.Logger;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import com.npci.config.MtsConfiguration;
 import com.npci.service.TransferService;
 
 public class MoneyTransferSystem {
@@ -21,7 +22,8 @@ public class MoneyTransferSystem {
         // -------------------------------------------------
         logger.info("-".repeat(50));
         ConfigurableApplicationContext applicationContext = null;
-        applicationContext = new ClassPathXmlApplicationContext("mts-config.xml");
+        // applicationContext = new ClassPathXmlApplicationContext("mts-config.xml");
+        applicationContext = new AnnotationConfigApplicationContext(MtsConfiguration.class);
         logger.info("Money Transfer System initialized.");
         logger.info("-".repeat(50));
 

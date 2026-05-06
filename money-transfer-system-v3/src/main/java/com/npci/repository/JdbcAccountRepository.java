@@ -4,17 +4,24 @@ import java.sql.Connection;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
+
 import com.npci.model.Account;
 
 /**
  * author: npci-dev1/team1
  */
 
+// @Component("jdbcAccountRepository")
+@Repository("jdbcAccountRepository")
 public class JdbcAccountRepository implements AccountRepository {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcAccountRepository.class);
     private final DataSource dataSource;
 
+    @Autowired
     public JdbcAccountRepository(DataSource dataSource) {
         this.dataSource = dataSource;
         // Initialize JDBC connection here

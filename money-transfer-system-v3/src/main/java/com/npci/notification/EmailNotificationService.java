@@ -1,7 +1,11 @@
 package com.npci.notification;
 
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
+// @Component("emailNotificationService")
+@Service("emailNotificationService")
 public class EmailNotificationService implements NotificationService {
 
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(EmailNotificationService.class);

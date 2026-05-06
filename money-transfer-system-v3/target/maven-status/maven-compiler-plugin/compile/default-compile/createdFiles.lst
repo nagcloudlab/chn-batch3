@@ -1,3 +1,4 @@
+com/npci/config/MtsConfiguration.class
 com/npci/model/Account.class
 com/npci/service/TransferServiceImpl.class
 com/npci/repository/JpaAccountRepository.class
