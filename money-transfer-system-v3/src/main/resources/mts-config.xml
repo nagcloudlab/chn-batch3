@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           https://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context
+           https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- Hikari Config -->
+    <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+        <property name="driverClassName" value="org.postgresql.Driver"/>
+        <property name="jdbcUrl" value="jdbc:postgresql://localhost:5432/mydatabase"/>
+        <property name="username" value="postgres"/>
+        <property name="password" value="mysecretpassword"/>
+        <property name="maximumPoolSize" value="10"/>
+        <property name="minimumIdle" value="2"/>
+        <property name="idleTimeout" value="30000"/>
+        <property name="connectionTimeout" value="20000"/>
+    </bean>
+
+    <!-- Hikari DataSource -->
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <constructor-arg ref="hikariConfig"/>
+    </bean>
+
+      <bean id="jdbcAccountRepository" class="com.npci.repository.JdbcAccountRepository">
+        <constructor-arg ref="dataSource"/>
+      </bean>
+      <bean id="jpaAccountRepository" class="com.npci.repository.JpaAccountRepository"/>
+      <bean id="emailNotificationService" class="com.npci.notification.EmailNotificationService"/>
+      <bean id="transferService" class="com.npci.service.TransferServiceImpl">
+        <constructor-arg ref="jdbcAccountRepository"/>
+        <constructor-arg ref="emailNotificationService"/>
+      </bean>
+
+</beans>

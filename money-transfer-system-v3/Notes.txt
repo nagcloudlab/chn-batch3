@@ -1,0 +1,96 @@
+
+
+how to run  Application?
+-----------------------------
+mvn clean compile exec:java -Dexec.mainClass="com.npci.MoneyTransferSystem"
+
+
+step-1 : know the data-model
+-----------------------------
+1. Account
+
+step-2 : know the layer(s) of the application
+-----------------------------
+1. Repository Layer => persistence logic
+    - JdbcAccountRepository => CRUD operations on Account
+2. Service Layer => processing logic
+    - TransferService => money transfer logic
+3. Controller Layer => request/response logic
+    - TransferController => money transfer request/response logic
+
+----
+
+
+v1 Problems
+============
+
+1. Design issue — tight coupling
+   - TransferServiceImpl is tightly coupled to JdbcAccountRepository
+   - Why it hurts:
+     => unit-testing is difficult => bug-fix slow, dev-slow
+     => can't extend with new features easily (e.g. swap JDBC with JPA)
+
+2. Performance issue — wasteful object creation
+   - Every transfer() call creates a new JdbcAccountRepository instance
+   - Why it hurts:
+     => resource usage high (memory, connections)
+     => latency high => not responsive to user
+
+
+Root cause
+==========
+   => Dependent creates its own dependency ( "new" inside the class )
+
+
+v2 Solutions (step by step)
+============================
+
+Step 1: Introduce interface (AccountRepository)
+   - Code depends on abstraction, not concrete class
+   - Enables multiple implementations (Jdbc, Jpa, etc.)
+   - Follows OCP — open for extension, closed for modification
+
+Step 2: Use Factory to create (AccountRepositoryFactory)
+   - Don't create dependency in dependent's home
+   - Get it from a factory instead
+   - Solves: tight coupling to a specific implementation
+
+Step 3: Use Dependency Injection (Constructor Injection)
+   - Don't create AND don't lookup from factory directly
+   - Let a third-party inject the dependency
+   - This is Inversion of Control (IoC) — the dependent gives up control of creating/finding its dependency
+
+   Types of DI:
+     - Constructor injection => for required dependencies
+     - Setter injection     => for optional dependencies
+
+
+OOP Concepts
+=============
+   - Abstraction    : what to do?    ( interface )
+   - Encapsulation  : how to do?     ( implementation hidden )
+   - Inheritance    : reuse code     ( is-a relationship )
+   - Polymorphism   : one name, many forms ( overloading / overriding )
+
+
+SOLID Principles
+=================
+   S — Single Responsibility  : a class should have only one reason to change
+   O — Open-Closed            : open for extension, closed for modification
+   L — Liskov Substitution    : subtypes must be substitutable for their base types
+   I — Interface Segregation  : clients should not depend on interfaces they don't use
+   D — Dependency Inversion   : high-level modules should not depend on low-level modules;
+                                both should depend on abstractions
+
+   => v2 applies: O, L, D
+
+
+
+
+
+postgres database setup with docker 
+------------------------------------
+
+docker run --name postgres-container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres -e POSTGRES_DB=mydatabase -p 5432:5432 -d postgres:latest
+docker ps
+docker exec -it postgres-container psql -U postgres -d mydatabase

@@ -1,13 +1,10 @@
 package com.npci;
 
 import org.slf4j.Logger;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.npci.notification.EmailNotification;
-import com.npci.notification.Notification;
-import com.npci.repository.AccountRepository;
-import com.npci.repository.AccountRepositoryFactory;
 import com.npci.service.TransferService;
-import com.npci.service.TransferServiceImpl;
 
 public class MoneyTransferSystem {
 
@@ -23,18 +20,15 @@ public class MoneyTransferSystem {
         // (in v3, Spring container will do this for us)
         // -------------------------------------------------
         logger.info("-".repeat(50));
-        logger.info("Initializing components...");
-        // Step 1: Create dependencies using factory
-        AccountRepository jdbcAccountRepository = AccountRepositoryFactory.getAccountRepository("jdbc");
-        // AccountRepository jpaAccountRepository =
-        // AccountRepositoryFactory.getAccountRepository("jpa");
-        // Step 2: Inject dependency via constructor (DI)
-        Notification emailNotification = new EmailNotification();
-        TransferService transferService = new TransferServiceImpl(jdbcAccountRepository, emailNotification);
+        ConfigurableApplicationContext applicationContext = null;
+        applicationContext = new ClassPathXmlApplicationContext("mts-config.xml");
         logger.info("Money Transfer System initialized.");
         logger.info("-".repeat(50));
 
+        // -------------------------------------------------
         // use phase
+        // -------------------------------------------------
+        TransferService transferService = applicationContext.getBean("transferService", TransferService.class);
         try {
             transferService.transfer(100.0, "ACC123", "ACC456");
             logger.info("-".repeat(30));
@@ -42,11 +36,15 @@ public class MoneyTransferSystem {
         } catch (IllegalArgumentException e) {
             logger.error("Transfer failed: {}", e.getMessage());
         }
-
+        // -------------------------------------------------
         // shutdown phase
+        // -------------------------------------------------
         logger.info("-".repeat(50));
         logger.info("Shutting down Money Transfer System...");
         logger.info("-".repeat(50));
+        if (applicationContext != null) {
+            applicationContext.close();
+        }
 
     }
 }
