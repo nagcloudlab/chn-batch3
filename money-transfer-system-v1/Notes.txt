@@ -1,5 +1,20 @@
 
 
-how to run this Application?
+how to run  Application?
 -----------------------------
 mvn clean compile exec:java -Dexec.mainClass="com.npci.MoneyTransferSystem"
+
+
+
+step-1 : know the data-model
+-----------------------------
+1. Account
+
+step-2 : know the layer(s) of the application
+-----------------------------
+1. Repository Layer => persistence logic
+    - JdbcAccountRepository => CRUD operations on Account
+2. Service Layer => processing logic
+    - TransferService => money transfer logic
+3. Controller Layer => request/response logic
+    - TransferController => money transfer request/response logic
