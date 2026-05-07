@@ -1,0 +1,195 @@
+
+
+how to run  Application?
+-----------------------------
+mvn -Duser.timezone='UTC' clean compile exec:java -Dexec.mainClass="com.npci.MoneyTransferSystem"
+
+
+step-1 : know the data-model
+-----------------------------
+1. Account
+
+step-2 : know the layer(s) of the application
+-----------------------------
+1. Repository Layer => persistence logic
+    - JdbcAccountRepository => CRUD operations on Account
+2. Service Layer => processing logic
+    - TransferService => money transfer logic
+3. Controller Layer => request/response logic
+    - TransferController => money transfer request/response logic
+
+----
+
+
+v1 Problems
+============
+
+1. Design issue — tight coupling
+   - TransferServiceImpl is tightly coupled to JdbcAccountRepository
+   - Why it hurts:
+     => unit-testing is difficult => bug-fix slow, dev-slow
+     => can't extend with new features easily (e.g. swap JDBC with JPA)
+
+2. Performance issue — wasteful object creation
+   - Every transfer() call creates a new JdbcAccountRepository instance
+   - Why it hurts:
+     => resource usage high (memory, connections)
+     => latency high => not responsive to user
+
+
+Root cause
+==========
+   => Dependent creates its own dependency ( "new" inside the class )
+
+
+v2 Solutions (step by step)
+============================
+
+Step 1: Introduce interface (AccountRepository)
+   - Code depends on abstraction, not concrete class
+   - Enables multiple implementations (Jdbc, Jpa, etc.)
+   - Follows OCP — open for extension, closed for modification
+
+Step 2: Use Factory to create (AccountRepositoryFactory)
+   - Don't create dependency in dependent's home
+   - Get it from a factory instead
+   - Solves: tight coupling to a specific implementation
+
+Step 3: Use Dependency Injection (Constructor Injection)
+   - Don't create AND don't lookup from factory directly
+   - Let a third-party inject the dependency
+   - This is Inversion of Control (IoC) — the dependent gives up control of creating/finding its dependency
+
+   Types of DI:
+     - Constructor injection => for required dependencies
+     - Setter injection     => for optional dependencies
+
+
+OOP Concepts
+=============
+   - Abstraction    : what to do?    ( interface )
+   - Encapsulation  : how to do?     ( implementation hidden )
+   - Inheritance    : reuse code     ( is-a relationship )
+   - Polymorphism   : one name, many forms ( overloading / overriding )
+
+
+SOLID Principles
+=================
+   S — Single Responsibility  : a class should have only one reason to change
+   O — Open-Closed            : open for extension, closed for modification
+   L — Liskov Substitution    : subtypes must be substitutable for their base types
+   I — Interface Segregation  : clients should not depend on interfaces they don't use
+   D — Dependency Inversion   : high-level modules should not depend on low-level modules;
+                                both should depend on abstractions
+
+   => v2 applies: O, L, D
+
+
+
+
+
+postgres database setup with docker 
+------------------------------------
+
+docker run --name postgres-container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres -e POSTGRES_DB=mydatabase -p 5432:5432 -d postgres:latest
+docker ps
+docker exec -it postgres-container psql -U postgres -d mydatabase
+
+
+
+
+------------------------------------------------
+spring framework core concepts
+
+- DI ( wiring dependencies )
+------------------------------------------------
+
+1. @Bean
+
+2. @Component
+   - @Repository => specialization of @Component for persistence layer
+     - JdbcAccountRepository
+   - @Service => specialization of @Component for service layer
+     - TransferServiceImpl
+   - @Controller => specialization of @Component for presentation layer
+     - TransferController
+   - @Configuration => specialization of @Component for configuration classes
+     - MtsConfiguration
+
+3. @Autowired 
+   - constructor injection (recommended) 
+   - setter injection
+   - field injection (not recommended)
+
+   Note: @Autowired no need to be used on constructor if there is only one constructor. 
+   Spring will automatically use it for injection.
+
+4. @Primary
+   - when multiple beans of the same type exist, use @Primary to specify which one to inject by default
+   - e.g. @Primary on JdbcAccountRepository to make it the default AccountRepository bean
+
+5. @Qualifier
+   - when multiple beans of the same type exist, use @Qualifier to specify which one to inject
+   - e.g. @Qualifier("jdbcAccountRepository") to specify the JdbcAccountRepository bean
+
+6. bean/component scope - @Scope
+   - singleton (default) => one instance per Spring container
+   - prototype => new instance every time requested
+   - request => one instance per HTTP request (web applications)
+   - session => one instance per HTTP session (web applications)   
+
+7. @Lazy
+   - delay bean initialization until it's needed
+   - can improve startup time and resource usage if the bean is expensive to create and not always needed
+
+8. @PostConstruct
+   - method annotated with @PostConstruct will be called after the bean is initialized and dependencies are injected
+   - useful for any initialization logic that needs to run after the bean is fully set up   
+
+9. @PreDestroy
+   - method annotated with @PreDestroy will be called before the bean is destroyed by the container
+   - useful for any cleanup logic that needs to run before the bean is removed from the container
+
+10. @Value
+   - inject values from properties files or environment variables into fields or method parameters
+   - e.g. @Value("${db.url}") to inject the value of "db.url" from the properties file
+
+11. @PropertySource
+   - specify the location of properties files to load into the Spring environment
+   - e.g. @PropertySource("classpath:application.properties") to load properties from the classpath
+
+
+12. @Profile
+   - specify that a bean should only be created in certain profiles (e.g. dev, prod)
+   - e.g. @Profile("dev") to only create the bean when the "dev" profile is active
+   - activate profiles: applicationContext.getEnvironment().setActiveProfiles("dev")
+   - use case: JdbcAccountRepository for "dev", JpaAccountRepository for "prod"
+
+13. @Conditional
+   - create beans only when a custom condition is met at runtime
+   - implement the Condition interface and override matches() method
+   - e.g. @Conditional(PostgresDriverCondition.class) — only create DataSource if PostgreSQL driver is on classpath
+   - more flexible than @Profile — you define arbitrary logic
+
+14. @EventListener
+   - method annotated with @EventListener will be called when a matching ApplicationEvent is published
+   - enables loose coupling — publisher doesn't know about listeners
+   - e.g. EmailNotificationService listens for TransferCompletedEvent
+   - to publish: applicationEventPublisher.publishEvent(new TransferCompletedEvent(...))
+   - custom events extend ApplicationEvent
+
+15. @Value with SpEL (Spring Expression Language)
+   - beyond simple property injection, @Value supports SpEL expressions using #{...}
+   - e.g. @Value("#{T(java.lang.Runtime).getRuntime().availableProcessors()}") => call static methods
+   - e.g. @Value("#{systemProperties['user.home']}") => read system properties
+   - e.g. @Value("#{mtsConfig.dbUrl}") => read a property from another bean
+   - syntax: ${...} for property placeholders, #{...} for SpEL expressions
+
+
+Spring Annotations Summary (covered so far)
+=============================================
+   DI & Wiring       : @Bean, @Component, @Autowired, @Primary, @Qualifier
+   Stereotypes        : @Repository, @Service, @Controller, @Configuration
+   Scope & Lifecycle  : @Scope, @Lazy, @PostConstruct, @PreDestroy
+   Configuration      : @Value, @PropertySource, @Profile, @Conditional
+   Events             : @EventListener, ApplicationEvent, ApplicationEventPublisher

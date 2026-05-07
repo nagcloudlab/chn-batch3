@@ -14,6 +14,8 @@ import com.npci.repository.AccountRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
+// POJO
+
 /**
  * author: npci-dev1/team1
  */
@@ -77,17 +79,16 @@ public class TransferServiceImpl implements TransferService {
    // Exception handling..
    // Exporting metrics..
    // ...
+
+   public void m1() {
+      logger.info("Executing m1 method.");
+   }
+
    public void transfer(double amount, String fromAccount, String toAccount) {
+
       logger.info("Initiating transfer of ${} from {} to {}", amount, fromAccount, toAccount);
 
-      // Approach 1 (v1): Don't create dependency here — tight coupling!
-      // JdbcAccountRepository accountRepository = new JdbcAccountRepository();
-
-      // Approach 2: Don't lookup from factory directly — still a hidden dependency!
-      // AccountRepository accountRepository =
-      // AccountRepositoryFactory.getAccountRepository("jpa");
-
-      // Approach 3 (v2): Use injected dependency (via constructor) — loose coupling!
+      m1();
 
       // Load fromAccount details
       Account from = accountRepository.loadAccount(fromAccount);
@@ -109,6 +110,12 @@ public class TransferServiceImpl implements TransferService {
       accountRepository.updateAccount(to);
       logger.info("Transfer of ${} from {} to {} completed successfully.", amount, fromAccount, toAccount);
 
+      boolean isFailed = false; // Simulate transfer failure for testing rollback
+      if (isFailed) {
+         logger.error("Simulated transfer failure. Throwing exception to trigger rollback.");
+         throw new RuntimeException("Simulated transfer failure");
+      }
+
       // Send notification
       if (notification != null) {
          // notification.sendNotification(
@@ -118,6 +125,7 @@ public class TransferServiceImpl implements TransferService {
 
       // Publish transfer event
       eventPublisher.publishEvent(new TransferCompletedEvent(this, amount, fromAccount, toAccount));
+
    }
 
 }

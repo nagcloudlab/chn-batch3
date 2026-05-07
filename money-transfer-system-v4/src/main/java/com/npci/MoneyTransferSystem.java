@@ -29,32 +29,19 @@ public class MoneyTransferSystem {
         applicationContext.getEnvironment().setActiveProfiles("dev");
         applicationContext.refresh(); // refresh context to apply new profile
         logger.info("Money Transfer System initialized.");
-        logger.info("-".repeat(50));
-
         // log active profiles
         String[] activeProfiles = applicationContext.getEnvironment().getActiveProfiles();
         logger.info("Active Spring Profiles: {}", String.join(", ", activeProfiles));
+        logger.info("-".repeat(50));
 
         // -------------------------------------------------
         // use phase
         // -------------------------------------------------
 
-        // prototupe scope test
-        // AccountRepository accountRepository1 =
-        // applicationContext.getBean("jdbcAccountRepository",
-        // AccountRepository.class);
-        // AccountRepository accountRepository2 =
-        // applicationContext.getBean("jdbcAccountRepository",
-        // AccountRepository.class);
-        // logger.info("accountRepository1 == accountRepository2 ? {}",
-        // accountRepository1 == accountRepository2);
-
-        // Lazy init
-        // AppCache appCache1 = applicationContext.getBean(AppCache.class);
-
         TransferService transferService = applicationContext.getBean("transferService", TransferService.class);
-
+        logger.info(transferService.getClass().getName());
         try {
+            // transferService.m1();
             transferService.transfer(100.0, "ACC123", "ACC456");
             // logger.info("-".repeat(30));
             // transferService.transfer(200.0, "ACC123", "ACC789");
