@@ -5,7 +5,9 @@ import java.sql.Connection;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 
 import com.npci.model.Account;
@@ -16,6 +18,9 @@ import com.npci.model.Account;
 
 // @Component("jdbcAccountRepository")
 @Repository("jdbcAccountRepository")
+@Primary
+@Scope("singleton")
+@Profile("dev")
 public class JdbcAccountRepository implements AccountRepository {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcAccountRepository.class);

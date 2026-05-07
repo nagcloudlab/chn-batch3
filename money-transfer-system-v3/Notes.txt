@@ -99,11 +99,14 @@ docker exec -it postgres-container psql -U postgres -d mydatabase
 
 
 ------------------------------------------------
-spring framework - DI ( wiring dependencies )
+spring framework core concepts
+
+- DI ( wiring dependencies )
 ------------------------------------------------
 
+1. @Bean
 
-- @Component
+2. @Component
    - @Repository => specialization of @Component for persistence layer
      - JdbcAccountRepository
    - @Service => specialization of @Component for service layer
@@ -113,10 +116,80 @@ spring framework - DI ( wiring dependencies )
    - @Configuration => specialization of @Component for configuration classes
      - MtsConfiguration
 
-- @Autowired 
+3. @Autowired 
    - constructor injection (recommended) 
    - setter injection
    - field injection (not recommended)
 
-   @Autowired no need to be used on constructor if there is only one constructor. 
+   Note: @Autowired no need to be used on constructor if there is only one constructor. 
    Spring will automatically use it for injection.
+
+4. @Primary
+   - when multiple beans of the same type exist, use @Primary to specify which one to inject by default
+   - e.g. @Primary on JdbcAccountRepository to make it the default AccountRepository bean
+
+5. @Qualifier
+   - when multiple beans of the same type exist, use @Qualifier to specify which one to inject
+   - e.g. @Qualifier("jdbcAccountRepository") to specify the JdbcAccountRepository bean
+
+6. bean/component scope - @Scope
+   - singleton (default) => one instance per Spring container
+   - prototype => new instance every time requested
+   - request => one instance per HTTP request (web applications)
+   - session => one instance per HTTP session (web applications)   
+
+7. @Lazy
+   - delay bean initialization until it's needed
+   - can improve startup time and resource usage if the bean is expensive to create and not always needed
+
+8. @PostConstruct
+   - method annotated with @PostConstruct will be called after the bean is initialized and dependencies are injected
+   - useful for any initialization logic that needs to run after the bean is fully set up   
+
+9. @PreDestroy
+   - method annotated with @PreDestroy will be called before the bean is destroyed by the container
+   - useful for any cleanup logic that needs to run before the bean is removed from the container
+
+10. @Value
+   - inject values from properties files or environment variables into fields or method parameters
+   - e.g. @Value("${db.url}") to inject the value of "db.url" from the properties file
+
+11. @PropertySource
+   - specify the location of properties files to load into the Spring environment
+   - e.g. @PropertySource("classpath:application.properties") to load properties from the classpath
+
+
+12. @Profile
+   - specify that a bean should only be created in certain profiles (e.g. dev, prod)
+   - e.g. @Profile("dev") to only create the bean when the "dev" profile is active
+   - activate profiles: applicationContext.getEnvironment().setActiveProfiles("dev")
+   - use case: JdbcAccountRepository for "dev", JpaAccountRepository for "prod"
+
+13. @Conditional
+   - create beans only when a custom condition is met at runtime
+   - implement the Condition interface and override matches() method
+   - e.g. @Conditional(PostgresDriverCondition.class) — only create DataSource if PostgreSQL driver is on classpath
+   - more flexible than @Profile — you define arbitrary logic
+
+14. @EventListener
+   - method annotated with @EventListener will be called when a matching ApplicationEvent is published
+   - enables loose coupling — publisher doesn't know about listeners
+   - e.g. EmailNotificationService listens for TransferCompletedEvent
+   - to publish: applicationEventPublisher.publishEvent(new TransferCompletedEvent(...))
+   - custom events extend ApplicationEvent
+
+15. @Value with SpEL (Spring Expression Language)
+   - beyond simple property injection, @Value supports SpEL expressions using #{...}
+   - e.g. @Value("#{T(java.lang.Runtime).getRuntime().availableProcessors()}") => call static methods
+   - e.g. @Value("#{systemProperties['user.home']}") => read system properties
+   - e.g. @Value("#{mtsConfig.dbUrl}") => read a property from another bean
+   - syntax: ${...} for property placeholders, #{...} for SpEL expressions
+
+
+Spring Annotations Summary (covered so far)
+=============================================
+   DI & Wiring       : @Bean, @Component, @Autowired, @Primary, @Qualifier
+   Stereotypes        : @Repository, @Service, @Controller, @Configuration
+   Scope & Lifecycle  : @Scope, @Lazy, @PostConstruct, @PreDestroy
+   Configuration      : @Value, @PropertySource, @Profile, @Conditional
+   Events             : @EventListener, ApplicationEvent, ApplicationEventPublisher

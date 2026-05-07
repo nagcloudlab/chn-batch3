@@ -2,33 +2,57 @@ package com.npci.config;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-@Configuration
+@Configuration("mtsConfig")
+@PropertySource("classpath:application.properties")
 @ComponentScan(basePackages = "com.npci")
 public class MtsConfiguration {
+
+    @Value("${spring.datasource.url}")
+    private String dbUrl;
+    @Value("${spring.datasource.username}")
+    private String dbUsername;
+    @Value("${spring.datasource.password}")
+    private String dbPassword;
+    @Value("${spring.datasource.hikari.maximum-pool-size:10}")
+    private int maxPoolSize;
+    @Value("${spring.datasource.hikari.minimum-idle:2}")
+    private int minIdle;
+    @Value("${spring.datasource.hikari.idle-timeout:30000}")
+    private long idleTimeout;
+    @Value("${spring.datasource.hikari.connection-timeout:20000}")
+    private long connectionTimeout;
+
+    public String getDbUrl() {
+        return dbUrl;
+    }
 
     @Bean
     public HikariConfig hikariConfig() {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.postgresql.Driver");
-        config.setJdbcUrl("jdbc:postgresql://localhost:5432/mydatabase");
-        config.setUsername("postgres");
-        config.setPassword("mysecretpassword");
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setIdleTimeout(30000);
-        config.setConnectionTimeout(20000);
+        config.setJdbcUrl(dbUrl);
+        config.setUsername(dbUsername);
+        config.setPassword(dbPassword);
+        config.setMaximumPoolSize(maxPoolSize);
+        config.setMinimumIdle(minIdle);
+        config.setIdleTimeout(idleTimeout);
+        config.setConnectionTimeout(connectionTimeout);
         return config;
     }
 
     @Bean
-    public DataSource dataSource(HikariConfig hikariConfig) {
+    @Conditional(PostgresDriverCondition.class)
+    public DataSource dataSourceChn(HikariConfig hikariConfig) {
         return new HikariDataSource(hikariConfig);
     }
 

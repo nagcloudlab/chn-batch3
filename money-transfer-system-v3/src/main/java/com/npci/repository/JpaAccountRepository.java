@@ -1,5 +1,7 @@
 package com.npci.repository;
 
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 
 import com.npci.model.Account;
@@ -10,6 +12,8 @@ import com.npci.model.Account;
 
 // @Component("jpaAccountRepository")
 @Repository("jpaAccountRepository")
+@Scope("singleton")
+@Profile("prod")
 public class JpaAccountRepository implements AccountRepository {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JpaAccountRepository.class);

@@ -1,13 +1,18 @@
 package com.npci.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.npci.event.TransferCompletedEvent;
 import com.npci.model.Account;
 import com.npci.notification.NotificationService;
 import com.npci.repository.AccountRepository;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 /**
  * author: npci-dev1/team1
@@ -15,16 +20,20 @@ import com.npci.repository.AccountRepository;
 
 // @Component("transferService")
 @Service("transferService")
+@Scope("singleton")
 public class TransferServiceImpl implements TransferService {
 
    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TransferServiceImpl.class);
 
    private AccountRepository accountRepository;
    private NotificationService notification;
+   private ApplicationEventPublisher eventPublisher;
 
    // @Autowired
-   public TransferServiceImpl(@Qualifier("jdbcAccountRepository") AccountRepository accountRepository) {
+   public TransferServiceImpl(/* @Qualifier("jpaAccountRepository") */ AccountRepository accountRepository,
+         ApplicationEventPublisher eventPublisher) {
       this.accountRepository = accountRepository;
+      this.eventPublisher = eventPublisher;
       logger.info("TransferServiceImpl initialized with AccountRepository: {}",
             accountRepository.getClass().getSimpleName());
    }
@@ -34,6 +43,30 @@ public class TransferServiceImpl implements TransferService {
       this.notification = notification;
       logger.info("NotificationService injected: {}",
             notification.getClass().getSimpleName());
+   }
+
+   @Value("#{T(java.lang.Runtime).getRuntime().availableProcessors()}")
+   int numberOfCpuCores;
+
+   @Value("#{systemProperties['user.home']}")
+   private String userHome;
+
+   @Value("#{mtsConfig.dbUrl}")
+   private String dbUrl;
+
+   @PostConstruct
+   public void init() {
+      logger.info("TransferServiceImpl init method called.");
+      // Avaliable Cpu cores int cpuCores =
+      // Runtime.getRuntime().availableProcessors();
+      logger.info("Available CPU cores: {}", numberOfCpuCores);
+      logger.info("User home directory: {}", userHome);
+      logger.info("Database URL from MtsConfiguration: {}", dbUrl);
+   }
+
+   @PreDestroy
+   public void cleanup() {
+      logger.info("TransferServiceImpl cleanup method called.");
    }
 
    public void transfer(double amount, String fromAccount, String toAccount) {
@@ -67,11 +100,16 @@ public class TransferServiceImpl implements TransferService {
       accountRepository.updateAccount(from);
       accountRepository.updateAccount(to);
       logger.info("Transfer of ${} from {} to {} completed successfully.", amount, fromAccount, toAccount);
+
       // Send notification
       if (notification != null) {
-         notification.sendNotification(
-               "Transfer of $" + amount + " from " + fromAccount + " to " + toAccount + " completed successfully.");
+         // notification.sendNotification(
+         // "Transfer of $" + amount + " from " + fromAccount + " to " + toAccount + "
+         // completed successfully.");
       }
+
+      // Publish transfer event
+      eventPublisher.publishEvent(new TransferCompletedEvent(this, amount, fromAccount, toAccount));
    }
 
 }
