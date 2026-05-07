@@ -274,6 +274,64 @@ Our v4 AOP Implementation
    - Uses JDK dynamic proxy (interface-based) or CGLIB (class-based)
 
 
+------------------------------------------------
+spring framework core concepts
+
+- Spring JDBC & Transaction Management
+------------------------------------------------
+
+21. JdbcTemplate
+   - Spring's JDBC abstraction — eliminates boilerplate (connection mgmt, exception handling, resource cleanup)
+   - Inject via constructor: @Autowired JdbcTemplate jdbcTemplate
+   - queryForObject() — single row query with RowMapper lambda
+   - update() — INSERT, UPDATE, DELETE operations
+   - Configured via @Bean in MtsConfiguration: new JdbcTemplate(dataSource)
+
+22. @Transactional
+   - declarative transaction management — replaces manual begin/commit/rollback
+   - Spring wraps the method in a transaction using AOP (proxy-based)
+   - rollbackFor = RuntimeException.class — specify which exceptions trigger rollback
+   - transactionManager = "transactionManager" — specify which tx manager to use
+   - if method completes normally → auto-commit
+   - if method throws specified exception → auto-rollback
+
+23. @EnableTransactionManagement
+   - placed on @Configuration class to enable @Transactional processing
+   - Spring creates proxies around @Transactional methods
+   - works via AOP — same proxy mechanism as @Aspect
+
+24. PlatformTransactionManager
+   - Spring's transaction abstraction interface
+   - DataSourceTransactionManager — implementation for JDBC-based transactions
+   - Configured as @Bean: new DataSourceTransactionManager(dataSource)
+
+
+Spring Context Lifecycle (detailed)
+=====================================
+   - init phase:
+     1. Bean definition loading (from @ComponentScan, @Bean methods)
+     2. BFPP (BeanFactoryPostProcessor) execution — can modify bean definitions
+     3. For each bean definition:
+        a. Create bean instance (constructor)
+        b. DI (constructor/setter/field injection)
+        c. BPP.postProcessBeforeInitialization()
+        d. @PostConstruct method execution
+        e. BPP.postProcessAfterInitialization() — AOP proxy creation happens here
+     4. Application is ready
+
+25. BeanFactoryPostProcessor (BFPP)
+   - runs BEFORE any bean is created
+   - can inspect and modify bean definitions (metadata, not instances)
+   - use case: override property values, add new bean definitions
+   - implement BeanFactoryPostProcessor interface
+
+26. BeanPostProcessor (BPP)
+   - runs AFTER each bean is created but wraps the initialization phase
+   - postProcessBeforeInitialization() — before @PostConstruct
+   - postProcessAfterInitialization() — after @PostConstruct (proxy creation for AOP happens here)
+   - use case: custom proxies, validation, metrics wrapping
+
+
 Spring Annotations Summary (covered so far)
 =============================================
    DI & Wiring       : @Bean, @Component, @Autowired, @Primary, @Qualifier
@@ -282,6 +340,8 @@ Spring Annotations Summary (covered so far)
    Configuration      : @Value, @PropertySource, @Profile, @Conditional
    Events             : @EventListener, ApplicationEvent, ApplicationEventPublisher
    AOP                : @Aspect, @EnableAspectJAutoProxy, @Before, @After, @AfterReturning, @AfterThrowing, @Around, @Order
+   Spring JDBC       : JdbcTemplate, @Transactional, @EnableTransactionManagement, PlatformTransactionManager
+   Lifecycle Hooks   : BeanFactoryPostProcessor (BFPP), BeanPostProcessor (BPP)
 
 
 

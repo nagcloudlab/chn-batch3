@@ -313,4 +313,67 @@ Spring Annotations Summary (covered so far)
      - BPP before initialization (postProcessBeforeInitialization)
      - @PostConstruct method execution
      - BPP after initialization (postProcessAfterInitialization) - proxy creation happens here for AOP
-     
+
+
+
+------------------------------------------------
+spring framework core concepts
+
+- Spring Boot
+------------------------------------------------
+
+What is Spring Boot?
+=====================
+   - Spring Boot = Spring Framework + Auto-Configuration + Embedded Server + Opinionated Defaults
+   - Goal: get started quickly with minimal configuration
+   - Convention over configuration — sensible defaults, override when needed
+
+
+27. @SpringBootApplication
+   - a meta-annotation that combines three annotations:
+     @Configuration       — this class is a Spring configuration class
+     @ComponentScan       — scan current package and sub-packages for @Component classes
+     @EnableAutoConfiguration — enable Spring Boot auto-configuration
+   - replaces manual @Configuration + @ComponentScan + @EnableAutoConfiguration
+
+28. SpringApplication.run()
+   - entry point for Spring Boot applications
+   - creates ApplicationContext, runs auto-configuration, starts embedded server (if web app)
+   - replaces: new AnnotationConfigApplicationContext() + register() + refresh()
+
+29. Auto-Configuration
+   - Spring Boot detects libraries on classpath and auto-configures beans
+   - e.g. PostgreSQL driver on classpath + spring.datasource.* properties → auto-creates DataSource, JdbcTemplate, TransactionManager
+   - no need for manual @Bean methods for DataSource, HikariConfig, JdbcTemplate, PlatformTransactionManager
+   - controlled by spring-boot-starter-* dependencies
+
+30. Starter Dependencies
+   - spring-boot-starter-data-jdbc → includes spring-jdbc, HikariCP, spring-tx
+   - spring-boot-starter-aop → includes spring-aop, aspectjweaver
+   - spring-boot-starter-parent → version management, plugin configuration
+   - each starter pulls in a curated set of compatible dependencies
+
+
+v5 vs v6 Comparison
+=====================
+   v5 (Spring Framework)                    v6 (Spring Boot)
+   ─────────────────────                    ─────────────────
+   Manual @Bean for DataSource              Auto-configured from properties
+   Manual @Bean for JdbcTemplate            Auto-configured
+   Manual @Bean for TransactionManager      Auto-configured
+   @Configuration + @ComponentScan          @SpringBootApplication
+   AnnotationConfigApplicationContext       SpringApplication.run()
+   Manual dependency versions in pom.xml    Starter parent manages versions
+
+
+Spring Annotations Summary (all versions)
+==========================================
+   DI & Wiring       : @Bean, @Component, @Autowired, @Primary, @Qualifier
+   Stereotypes        : @Repository, @Service, @Controller, @Configuration
+   Scope & Lifecycle  : @Scope, @Lazy, @PostConstruct, @PreDestroy
+   Configuration      : @Value, @PropertySource, @Profile, @Conditional
+   Events             : @EventListener, ApplicationEvent, ApplicationEventPublisher
+   AOP               : @Aspect, @EnableAspectJAutoProxy, @Before, @After, @AfterReturning, @AfterThrowing, @Around, @Order
+   Spring JDBC       : JdbcTemplate, @Transactional, @EnableTransactionManagement, PlatformTransactionManager
+   Lifecycle Hooks   : BeanFactoryPostProcessor (BFPP), BeanPostProcessor (BPP)
+   Spring Boot       : @SpringBootApplication, SpringApplication.run(), Auto-Configuration, Starter Dependencies

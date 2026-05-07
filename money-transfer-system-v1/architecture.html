@@ -2,203 +2,545 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>v1 — Money Transfer System Architecture</title>
+<title>v1 — Money Transfer System | Tight Coupling</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #1e1e2e; color: #cdd6f4; font-family: 'Segoe UI', sans-serif; padding: 40px; }
-  h1 { text-align: center; font-size: 28px; margin-bottom: 10px; color: #f5c2e7; }
-  .subtitle { text-align: center; font-size: 14px; color: #6c7086; margin-bottom: 50px; }
 
-  /* Layered Architecture */
-  .section-title { font-size: 20px; color: #89b4fa; margin-bottom: 30px; font-weight: 600; }
-  .architecture { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 60px; }
-  .layer-label { text-align: center; font-size: 12px; color: #6c7086; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-  .layer { display: flex; flex-direction: column; align-items: center; }
-  .box { padding: 20px 30px; border-radius: 10px; text-align: center; min-width: 180px; position: relative; }
-  .box .name { font-size: 16px; font-weight: 700; }
-  .box .desc { font-size: 11px; margin-top: 4px; opacity: 0.7; }
-  .caller { background: #313244; border: 1px solid #45475a; }
-  .service { background: #45379a; border: 1px solid #6c5ce7; }
-  .repo { background: #1a6b5a; border: 1px solid #2ecc71; }
-  .db { background: #313244; border: 1px solid #45475a; }
-  .arrow { font-size: 28px; color: #6c7086; margin: 0 10px; padding-top: 20px; }
+  :root {
+    --bg: #0f0f1a;
+    --surface: #161625;
+    --surface2: #1c1c30;
+    --border: #2a2a45;
+    --text: #e2e4f0;
+    --text-dim: #8888a8;
+    --green: #6ee7b7;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --pink: #f472b6;
+    --yellow: #fbbf24;
+    --orange: #fb923c;
+    --red: #f87171;
+    --teal: #2dd4bf;
+    --accent: #6ee7b7;
+    --accent2: #818cf8;
+  }
 
-  /* Problems Section */
-  .problems { background: #302030; border: 2px dashed #f38ba8; border-radius: 14px; padding: 30px 40px; margin-bottom: 40px; max-width: 900px; margin-left: auto; margin-right: auto; }
-  .problems h2 { color: #f38ba8; font-size: 20px; margin-bottom: 20px; }
-  .problem { margin-bottom: 24px; }
-  .problem h3 { color: #fab387; font-size: 15px; margin-bottom: 6px; }
-  .problem p { font-size: 13px; color: #a6adc8; line-height: 1.6; }
-  .problem code { background: #1e1e2e; padding: 2px 8px; border-radius: 4px; color: #f38ba8; font-size: 13px; }
+  html, body {
+    height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+  }
 
-  /* Code Snapshot */
-  .code-section { max-width: 900px; margin: 0 auto 40px; }
-  .code-section h2 { color: #89b4fa; font-size: 18px; margin-bottom: 14px; }
-  .code-block { background: #181825; border: 1px solid #313244; border-radius: 10px; padding: 20px 24px; font-family: 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; }
-  .code-block .comment { color: #6c7086; }
-  .code-block .keyword { color: #cba6f7; }
-  .code-block .type { color: #89b4fa; }
-  .code-block .string { color: #a6e3a1; }
-  .code-block .bad { background: #f38ba822; border-left: 3px solid #f38ba8; padding-left: 8px; display: inline-block; width: 100%; }
-  .code-block .highlight-label { color: #f38ba8; font-weight: bold; font-size: 12px; }
+  /* ─── Slide Container ─── */
+  .deck { position: relative; width: 100%; height: 100%; }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 80px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    transform: translateX(40px);
+  }
+  .slide.active {
+    opacity: 1; pointer-events: auto; transform: translateX(0);
+  }
+  .slide.exit-left {
+    opacity: 0; transform: translateX(-40px);
+  }
 
-  /* Dependency Diagram */
-  .dep-diagram { max-width: 900px; margin: 0 auto 40px; text-align: center; }
-  .dep-diagram h2 { color: #89b4fa; font-size: 18px; margin-bottom: 20px; }
-  .dep-flow { display: flex; align-items: center; justify-content: center; gap: 0; }
-  .dep-box { padding: 16px 24px; border-radius: 8px; text-align: center; }
+  /* ─── Navigation ─── */
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 32px;
+    background: linear-gradient(180deg, transparent 0%, rgba(15,15,26,0.95) 40%);
+    backdrop-filter: blur(10px);
+  }
+  .nav-dots { display: flex; gap: 8px; }
+  .nav-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border); cursor: pointer;
+    transition: all 0.3s;
+  }
+  .nav-dot.active { background: var(--red); box-shadow: 0 0 12px var(--red); transform: scale(1.3); }
+  .nav-dot:hover { background: var(--accent2); }
+  .nav-info { font-size: 13px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+  .nav-keys { font-size: 11px; color: var(--text-dim); }
+  .nav-keys kbd {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  .nav-btn {
+    position: fixed; top: 50%; z-index: 90;
+    transform: translateY(-50%);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-dim); font-size: 24px;
+    width: 44px; height: 44px; border-radius: 50%;
+    cursor: pointer; transition: all 0.25s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:hover { background: var(--accent2); color: white; border-color: var(--accent2); }
+  .nav-prev { left: 16px; }
+  .nav-next { right: 16px; }
+
+  /* ─── Typography ─── */
+  .slide-title {
+    font-size: 36px; font-weight: 800; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--red), var(--orange));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .slide-subtitle { font-size: 15px; color: var(--text-dim); margin-bottom: 40px; letter-spacing: 0.5px; }
+  .section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--red); margin-bottom: 12px;
+  }
+
+  /* ─── Cards & Boxes ─── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; transition: border-color 0.3s;
+  }
+  .card:hover { border-color: var(--accent2); }
+  .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+  .card p { font-size: 13px; color: var(--text-dim); line-height: 1.7; }
+  .card code {
+    background: var(--bg); padding: 2px 7px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--yellow);
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 1000px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; width: 100%; max-width: 1100px; }
+
+  /* ─── Code blocks ─── */
+  .code-box {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8;
+    overflow-x: auto;
+  }
+  .kw { color: var(--purple); }
+  .ty { color: var(--blue); }
+  .an { color: var(--yellow); }
+  .st { color: var(--green); }
+  .cm { color: var(--text-dim); }
+  .hl-green { background: rgba(110,231,183,0.08); border-left: 3px solid var(--green); padding-left: 10px; display: block; }
+  .hl-red { background: rgba(248,113,113,0.1); border-left: 3px solid var(--red); padding-left: 10px; display: block; }
+  .hl-yellow { background: rgba(251,191,36,0.08); border-left: 3px solid var(--yellow); padding-left: 10px; display: block; }
+  .hl-blue { background: rgba(96,165,250,0.08); border-left: 3px solid var(--blue); padding-left: 10px; display: block; }
+  .hl-pink { background: rgba(244,114,182,0.08); border-left: 3px solid var(--pink); padding-left: 10px; display: block; }
+
+  /* ─── Flowcharts ─── */
+  .flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+  .flow-arrow { font-size: 22px; color: var(--text-dim); margin: 0 14px; }
+  .flow-box {
+    padding: 18px 26px; border-radius: 12px; text-align: center; min-width: 180px;
+  }
+  .flow-box h4 { font-size: 14px; margin-bottom: 4px; }
+  .flow-box p { font-size: 11px; color: var(--text-dim); }
+  .flow-box code { font-size: 11px; }
+
+  /* ─── Title slide ─── */
+  .big-title {
+    font-size: 52px; font-weight: 800;
+    background: linear-gradient(135deg, var(--red), var(--orange));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 16px;
+  }
+  .big-subtitle { font-size: 18px; color: var(--text-dim); margin-bottom: 40px; }
+  .tag-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .tag {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--red);
+  }
+
+  /* ─── Architecture layers ─── */
+  .arch-flow {
+    display: flex; align-items: flex-start; justify-content: center;
+    gap: 0; flex-wrap: wrap;
+  }
+  .arch-layer { display: flex; flex-direction: column; align-items: center; }
+  .arch-label {
+    text-align: center; font-size: 10px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 600;
+  }
+  .arch-box {
+    padding: 16px 22px; border-radius: 12px; text-align: center; min-width: 150px;
+  }
+  .arch-box .name { font-size: 14px; font-weight: 700; }
+  .arch-box .desc { font-size: 10px; margin-top: 4px; color: var(--text-dim); }
+  .arch-caller { background: var(--surface2); border: 1px solid var(--border); }
+  .arch-svc { background: rgba(129,140,248,0.15); border: 1px solid var(--accent2); }
+  .arch-repo { background: rgba(110,231,183,0.12); border: 1px solid var(--green); }
+  .arch-db { background: var(--surface2); border: 1px solid var(--border); }
+  .arch-arrow { font-size: 24px; color: var(--text-dim); margin: 0 8px; padding-top: 20px; }
+
+  /* ─── Dependency diagram ─── */
+  .dep-box {
+    padding: 18px 28px; border-radius: 12px; text-align: center;
+  }
   .dep-box .cls { font-size: 15px; font-weight: 700; }
-  .dep-box .detail { font-size: 11px; opacity: 0.7; margin-top: 3px; }
-  .dep-concrete { background: #45379a; border: 2px solid #6c5ce7; }
-  .dep-concrete-repo { background: #1a6b5a; border: 2px solid #2ecc71; }
-  .dep-arrow { font-size: 24px; color: #f38ba8; margin: 0 8px; }
-  .dep-arrow-label { font-size: 11px; color: #f38ba8; text-align: center; margin-top: -4px; }
-  .dep-arrow-container { display: flex; flex-direction: column; align-items: center; }
+  .dep-box .detail { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .dep-arrow-container { display: flex; flex-direction: column; align-items: center; margin: 0 16px; }
+  .dep-arrow { font-size: 24px; color: var(--red); font-weight: 700; }
+  .dep-arrow-label { font-size: 11px; color: var(--red); margin-top: 2px; }
 
-  /* Impact */
-  .impact { background: #1e1e2e; border: 2px solid #f9e2af; border-radius: 14px; padding: 24px 36px; max-width: 900px; margin: 0 auto 40px; }
-  .impact h2 { color: #f9e2af; font-size: 18px; margin-bottom: 14px; }
-  .impact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .impact-item { display: flex; align-items: start; gap: 10px; font-size: 13px; }
-  .impact-icon { font-size: 18px; }
-  .impact-text strong { color: #f9e2af; }
-  .impact-text { color: #a6adc8; line-height: 1.5; }
+  /* ─── Impact cards ─── */
+  .impact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 700px; }
+  .impact-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 22px; transition: border-color 0.3s;
+  }
+  .impact-card:hover { border-color: var(--red); }
+  .impact-card h4 { font-size: 14px; margin-bottom: 6px; }
+  .impact-card p { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
 
-  .footer { text-align: center; margin-top: 50px; color: #45475a; font-size: 12px; }
+  /* ─── Root cause box ─── */
+  .root-cause {
+    border: 2px dashed var(--red); border-radius: 16px;
+    padding: 24px 40px; text-align: center; max-width: 700px; margin-bottom: 30px;
+    background: rgba(248,113,113,0.04);
+  }
+  .root-cause h3 { font-size: 20px; color: var(--red); margin-bottom: 10px; }
+  .root-cause p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+
+  /* ─── Next teaser ─── */
+  .teaser-box {
+    border: 2px solid var(--green); border-radius: 16px;
+    padding: 30px 50px; text-align: center; max-width: 700px;
+    background: rgba(110,231,183,0.04);
+  }
+  .teaser-box h3 {
+    font-size: 22px; margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--green), var(--blue));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .teaser-box p { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
+
+  /* Progress bar */
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px; z-index: 110;
+    background: linear-gradient(90deg, var(--red), var(--orange));
+    transition: width 0.4s ease;
+  }
+
+  /* Slide number top-right */
+  .slide-counter {
+    position: fixed; top: 16px; right: 24px; z-index: 100;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--text-dim); background: var(--surface2);
+    padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border);
+  }
 </style>
 </head>
 <body>
 
-<h1>v1 — Money Transfer System</h1>
-<p class="subtitle">Plain Java | No Interfaces | No DI | Tight Coupling</p>
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
 
-<!-- Architecture -->
-<div style="max-width:900px; margin: 0 auto;">
-  <div class="section-title">Layered Architecture</div>
+<button class="nav-btn nav-prev" onclick="prevSlide()">&#8592;</button>
+<button class="nav-btn nav-next" onclick="nextSlide()">&#8594;</button>
+
+<div class="nav-bar">
+  <div class="nav-keys"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or click arrows</div>
+  <div class="nav-dots" id="navDots"></div>
+  <div class="nav-info" id="navInfo"></div>
 </div>
-<div class="architecture">
-  <div class="layer">
-    <div class="layer-label">Caller</div>
-    <div class="box caller">
-      <div class="name">Console</div>
-      <div class="desc">main() — User input</div>
-    </div>
-  </div>
-  <div class="arrow">→</div>
-  <div class="layer">
-    <div class="layer-label">Service Layer</div>
-    <div class="box service">
-      <div class="name">TransferServiceImpl</div>
-      <div class="desc">Business logic</div>
-    </div>
-  </div>
-  <div class="arrow">→</div>
-  <div class="layer">
-    <div class="layer-label">Repository Layer</div>
-    <div class="box repo">
-      <div class="name">JdbcAccountRepository</div>
-      <div class="desc">Data access (JDBC)</div>
-    </div>
-  </div>
-  <div class="arrow">→</div>
-  <div class="layer">
-    <div class="layer-label">Persistence</div>
-    <div class="box db">
-      <div class="name">Database</div>
-      <div class="desc">SQL</div>
-    </div>
+
+<div class="deck" id="deck">
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1: Title -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="big-title">Money Transfer System v1</div>
+  <div class="big-subtitle">Plain Java &mdash; No Interfaces &mdash; No DI &mdash; Tight Coupling</div>
+  <div class="tag-row">
+    <span class="tag">tight coupling</span>
+    <span class="tag">new keyword</span>
+    <span class="tag">no interfaces</span>
+    <span class="tag">concrete dependencies</span>
+    <span class="tag">wasteful object creation</span>
+    <span class="tag">hard to test</span>
   </div>
 </div>
 
-<!-- Dependency Diagram -->
-<div class="dep-diagram">
-  <h2>Dependency — Tight Coupling</h2>
-  <br>
-  <div class="dep-flow">
-    <div class="dep-box dep-concrete">
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2: Layered Architecture -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Architecture</div>
+  <div class="slide-title">Layered Architecture</div>
+  <div class="slide-subtitle">Simple 3-layer design &mdash; all concrete classes, no abstractions</div>
+  <div class="arch-flow">
+    <div class="arch-layer">
+      <div class="arch-label">Caller</div>
+      <div class="arch-box arch-caller">
+        <div class="name">Console</div>
+        <div class="desc">main() &mdash; User input</div>
+      </div>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-layer">
+      <div class="arch-label">Service Layer</div>
+      <div class="arch-box arch-svc">
+        <div class="name">TransferServiceImpl</div>
+        <div class="desc">Business logic</div>
+      </div>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-layer">
+      <div class="arch-label">Repository Layer</div>
+      <div class="arch-box arch-repo">
+        <div class="name">JdbcAccountRepository</div>
+        <div class="desc">Data access (JDBC)</div>
+      </div>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-layer">
+      <div class="arch-label">Persistence</div>
+      <div class="arch-box arch-db">
+        <div class="name">Database</div>
+        <div class="desc">SQL</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3: The Problem in Code -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Code</div>
+  <div class="slide-title">The Problem in Code</div>
+  <div class="slide-subtitle">Dependency created inside the method using "new"</div>
+  <div class="code-box" style="max-width:800px;width:100%;">
+    <span class="kw">public void</span> <span class="ty">transfer</span>(<span class="kw">double</span> amount, <span class="ty">String</span> from, <span class="ty">String</span> to) {<br>
+    <br>
+    <span class="hl-red"><span class="cm">&nbsp;&nbsp;// Problem: creating dependency inside the method</span></span>
+    <span class="hl-red">&nbsp;&nbsp;<span class="ty">JdbcAccountRepository</span> repo = <span class="kw">new</span> <span class="ty">JdbcAccountRepository</span>();</span>
+    <br>
+    &nbsp;&nbsp;<span class="ty">Account</span> fromAcc = repo.loadAccount(from);<br>
+    &nbsp;&nbsp;<span class="ty">Account</span> toAcc = repo.loadAccount(to);<br>
+    &nbsp;&nbsp;<span class="cm">// ... transfer logic ...</span><br>
+    }
+  </div>
+  <p style="color:var(--red);font-size:13px;margin-top:20px;font-weight:600;">Every call to transfer() creates a brand new JdbcAccountRepository object</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4: Dependency — Tight Coupling -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Dependency</div>
+  <div class="slide-title">Tight Coupling</div>
+  <div class="slide-subtitle">Service directly depends on a concrete repository class</div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:30px;">
+    <div class="dep-box arch-svc">
       <div class="cls">TransferServiceImpl</div>
       <div class="detail">concrete class</div>
     </div>
     <div class="dep-arrow-container">
-      <div class="dep-arrow">— new →</div>
+      <div class="dep-arrow">&mdash; new &rarr;</div>
       <div class="dep-arrow-label">creates directly</div>
     </div>
-    <div class="dep-box dep-concrete-repo">
+    <div class="dep-box arch-repo">
       <div class="cls">JdbcAccountRepository</div>
       <div class="detail">concrete class</div>
     </div>
   </div>
-</div>
-
-<!-- Code Snapshot -->
-<div class="code-section">
-  <h2>The Problem in Code</h2>
-  <div class="code-block">
-    <span class="keyword">public void</span> <span class="type">transfer</span>(<span class="keyword">double</span> amount, String from, String to) {<br>
-    <br>
-    <span class="bad">
-      &nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight-label">// ❌ Problem: creating dependency inside the method</span><br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<span class="type">JdbcAccountRepository</span> repo = <span class="keyword">new</span> <span class="type">JdbcAccountRepository</span>();
-    </span><br>
-    <br>
-    &nbsp;&nbsp;&nbsp;&nbsp;Account fromAcc = repo.loadAccount(from);<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;Account toAcc = repo.loadAccount(to);<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// ... transfer logic ...</span><br>
-    }
+  <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+    <div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:10px;padding:14px 22px;text-align:center;">
+      <div style="font-size:13px;color:var(--red);font-weight:700;">No Interface</div>
+      <div style="font-size:11px;color:var(--text-dim);">Both are concrete classes</div>
+    </div>
+    <div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:10px;padding:14px 22px;text-align:center;">
+      <div style="font-size:13px;color:var(--red);font-weight:700;">No Abstraction</div>
+      <div style="font-size:11px;color:var(--text-dim);">Service knows the exact implementation</div>
+    </div>
+    <div style="background:rgba(248,113,113,0.08);border:1px solid var(--red);border-radius:10px;padding:14px 22px;text-align:center;">
+      <div style="font-size:13px;color:var(--red);font-weight:700;">No Flexibility</div>
+      <div style="font-size:11px;color:var(--text-dim);">Can't swap without code changes</div>
+    </div>
   </div>
 </div>
 
-<!-- Problems -->
-<div class="problems">
-  <h2>Problems</h2>
-  <div class="problem">
-    <h3>1. Tight Coupling (Design Issue)</h3>
-    <p>
-      <code>TransferServiceImpl</code> directly depends on <code>JdbcAccountRepository</code>.<br>
-      Cannot swap to JPA, MongoDB, or mock without changing service code.<br>
-      Unit testing is difficult — can't isolate the service layer.
-    </p>
-  </div>
-  <div class="problem">
-    <h3>2. Wasteful Object Creation (Performance Issue)</h3>
-    <p>
-      Every <code>transfer()</code> call creates a <strong>new</strong> <code>JdbcAccountRepository</code>.<br>
-      Wastes memory, connections, and increases latency.
-    </p>
-  </div>
-  <div class="problem">
-    <h3>3. Root Cause</h3>
-    <p>
-      The dependent (<code>TransferServiceImpl</code>) creates its own dependency using <code>new</code>.<br>
-      It controls <strong>what</strong> to use and <strong>when</strong> to create — no flexibility.
-    </p>
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5: Two Problems -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Problems</div>
+  <div class="slide-title">Two Problems</div>
+  <div class="slide-subtitle">Design issue + Performance issue caused by using "new" inside the method</div>
+  <div class="grid-2">
+    <div class="card" style="border-color:rgba(248,113,113,0.4);">
+      <h3 style="color:var(--red);">1. Design Issue &mdash; Tight Coupling</h3>
+      <div class="code-box" style="font-size:12px;margin-bottom:14px;">
+        <span class="cm">// Service is locked to JDBC impl</span><br>
+        <span class="ty">JdbcAccountRepository</span> repo = <span class="kw">new</span> <span class="ty">JdbcAccountRepository</span>();
+      </div>
+      <p>
+        <strong style="color:var(--red);">Can't swap</strong> &mdash; Want JPA? Change service code.<br>
+        <strong style="color:var(--red);">Can't mock</strong> &mdash; No way to inject a test double.<br>
+        <strong style="color:var(--red);">Can't extend</strong> &mdash; Adding MongoDB means editing existing code.
+      </p>
+    </div>
+    <div class="card" style="border-color:rgba(251,146,60,0.4);">
+      <h3 style="color:var(--orange);">2. Performance Issue &mdash; Wasteful</h3>
+      <div class="code-box" style="font-size:12px;margin-bottom:14px;">
+        <span class="cm">// Called 1000 times = 1000 objects</span><br>
+        <span class="kw">public void</span> transfer(...) {<br>
+        &nbsp;&nbsp;<span class="kw">new</span> <span class="ty">JdbcAccountRepository</span>(); <span class="cm">// every time!</span><br>
+        }
+      </div>
+      <p>
+        <strong style="color:var(--orange);">New object per call</strong> &mdash; wasteful memory allocation.<br>
+        <strong style="color:var(--orange);">New connection per call</strong> &mdash; slow and expensive.<br>
+        <strong style="color:var(--orange);">No reuse</strong> &mdash; previous object is garbage collected.
+      </p>
+    </div>
   </div>
 </div>
 
-<!-- Impact -->
-<div class="impact">
-  <h2>Impact</h2>
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6: Root Cause + Impact -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Analysis</div>
+  <div class="slide-title">Root Cause + Impact</div>
+  <div class="slide-subtitle">Why this happens and what it leads to</div>
+  <div class="root-cause">
+    <h3>Root Cause</h3>
+    <p>The dependent (<code style="color:var(--yellow);background:var(--bg);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">TransferServiceImpl</code>) creates its own dependency using <code style="color:var(--red);background:var(--bg);padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;">new</code><br>
+    It controls <strong style="color:var(--text);">WHAT</strong> to use and <strong style="color:var(--text);">WHEN</strong> to create &mdash; no external flexibility</p>
+  </div>
   <div class="impact-grid">
-    <div class="impact-item">
-      <div class="impact-icon">🔒</div>
-      <div class="impact-text"><strong>Locked to JDBC</strong><br>Can't switch to JPA or any other impl</div>
+    <div class="impact-card">
+      <h4 style="color:var(--red);">Locked to JDBC</h4>
+      <p>Can't switch to JPA, MongoDB, or any other implementation without changing service code</p>
     </div>
-    <div class="impact-item">
-      <div class="impact-icon">🧪</div>
-      <div class="impact-text"><strong>Hard to Test</strong><br>Can't mock the repository</div>
+    <div class="impact-card">
+      <h4 style="color:var(--orange);">Hard to Test</h4>
+      <p>Can't mock the repository &mdash; unit testing the service layer is nearly impossible</p>
     </div>
-    <div class="impact-item">
-      <div class="impact-icon">🐌</div>
-      <div class="impact-text"><strong>Slow & Wasteful</strong><br>New object per method call</div>
+    <div class="impact-card">
+      <h4 style="color:var(--yellow);">Slow & Wasteful</h4>
+      <p>New object created on every method call &mdash; wastes memory, connections, and time</p>
     </div>
-    <div class="impact-item">
-      <div class="impact-icon">🔧</div>
-      <div class="impact-text"><strong>Hard to Maintain</strong><br>Change repo = change service code</div>
+    <div class="impact-card">
+      <h4 style="color:var(--pink);">Hard to Maintain</h4>
+      <p>Changing the repository means changing the service &mdash; ripple effect across layers</p>
     </div>
   </div>
 </div>
 
-<div class="footer">money-transfer-system-v1 | Next: v2 solves these with Interfaces + Factory + Constructor DI</div>
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7: What's Next -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Next</div>
+  <div class="slide-title">What's Next?</div>
+  <div class="slide-subtitle">v2 solves these problems with three key changes</div>
+  <div class="teaser-box" style="margin-bottom:30px;">
+    <h3>v2 &mdash; Interfaces + Factory + Constructor DI</h3>
+    <p>Introduce an <strong style="color:var(--text);">interface</strong> between service and repository.<br>
+    Use a <strong style="color:var(--text);">factory</strong> to create objects externally.<br>
+    Pass dependencies via <strong style="color:var(--text);">constructor injection</strong>.</p>
+  </div>
+  <div class="flow">
+    <div class="flow-box" style="background:rgba(248,113,113,0.1);border:1px solid var(--red);">
+      <h4 style="color:var(--red);">v1 &mdash; Problems</h4>
+      <p>Tight coupling<br><code style="color:var(--red)">new</code> inside service<br>Hard to test & extend</p>
+    </div>
+    <div class="flow-arrow" style="color:var(--green);font-size:28px;">&rarr;</div>
+    <div class="flow-box" style="background:rgba(110,231,183,0.1);border:2px solid var(--green);">
+      <h4 style="color:var(--green);">v2 &mdash; Solution</h4>
+      <p>Interfaces for abstraction<br>Factory creates objects<br>Constructor DI for wiring</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end deck -->
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const navDots = document.getElementById('navDots');
+const navInfo = document.getElementById('navInfo');
+const progressBar = document.getElementById('progressBar');
+const slideCounter = document.getElementById('slideCounter');
+let current = 0;
+
+// Build nav dots
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot';
+  dot.onclick = () => goTo(i);
+  navDots.appendChild(dot);
+});
+
+function goTo(n) {
+  if (n < 0 || n >= slides.length) return;
+  slides[current].classList.remove('active');
+  slides[current].classList.add('exit-left');
+  setTimeout(() => slides[current === n ? current : current].classList.remove('exit-left'), 450);
+
+  const prev = current;
+  current = n;
+  slides[current].classList.remove('exit-left');
+
+  // Direction-aware animation
+  if (n > prev) {
+    slides[current].style.transform = 'translateX(40px)';
+  } else {
+    slides[current].style.transform = 'translateX(-40px)';
+  }
+  // Force reflow
+  void slides[current].offsetWidth;
+  slides[current].classList.add('active');
+
+  // Remove exit from previous
+  setTimeout(() => {
+    slides.forEach((s, i) => { if (i !== current) { s.classList.remove('active', 'exit-left'); }});
+  }, 500);
+
+  updateUI();
+}
+
+function nextSlide() { goTo(current + 1); }
+function prevSlide() { goTo(current - 1); }
+
+function updateUI() {
+  document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  navInfo.textContent = `${current + 1} / ${slides.length}`;
+  progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+  slideCounter.textContent = `${current + 1} / ${slides.length}`;
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End') { e.preventDefault(); goTo(slides.length - 1); }
+});
+
+// Touch swipe support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+document.addEventListener('touchend', e => {
+  const diff = e.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(diff) > 50) { diff > 0 ? prevSlide() : nextSlide(); }
+});
+
+// Init
+slides[0].classList.add('active');
+updateUI();
+</script>
 
 </body>
 </html>

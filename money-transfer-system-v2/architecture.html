@@ -2,338 +2,802 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>v2 — Money Transfer System Architecture</title>
+<title>v2 — Money Transfer System | Interfaces | Factory | Constructor DI</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #1e1e2e; color: #cdd6f4; font-family: 'Segoe UI', sans-serif; padding: 40px; }
-  h1 { text-align: center; font-size: 28px; margin-bottom: 10px; color: #a6e3a1; }
-  .subtitle { text-align: center; font-size: 14px; color: #6c7086; margin-bottom: 50px; }
 
-  .section-title { font-size: 20px; color: #89b4fa; margin-bottom: 30px; font-weight: 600; }
+  :root {
+    --bg: #0f0f1a;
+    --surface: #161625;
+    --surface2: #1c1c30;
+    --border: #2a2a45;
+    --text: #e2e4f0;
+    --text-dim: #8888a8;
+    --green: #6ee7b7;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --pink: #f472b6;
+    --yellow: #fbbf24;
+    --orange: #fb923c;
+    --red: #f87171;
+    --teal: #2dd4bf;
+    --accent: #6ee7b7;
+    --accent2: #818cf8;
+  }
 
-  /* Architecture */
-  .architecture { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: 60px; }
-  .layer-label { text-align: center; font-size: 12px; color: #6c7086; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-  .layer { display: flex; flex-direction: column; align-items: center; }
-  .box { padding: 20px 28px; border-radius: 10px; text-align: center; min-width: 180px; }
-  .box .name { font-size: 16px; font-weight: 700; }
-  .box .desc { font-size: 11px; margin-top: 4px; opacity: 0.7; }
-  .caller { background: #313244; border: 1px solid #45475a; }
-  .service { background: #45379a; border: 1px solid #6c5ce7; }
-  .repo { background: #1a6b5a; border: 1px solid #2ecc71; }
-  .db { background: #313244; border: 1px solid #45475a; }
-  .iface { background: transparent; border: 2px dashed #89b4fa; }
-  .iface .name { color: #89b4fa; font-style: italic; }
-  .arrow { font-size: 28px; color: #6c7086; margin: 0 10px; padding-top: 20px; }
+  html, body {
+    height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+  }
 
-  /* Repo stack */
-  .repo-stack { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .impl-label { font-size: 10px; color: #6c7086; margin-top: 4px; }
-  .impl-group { display: flex; gap: 10px; }
-  .impl-box { padding: 12px 18px; border-radius: 8px; text-align: center; font-size: 13px; font-weight: 600; }
-  .impl-jdbc { background: #1a6b5a; border: 1px solid #2ecc71; }
-  .impl-jpa { background: #2d5a1a; border: 1px solid #66bb6a; }
+  /* ─── Slide Container ─── */
+  .deck { position: relative; width: 100%; height: 100%; }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 80px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    transform: translateX(40px);
+  }
+  .slide.active {
+    opacity: 1; pointer-events: auto; transform: translateX(0);
+  }
+  .slide.exit-left {
+    opacity: 0; transform: translateX(-40px);
+  }
 
-  /* Evolution */
-  .evolution { max-width: 1000px; margin: 0 auto 50px; }
-  .evolution h2 { color: #89b4fa; font-size: 20px; margin-bottom: 24px; }
-  .steps { display: flex; gap: 20px; }
-  .step { flex: 1; background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 24px; position: relative; }
-  .step-num { position: absolute; top: -14px; left: 20px; background: #89b4fa; color: #1e1e2e; font-weight: 800; font-size: 13px; padding: 4px 12px; border-radius: 20px; }
-  .step h3 { color: #cba6f7; font-size: 15px; margin: 10px 0 10px; }
-  .step p { font-size: 12px; color: #a6adc8; line-height: 1.7; }
-  .step code { background: #1e1e2e; padding: 1px 6px; border-radius: 3px; color: #f9e2af; font-size: 12px; }
-  .step .tag { display: inline-block; margin-top: 10px; font-size: 10px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
-  .tag-design { background: #cba6f733; color: #cba6f7; }
-  .tag-perf { background: #a6e3a133; color: #a6e3a1; }
-  .tag-solid { background: #89b4fa33; color: #89b4fa; }
+  /* ─── Navigation ─── */
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 32px;
+    background: linear-gradient(180deg, transparent 0%, rgba(15,15,26,0.95) 40%);
+    backdrop-filter: blur(10px);
+  }
+  .nav-dots { display: flex; gap: 8px; }
+  .nav-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border); cursor: pointer;
+    transition: all 0.3s;
+  }
+  .nav-dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent); transform: scale(1.3); }
+  .nav-dot:hover { background: var(--accent2); }
+  .nav-info { font-size: 13px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+  .nav-keys { font-size: 11px; color: var(--text-dim); }
+  .nav-keys kbd {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
 
-  /* Dependency Diagram */
-  .dep-section { max-width: 1000px; margin: 0 auto 50px; text-align: center; }
-  .dep-section h2 { color: #89b4fa; font-size: 18px; margin-bottom: 24px; }
-  .dep-container { display: flex; align-items: center; justify-content: center; gap: 0; }
-  .dep-box { padding: 16px 22px; border-radius: 8px; text-align: center; }
-  .dep-box .cls { font-size: 14px; font-weight: 700; }
-  .dep-box .detail { font-size: 10px; opacity: 0.7; margin-top: 3px; }
-  .dep-iface { background: transparent; border: 2px dashed #89b4fa; }
-  .dep-iface .cls { color: #89b4fa; font-style: italic; }
-  .dep-impl { background: #1a6b5a; border: 1px solid #2ecc71; }
-  .dep-service { background: #45379a; border: 1px solid #6c5ce7; }
-  .dep-main { background: #313244; border: 1px solid #45475a; }
-  .dep-arrow { font-size: 22px; margin: 0 8px; }
-  .dep-arrow-green { color: #a6e3a1; }
-  .dep-arrow-blue { color: #89b4fa; }
-  .dep-arrow-label { font-size: 10px; text-align: center; margin-top: -2px; }
+  .nav-btn {
+    position: fixed; top: 50%; z-index: 90;
+    transform: translateY(-50%);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-dim); font-size: 24px;
+    width: 44px; height: 44px; border-radius: 50%;
+    cursor: pointer; transition: all 0.25s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:hover { background: var(--accent2); color: white; border-color: var(--accent2); }
+  .nav-prev { left: 16px; }
+  .nav-next { right: 16px; }
 
-  .dep-row { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; gap: 0; }
-  .vs-label { color: #45475a; font-size: 12px; margin: 20px 0; }
+  /* ─── Typography ─── */
+  .slide-title {
+    font-size: 36px; font-weight: 800; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .slide-subtitle { font-size: 15px; color: var(--text-dim); margin-bottom: 40px; letter-spacing: 0.5px; }
+  .section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--accent); margin-bottom: 12px;
+  }
 
-  /* DIP Box */
-  .principle-box { max-width: 700px; margin: 0 auto 40px; border: 2px dashed #6c7086; border-radius: 14px; padding: 24px 36px; text-align: center; }
-  .principle-box h3 { font-size: 18px; color: #cdd6f4; margin-bottom: 8px; }
-  .principle-box p { font-size: 14px; color: #a6adc8; }
+  /* ─── Cards & Boxes ─── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; transition: border-color 0.3s;
+  }
+  .card:hover { border-color: var(--accent2); }
+  .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+  .card p { font-size: 13px; color: var(--text-dim); line-height: 1.7; }
+  .card code {
+    background: var(--bg); padding: 2px 7px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--yellow);
+  }
 
-  /* Code Comparison */
-  .code-compare { max-width: 1000px; margin: 0 auto 50px; }
-  .code-compare h2 { color: #89b4fa; font-size: 18px; margin-bottom: 16px; }
-  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .code-panel { background: #181825; border: 1px solid #313244; border-radius: 10px; padding: 20px; font-family: 'Fira Code','Consolas', monospace; font-size: 12px; line-height: 1.7; }
-  .code-panel h3 { font-family: 'Segoe UI', sans-serif; margin-bottom: 12px; font-size: 14px; }
-  .panel-bad h3 { color: #f38ba8; }
-  .panel-good h3 { color: #a6e3a1; }
-  .panel-bad { border-color: #f38ba855; }
-  .panel-good { border-color: #a6e3a155; }
-  .bad-line { background: #f38ba815; border-left: 3px solid #f38ba8; padding-left: 8px; display: block; }
-  .good-line { background: #a6e3a115; border-left: 3px solid #a6e3a1; padding-left: 8px; display: block; }
-  .comment { color: #6c7086; }
-  .keyword { color: #cba6f7; }
-  .type { color: #89b4fa; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 1000px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; width: 100%; max-width: 1100px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; width: 100%; max-width: 1100px; }
 
-  /* Benefits */
-  .benefits { background: #1a2e1a; border: 2px solid #a6e3a1; border-radius: 14px; padding: 28px 40px; max-width: 900px; margin: 0 auto 40px; }
-  .benefits h2 { color: #a6e3a1; font-size: 20px; margin-bottom: 18px; }
-  .benefits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .benefit-item { display: flex; align-items: start; gap: 10px; font-size: 13px; }
-  .benefit-icon { font-size: 18px; }
-  .benefit-text strong { color: #a6e3a1; }
-  .benefit-text { color: #a6adc8; line-height: 1.5; }
+  /* ─── Code blocks ─── */
+  .code-box {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8;
+    overflow-x: auto;
+  }
+  .kw { color: var(--purple); }
+  .ty { color: var(--blue); }
+  .an { color: var(--yellow); }
+  .st { color: var(--green); }
+  .cm { color: var(--text-dim); }
+  .hl-green { background: rgba(110,231,183,0.08); border-left: 3px solid var(--green); padding-left: 10px; display: block; }
+  .hl-red { background: rgba(248,113,113,0.08); border-left: 3px solid var(--red); padding-left: 10px; display: block; }
+  .hl-yellow { background: rgba(251,191,36,0.08); border-left: 3px solid var(--yellow); padding-left: 10px; display: block; }
+  .hl-blue { background: rgba(96,165,250,0.08); border-left: 3px solid var(--blue); padding-left: 10px; display: block; }
 
-  /* SOLID */
-  .solid-section { max-width: 900px; margin: 0 auto 40px; }
-  .solid-section h2 { color: #89b4fa; font-size: 18px; margin-bottom: 16px; }
-  .solid-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-  .solid-item { padding: 12px 18px; border-radius: 8px; font-size: 13px; text-align: center; min-width: 150px; }
-  .solid-active { background: #89b4fa22; border: 1px solid #89b4fa; color: #89b4fa; }
-  .solid-inactive { background: #31324455; border: 1px solid #313244; color: #45475a; }
-  .solid-item .letter { font-size: 22px; font-weight: 800; }
-  .solid-item .desc { font-size: 10px; margin-top: 4px; }
+  /* ─── Flowcharts ─── */
+  .flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+  .flow-arrow { font-size: 22px; color: var(--text-dim); margin: 0 14px; }
+  .flow-box {
+    padding: 18px 26px; border-radius: 12px; text-align: center; min-width: 180px;
+  }
+  .flow-box h4 { font-size: 14px; margin-bottom: 4px; }
+  .flow-box p { font-size: 11px; color: var(--text-dim); }
+  .flow-box code { font-size: 11px; }
 
-  .footer { text-align: center; margin-top: 50px; color: #45475a; font-size: 12px; }
+  /* ─── Timeline ─── */
+  .tl-bad { background: #2a1020; border: 1px solid var(--red); }
+  .tl-bad h4 { color: var(--red); }
+  .tl-good { background: #102a1a; border: 2px solid var(--green); }
+  .tl-good h4 { color: var(--green); }
+
+  /* ─── Architecture layers ─── */
+  .arch-flow {
+    display: flex; align-items: flex-start; justify-content: center;
+    gap: 0; flex-wrap: wrap;
+  }
+  .arch-layer { display: flex; flex-direction: column; align-items: center; }
+  .arch-label {
+    text-align: center; font-size: 10px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 600;
+  }
+  .arch-box {
+    padding: 16px 22px; border-radius: 12px; text-align: center; min-width: 150px;
+  }
+  .arch-box .name { font-size: 14px; font-weight: 700; }
+  .arch-box .desc { font-size: 10px; margin-top: 4px; color: var(--text-dim); }
+  .arch-caller { background: var(--surface2); border: 1px solid var(--border); }
+  .arch-svc { background: rgba(129,140,248,0.15); border: 1px solid var(--accent2); }
+  .arch-repo { background: rgba(110,231,183,0.12); border: 1px solid var(--green); }
+  .arch-notif { background: rgba(251,146,60,0.1); border: 1px solid var(--orange); }
+  .arch-db { background: var(--surface2); border: 1px solid var(--border); }
+  .arch-iface { background: transparent; border: 2px dashed var(--blue); }
+  .arch-iface .name { color: var(--blue); font-style: italic; font-size: 13px; }
+  .arch-arrow { font-size: 24px; color: var(--text-dim); margin: 0 8px; padding-top: 20px; }
+  .impl-group { display: flex; gap: 8px; margin-top: 8px; }
+  .impl-box {
+    padding: 10px 14px; border-radius: 8px; text-align: center;
+    font-size: 12px; font-weight: 600;
+  }
+
+  /* ─── Title slide ─── */
+  .big-title {
+    font-size: 52px; font-weight: 800;
+    background: linear-gradient(135deg, var(--green), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 16px;
+  }
+  .big-subtitle { font-size: 18px; color: var(--text-dim); margin-bottom: 40px; }
+  .tag-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .tag {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--yellow);
+  }
+
+  /* ─── Step boxes ─── */
+  .steps-row { display: flex; gap: 0; align-items: stretch; width: 100%; max-width: 1100px; }
+  .step-box {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    padding: 22px; text-align: center;
+  }
+  .step-box:first-child { border-radius: 14px 0 0 14px; }
+  .step-box:last-child { border-radius: 0 14px 14px 0; }
+  .step-box h3 { font-size: 14px; margin-bottom: 8px; }
+  .step-box p { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+  .step-num {
+    background: var(--teal); color: var(--bg); font-weight: 800;
+    font-size: 11px; padding: 3px 12px; border-radius: 20px;
+    display: inline-block; margin-bottom: 8px;
+  }
+  .step-arrow {
+    display: flex; align-items: center; color: var(--teal); font-size: 20px;
+    background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 0 4px;
+  }
+
+  /* ─── Benefits ─── */
+  .benefits-box {
+    background: rgba(110,231,183,0.05); border: 2px solid var(--green);
+    border-radius: 16px; padding: 30px 40px; width: 100%; max-width: 1100px;
+  }
+  .benefits-box h2 { color: var(--green); font-size: 22px; margin-bottom: 20px; }
+  .benefit-item { display: flex; align-items: start; gap: 12px; font-size: 13px; }
+  .benefit-icon { font-size: 20px; flex-shrink: 0; }
+  .benefit-text strong { color: var(--green); }
+  .benefit-text { color: var(--text-dim); line-height: 1.6; }
+
+  /* ─── SOLID items ─── */
+  .solid-grid { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .solid-item {
+    padding: 16px 22px; border-radius: 12px; font-size: 13px;
+    text-align: center; min-width: 160px; transition: border-color 0.3s;
+  }
+  .solid-active { background: rgba(96,165,250,0.1); border: 2px solid var(--blue); color: var(--blue); }
+  .solid-inactive { background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); opacity: 0.45; }
+  .solid-item .letter { font-size: 28px; font-weight: 800; }
+  .solid-item .sdesc { font-size: 11px; margin-top: 4px; }
+  .solid-item .detail { font-size: 10px; margin-top: 6px; color: var(--text-dim); }
+
+  /* ─── Principle box ─── */
+  .principle {
+    border: 2px dashed var(--text-dim); border-radius: 16px;
+    padding: 30px 50px; text-align: center; max-width: 700px;
+  }
+  .principle h3 { font-size: 22px; margin-bottom: 10px; }
+  .principle p { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
+
+  /* ─── Dep diagram ─── */
+  .dep-row { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; margin-bottom: 14px; }
+  .dep-box { padding: 14px 20px; border-radius: 10px; text-align: center; }
+  .dep-box .cls { font-size: 13px; font-weight: 700; }
+  .dep-iface { background: transparent; border: 2px dashed var(--blue); }
+  .dep-iface .cls { color: var(--blue); font-style: italic; }
+  .dep-impl { background: rgba(110,231,183,0.12); border: 1px solid var(--green); }
+  .dep-svc { background: rgba(129,140,248,0.15); border: 1px solid var(--accent2); }
+
+  /* ─── OOP cards ─── */
+  .oop-icon { font-size: 28px; margin-bottom: 8px; }
+
+  /* Progress bar */
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px; z-index: 110;
+    background: linear-gradient(90deg, var(--green), var(--accent2));
+    transition: width 0.4s ease;
+  }
+
+  /* Slide number top-right */
+  .slide-counter {
+    position: fixed; top: 16px; right: 24px; z-index: 100;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--text-dim); background: var(--surface2);
+    padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border);
+  }
 </style>
 </head>
 <body>
 
-<h1>v2 — Money Transfer System</h1>
-<p class="subtitle">Interfaces | Factory Pattern | Constructor Dependency Injection | Loose Coupling</p>
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
 
-<!-- Architecture -->
-<div style="max-width:1000px; margin: 0 auto;">
-  <div class="section-title">Layered Architecture</div>
+<button class="nav-btn nav-prev" onclick="prevSlide()">&#8592;</button>
+<button class="nav-btn nav-next" onclick="nextSlide()">&#8594;</button>
+
+<div class="nav-bar">
+  <div class="nav-keys"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or click arrows</div>
+  <div class="nav-dots" id="navDots"></div>
+  <div class="nav-info" id="navInfo"></div>
 </div>
-<div class="architecture">
-  <div class="layer">
-    <div class="layer-label">Caller / Assembler</div>
-    <div class="box caller">
-      <div class="name">main()</div>
-      <div class="desc">Creates & wires components</div>
-    </div>
-  </div>
-  <div class="arrow">→</div>
-  <div class="layer">
-    <div class="layer-label">Service Layer</div>
-    <div class="box iface" style="margin-bottom: 8px;">
-      <div class="name">&laquo;TransferService&raquo;</div>
-      <div class="desc">interface</div>
-    </div>
-    <div class="box service">
-      <div class="name">TransferServiceImpl</div>
-      <div class="desc">Business logic</div>
-    </div>
-  </div>
-  <div class="arrow">→</div>
-  <div class="layer">
-    <div class="layer-label">Repository Layer</div>
-    <div class="repo-stack">
-      <div class="box iface">
-        <div class="name">&laquo;AccountRepository&raquo;</div>
-        <div class="desc">interface</div>
-      </div>
-      <div class="impl-label">implementations</div>
-      <div class="impl-group">
-        <div class="impl-box impl-jdbc">JdbcAccountRepo</div>
-        <div class="impl-box impl-jpa">JpaAccountRepo</div>
-      </div>
-    </div>
-  </div>
-  <div class="arrow">→</div>
-  <div class="layer">
-    <div class="layer-label">Persistence</div>
-    <div class="box db">
-      <div class="name">Database</div>
-      <div class="desc">SQL</div>
-    </div>
+
+<div class="deck" id="deck">
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1: Title -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="big-title">Money Transfer System v2</div>
+  <div class="big-subtitle">Interfaces | Factory Pattern | Constructor DI | Loose Coupling</div>
+  <div class="tag-row">
+    <span class="tag">AccountRepository</span>
+    <span class="tag">TransferService</span>
+    <span class="tag">Notification</span>
+    <span class="tag">Factory Pattern</span>
+    <span class="tag">Constructor Injection</span>
+    <span class="tag">IoC</span>
   </div>
 </div>
 
-<!-- 3 Steps Evolution -->
-<div class="evolution">
-  <h2>v1 → v2 : Three Steps of Improvement</h2>
-  <div class="steps">
-    <div class="step">
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2: Evolution v1 → v2 -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Journey</div>
+  <div class="slide-title">Evolution: v1 &rarr; v2</div>
+  <div class="slide-subtitle">From tight coupling and wasteful creation to clean, injected dependencies</div>
+  <div class="flow">
+    <div class="flow-box tl-bad" style="min-width:320px;">
+      <h4>v1 &mdash; Problems</h4>
+      <p style="text-align:left;padding-left:16px;line-height:1.9;">
+        <span style="color:var(--red);">&#10007;</span> Tight coupling &mdash; <code style="color:var(--red);">new JdbcAccountRepository()</code> inside service<br>
+        <span style="color:var(--red);">&#10007;</span> Hard to test &mdash; can't inject mocks<br>
+        <span style="color:var(--red);">&#10007;</span> Hard to extend &mdash; can't swap JDBC for JPA<br>
+        <span style="color:var(--red);">&#10007;</span> Wasteful &mdash; new object on every <code style="color:var(--red);">transfer()</code> call
+      </p>
+    </div>
+    <div class="flow-arrow" style="font-size:32px;">&rarr;</div>
+    <div class="flow-box tl-good" style="min-width:320px;">
+      <h4>v2 &mdash; Solutions</h4>
+      <p style="text-align:left;padding-left:16px;line-height:1.9;">
+        <span style="color:var(--green);">&#10003;</span> Interfaces &mdash; depend on abstraction<br>
+        <span style="color:var(--green);">&#10003;</span> Factory &mdash; centralized object creation<br>
+        <span style="color:var(--green);">&#10003;</span> Constructor DI &mdash; dependencies injected from outside<br>
+        <span style="color:var(--green);">&#10003;</span> Single instance &mdash; shared across all calls
+      </p>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:12px;margin-top:24px;">Root cause of v1 problems: <strong style="color:var(--red);">dependent creates its own dependency</strong> (<code style="color:var(--red);">new</code> inside the class)</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3: Layered Architecture -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Architecture</div>
+  <div class="slide-title">Layered Architecture</div>
+  <div class="slide-subtitle">main() assembles components, service depends on interfaces only</div>
+  <div class="arch-flow">
+    <div class="arch-layer">
+      <div class="arch-label">Assembler</div>
+      <div class="arch-box arch-caller">
+        <div class="name">main()</div>
+        <div class="desc">Creates deps via factory<br>Injects via constructor</div>
+      </div>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-layer">
+      <div class="arch-label">Service Layer</div>
+      <div class="arch-box arch-iface" style="margin-bottom:6px;">
+        <div class="name">&laquo;TransferService&raquo;</div>
+      </div>
+      <div class="arch-box arch-svc">
+        <div class="name">TransferServiceImpl</div>
+        <div class="desc">constructor(AccountRepository,<br>Notification)</div>
+      </div>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-layer" style="gap:14px;">
+      <div>
+        <div class="arch-label">Repository Layer</div>
+        <div class="arch-box arch-iface" style="margin-bottom:6px;">
+          <div class="name">&laquo;AccountRepository&raquo;</div>
+        </div>
+        <div class="impl-group">
+          <div class="impl-box" style="background:rgba(110,231,183,0.12);border:1px solid var(--green);">
+            JdbcAccountRepo
+          </div>
+          <div class="impl-box" style="background:rgba(45,212,191,0.1);border:1px solid var(--teal);">
+            JpaAccountRepo
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="arch-label">Notification</div>
+        <div class="arch-box arch-iface" style="margin-bottom:6px;min-width:140px;">
+          <div class="name">&laquo;Notification&raquo;</div>
+        </div>
+        <div class="impl-group">
+          <div class="impl-box" style="background:rgba(251,146,60,0.1);border:1px solid var(--orange);">
+            EmailNotification
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-layer">
+      <div class="arch-label">Persistence</div>
+      <div class="arch-box arch-db">
+        <div class="name">Database</div>
+        <div class="desc">SQL</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4: Three Steps of Improvement -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Refactoring</div>
+  <div class="slide-title">Three Steps of Improvement</div>
+  <div class="slide-subtitle">v1 &rarr; v2 in three incremental steps</div>
+  <div class="steps-row">
+    <div class="step-box">
       <div class="step-num">Step 1</div>
-      <h3>Introduce Interfaces</h3>
+      <h3 style="color:var(--blue);">Introduce Interfaces</h3>
       <p>
-        Define <code>AccountRepository</code> and <code>TransferService</code> interfaces.<br><br>
-        Service depends on <strong>abstraction</strong>, not concrete class. Enables multiple implementations.
+        Define <code style="color:var(--yellow);">AccountRepository</code>,
+        <code style="color:var(--yellow);">TransferService</code>, and
+        <code style="color:var(--yellow);">Notification</code> interfaces.<br><br>
+        Service depends on <strong style="color:var(--blue);">abstraction</strong>, not concrete class.<br>
+        Enables multiple implementations.
       </p>
-      <span class="tag tag-design">Design fix</span>
-      <span class="tag tag-solid">OCP</span>
+      <div style="margin-top:10px;">
+        <span style="font-size:10px;background:rgba(96,165,250,0.15);color:var(--blue);padding:3px 10px;border-radius:10px;font-weight:600;">OCP</span>
+      </div>
     </div>
-    <div class="step">
+    <div class="step-arrow">&rarr;</div>
+    <div class="step-box">
       <div class="step-num">Step 2</div>
-      <h3>Use Factory</h3>
+      <h3 style="color:var(--purple);">Use Factory</h3>
       <p>
-        <code>AccountRepositoryFactory</code> creates the right implementation by type.<br><br>
-        Service no longer does <code>new JdbcAccountRepository()</code> inside its methods.
+        <code style="color:var(--yellow);">AccountRepositoryFactory</code> creates the right implementation by type.<br><br>
+        Service no longer does<br><code style="color:var(--red);">new JdbcAccountRepository()</code><br>inside its methods.
       </p>
-      <span class="tag tag-design">Decouples creation</span>
+      <div style="margin-top:10px;">
+        <span style="font-size:10px;background:rgba(167,139,250,0.15);color:var(--purple);padding:3px 10px;border-radius:10px;font-weight:600;">Decouples creation</span>
+      </div>
     </div>
-    <div class="step">
+    <div class="step-arrow">&rarr;</div>
+    <div class="step-box">
       <div class="step-num">Step 3</div>
-      <h3>Constructor DI</h3>
+      <h3 style="color:var(--green);">Constructor DI</h3>
       <p>
-        Dependency is <strong>injected</strong> via constructor by the assembler (<code>main</code>).<br><br>
-        Service doesn't create or lookup — it just <strong>receives</strong>.
+        Dependency is <strong style="color:var(--green);">injected</strong> via constructor by the assembler (<code style="color:var(--yellow);">main</code>).<br><br>
+        Service doesn't create or lookup &mdash; it just <strong style="color:var(--green);">receives</strong>.
       </p>
-      <span class="tag tag-perf">Performance fix</span>
-      <span class="tag tag-solid">DIP</span>
-    </div>
-  </div>
-</div>
-
-<!-- Dependency Diagram: v1 vs v2 -->
-<div class="dep-section">
-  <h2>Dependency Flow — Before vs After</h2>
-
-  <p style="color: #f38ba8; font-size: 13px; margin-bottom: 10px;">v1 — Tight coupling (concrete → concrete)</p>
-  <div class="dep-row">
-    <div class="dep-box dep-service">
-      <div class="cls">TransferServiceImpl</div>
-    </div>
-    <div style="display:flex; flex-direction:column; align-items:center;">
-      <div class="dep-arrow" style="color:#f38ba8;">— new →</div>
-      <div class="dep-arrow-label" style="color:#f38ba8;">creates directly</div>
-    </div>
-    <div class="dep-box dep-impl">
-      <div class="cls">JdbcAccountRepository</div>
-    </div>
-  </div>
-
-  <div class="vs-label">— — — vs — — —</div>
-
-  <p style="color: #a6e3a1; font-size: 13px; margin-bottom: 10px;">v2 — Loose coupling (concrete → interface ← concrete)</p>
-  <div class="dep-row">
-    <div class="dep-box dep-service">
-      <div class="cls">TransferServiceImpl</div>
-    </div>
-    <div style="display:flex; flex-direction:column; align-items:center;">
-      <div class="dep-arrow dep-arrow-blue">— depends →</div>
-      <div class="dep-arrow-label" style="color:#89b4fa;">uses interface</div>
-    </div>
-    <div class="dep-box dep-iface">
-      <div class="cls">&laquo;AccountRepository&raquo;</div>
-    </div>
-    <div style="display:flex; flex-direction:column; align-items:center;">
-      <div class="dep-arrow dep-arrow-green">← implements —</div>
-      <div class="dep-arrow-label" style="color:#a6e3a1;">can be swapped</div>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:8px;">
-      <div class="dep-box dep-impl" style="padding:10px 16px;">
-        <div class="cls" style="font-size:12px;">JdbcAccountRepo</div>
-      </div>
-      <div class="dep-box" style="padding:10px 16px; background:#2d5a1a; border:1px solid #66bb6a;">
-        <div class="cls" style="font-size:12px;">JpaAccountRepo</div>
+      <div style="margin-top:10px;">
+        <span style="font-size:10px;background:rgba(110,231,183,0.15);color:var(--green);padding:3px 10px;border-radius:10px;font-weight:600;">DIP</span>
+        <span style="font-size:10px;background:rgba(110,231,183,0.15);color:var(--green);padding:3px 10px;border-radius:10px;font-weight:600;margin-left:4px;">IoC</span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- DIP Principle Box -->
-<div class="principle-box">
-  <h3>Dependency Inversion Principle</h3>
-  <p>Service depends on <strong>AccountRepository interface</strong> — not the JDBC or JPA implementation</p>
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5: Dependency Flow v1 vs v2 -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Dependencies</div>
+  <div class="slide-title">Dependency Flow: v1 vs v2</div>
+  <div class="slide-subtitle">From concrete-to-concrete to concrete-to-interface</div>
+
+  <div style="max-width:900px;width:100%;">
+    <p style="color:var(--red);font-size:13px;font-weight:700;margin-bottom:12px;">v1 &mdash; Tight coupling (concrete &rarr; concrete)</p>
+    <div class="dep-row">
+      <div class="dep-box dep-svc">
+        <div class="cls">TransferServiceImpl</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;margin:0 12px;">
+        <div style="color:var(--red);font-size:14px;font-family:'JetBrains Mono',monospace;">-- new &rarr;</div>
+        <div style="font-size:10px;color:var(--red);">creates directly</div>
+      </div>
+      <div class="dep-box dep-impl">
+        <div class="cls">JdbcAccountRepository</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:var(--border);font-size:12px;margin:16px 0;">&mdash; &mdash; &mdash; vs &mdash; &mdash; &mdash;</div>
+
+    <p style="color:var(--green);font-size:13px;font-weight:700;margin-bottom:12px;">v2 &mdash; Loose coupling (concrete &rarr; interface &larr; implementations)</p>
+    <div class="dep-row">
+      <div class="dep-box dep-svc">
+        <div class="cls">TransferServiceImpl</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;margin:0 12px;">
+        <div style="color:var(--blue);font-size:14px;font-family:'JetBrains Mono',monospace;">-- depends &rarr;</div>
+        <div style="font-size:10px;color:var(--blue);">uses interface</div>
+      </div>
+      <div class="dep-box dep-iface">
+        <div class="cls">&laquo;AccountRepository&raquo;</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;margin:0 12px;">
+        <div style="color:var(--green);font-size:14px;font-family:'JetBrains Mono',monospace;">&larr; implements --</div>
+        <div style="font-size:10px;color:var(--green);">can be swapped</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="dep-box dep-impl" style="padding:10px 16px;">
+          <div class="cls" style="font-size:12px;">JdbcAccountRepo</div>
+        </div>
+        <div class="dep-box" style="padding:10px 16px;background:rgba(45,212,191,0.1);border:1px solid var(--teal);">
+          <div class="cls" style="font-size:12px;">JpaAccountRepo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="principle" style="margin-top:24px;padding:18px 36px;max-width:600px;">
+    <h3 style="font-size:16px;background:linear-gradient(135deg,var(--green),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Dependency Inversion Principle</h3>
+    <p style="font-size:13px;">Service depends on <strong style="color:var(--text);">AccountRepository interface</strong> &mdash; not the JDBC or JPA implementation</p>
+  </div>
 </div>
 
-<!-- Code Comparison -->
-<div class="code-compare">
-  <h2>Code Comparison — TransferServiceImpl</h2>
-  <div class="compare-grid">
-    <div class="code-panel panel-bad">
-      <h3>v1 — Tight Coupling</h3>
-      <span class="keyword">public void</span> <span class="type">transfer</span>(...) {<br>
-      <span class="bad-line">&nbsp;&nbsp;<span class="type">JdbcAccountRepository</span> repo =</span>
-      <span class="bad-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">new</span> <span class="type">JdbcAccountRepository</span>();</span>
-      <br>
-      &nbsp;&nbsp;Account from = repo.loadAccount(...);<br>
-      &nbsp;&nbsp;<span class="comment">// ...</span><br>
-      }
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6: Code Comparison -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Code</div>
+  <div class="slide-title">Code Comparison &mdash; TransferServiceImpl</div>
+  <div class="slide-subtitle">v1 creates internally vs v2 receives externally</div>
+  <div class="grid-2">
+    <div class="card" style="border-color:rgba(248,113,113,0.3);">
+      <h3 style="color:var(--red);">v1 &mdash; Tight Coupling</h3>
+      <div class="code-box" style="font-size:12px;">
+        <span class="kw">public void</span> <span class="ty">transfer</span>(...) {<br>
+        <span class="hl-red">&nbsp;&nbsp;<span class="ty">JdbcAccountRepository</span> repo =</span>
+        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">new</span> <span class="ty">JdbcAccountRepository</span>();</span>
+        <br>
+        &nbsp;&nbsp;<span class="ty">Account</span> from = repo.loadAccount(...);<br>
+        &nbsp;&nbsp;<span class="cm">// transfer logic...</span><br>
+        }
+      </div>
+      <p style="font-size:11px;color:var(--red);margin-top:14px;">
+        &#10007; Creates dependency inside method<br>
+        &#10007; Concrete type hardcoded<br>
+        &#10007; New object every call
+      </p>
     </div>
-    <div class="code-panel panel-good">
-      <h3>v2 — Constructor DI</h3>
-      <span class="keyword">private final</span> <span class="type">AccountRepository</span> repo;<br><br>
-      <span class="good-line"><span class="keyword">public</span> <span class="type">TransferServiceImpl</span>(<span class="type">AccountRepository</span> repo) {</span>
-      <span class="good-line">&nbsp;&nbsp;<span class="keyword">this</span>.repo = repo;</span>
-      <span class="good-line">}</span>
-      <br>
-      <span class="keyword">public void</span> <span class="type">transfer</span>(...) {<br>
-      &nbsp;&nbsp;Account from = repo.loadAccount(...);<br>
-      &nbsp;&nbsp;<span class="comment">// ...</span><br>
-      }
+    <div class="card" style="border-color:rgba(110,231,183,0.3);">
+      <h3 style="color:var(--green);">v2 &mdash; Constructor DI</h3>
+      <div class="code-box" style="font-size:12px;">
+        <span class="kw">private final</span> <span class="ty">AccountRepository</span> repo;<br>
+        <span class="kw">private final</span> <span class="ty">Notification</span> notif;<br><br>
+        <span class="hl-green"><span class="kw">public</span> <span class="ty">TransferServiceImpl</span>(</span>
+        <span class="hl-green">&nbsp;&nbsp;<span class="ty">AccountRepository</span> repo,</span>
+        <span class="hl-green">&nbsp;&nbsp;<span class="ty">Notification</span> notif) {</span>
+        <span class="hl-green">&nbsp;&nbsp;<span class="kw">this</span>.repo = repo;</span>
+        <span class="hl-green">&nbsp;&nbsp;<span class="kw">this</span>.notif = notif;</span>
+        <span class="hl-green">}</span>
+        <br>
+        <span class="kw">public void</span> <span class="ty">transfer</span>(...) {<br>
+        &nbsp;&nbsp;<span class="ty">Account</span> from = repo.loadAccount(...);<br>
+        &nbsp;&nbsp;<span class="cm">// transfer logic...</span><br>
+        }
+      </div>
+      <p style="font-size:11px;color:var(--green);margin-top:14px;">
+        &#10003; Dependencies injected from outside<br>
+        &#10003; Interface type &mdash; swappable<br>
+        &#10003; Single shared instance
+      </p>
     </div>
   </div>
 </div>
 
-<!-- Benefits -->
-<div class="benefits">
-  <h2>Benefits of v2</h2>
-  <div class="benefits-grid">
-    <div class="benefit-item">
-      <div class="benefit-icon">🔓</div>
-      <div class="benefit-text"><strong>Swappable</strong><br>Switch JDBC to JPA by changing one line in main()</div>
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7: DI Types -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Dependency Injection</div>
+  <div class="slide-title">Constructor vs Setter Injection</div>
+  <div class="slide-subtitle">Required deps via constructor, optional deps via setter</div>
+  <div class="grid-2">
+    <div class="card" style="border-color:rgba(110,231,183,0.3);">
+      <h3 style="color:var(--green);">Constructor Injection (Required)</h3>
+      <div class="code-box" style="font-size:12px;">
+        <span class="kw">public class</span> <span class="ty">TransferServiceImpl</span> {<br><br>
+        &nbsp;&nbsp;<span class="kw">private final</span> <span class="ty">AccountRepository</span> repo;<br>
+        &nbsp;&nbsp;<span class="kw">private final</span> <span class="ty">Notification</span> notif;<br><br>
+        <span class="hl-green">&nbsp;&nbsp;<span class="kw">public</span> TransferServiceImpl(</span>
+        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">AccountRepository</span> repo,</span>
+        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">Notification</span> notif) {</span>
+        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.repo = repo;</span>
+        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.notif = notif;</span>
+        <span class="hl-green">&nbsp;&nbsp;}</span>
+        <br>}
+      </div>
+      <p style="font-size:11px;color:var(--green);margin-top:14px;">
+        &#10003; Immutable (final fields) &nbsp; &#10003; Required at creation &nbsp; &#10003; Object always fully initialized
+      </p>
     </div>
-    <div class="benefit-item">
-      <div class="benefit-icon">🧪</div>
-      <div class="benefit-text"><strong>Testable</strong><br>Inject a mock repository for unit testing</div>
-    </div>
-    <div class="benefit-item">
-      <div class="benefit-icon">⚡</div>
-      <div class="benefit-text"><strong>Efficient</strong><br>Single repo instance shared across all calls</div>
-    </div>
-    <div class="benefit-item">
-      <div class="benefit-icon">🧩</div>
-      <div class="benefit-text"><strong>Extensible</strong><br>Add new repo impl without touching service code</div>
+    <div class="card" style="border-color:rgba(251,191,36,0.3);">
+      <h3 style="color:var(--yellow);">Setter Injection (Optional)</h3>
+      <div class="code-box" style="font-size:12px;">
+        <span class="kw">public class</span> <span class="ty">TransferServiceImpl</span> {<br><br>
+        &nbsp;&nbsp;<span class="kw">private</span> <span class="ty">Notification</span> notif;<br><br>
+        <span class="hl-yellow">&nbsp;&nbsp;<span class="kw">public void</span> setNotification(</span>
+        <span class="hl-yellow">&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">Notification</span> notif) {</span>
+        <span class="hl-yellow">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>.notif = notif;</span>
+        <span class="hl-yellow">&nbsp;&nbsp;}</span>
+        <br><br>
+        &nbsp;&nbsp;<span class="cm">// null-safe usage</span><br>
+        &nbsp;&nbsp;<span class="kw">if</span> (notif != <span class="kw">null</span>) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;notif.send(...);<br>
+        &nbsp;&nbsp;}
+      </div>
+      <p style="font-size:11px;color:var(--yellow);margin-top:14px;">
+        &#10003; Optional dependency &nbsp; &#10003; Can be absent &nbsp; &#10003; Set after construction
+      </p>
     </div>
   </div>
 </div>
 
-<!-- SOLID applied -->
-<div class="solid-section">
-  <h2>SOLID Principles Applied in v2</h2>
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8: OOP Concepts -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Foundations</div>
+  <div class="slide-title">OOP Concepts in v2</div>
+  <div class="slide-subtitle">Four pillars of object-oriented programming applied in our design</div>
+  <div class="grid-4">
+    <div class="card" style="border-color:rgba(96,165,250,0.3);text-align:center;">
+      <div class="oop-icon" style="color:var(--blue);">&#9649;</div>
+      <h3 style="color:var(--blue);">Abstraction</h3>
+      <p><strong style="color:var(--text);">What to do?</strong><br><br>
+      <code>AccountRepository</code> interface defines the contract &mdash; <em>what</em> operations exist, not <em>how</em></p>
+    </div>
+    <div class="card" style="border-color:rgba(167,139,250,0.3);text-align:center;">
+      <div class="oop-icon" style="color:var(--purple);">&#9635;</div>
+      <h3 style="color:var(--purple);">Encapsulation</h3>
+      <p><strong style="color:var(--text);">How to do?</strong><br><br>
+      <code>JdbcAccountRepo</code> hides SQL/JDBC details behind the interface</p>
+    </div>
+    <div class="card" style="border-color:rgba(45,212,191,0.3);text-align:center;">
+      <div class="oop-icon" style="color:var(--teal);">&#9683;</div>
+      <h3 style="color:var(--teal);">Inheritance</h3>
+      <p><strong style="color:var(--text);">Reuse code</strong><br><br>
+      <code>JdbcAccountRepo</code> and <code>JpaAccountRepo</code> implement the same interface (is-a)</p>
+    </div>
+    <div class="card" style="border-color:rgba(251,191,36,0.3);text-align:center;">
+      <div class="oop-icon" style="color:var(--yellow);">&#9830;</div>
+      <h3 style="color:var(--yellow);">Polymorphism</h3>
+      <p><strong style="color:var(--text);">One name, many forms</strong><br><br>
+      <code>repo.loadAccount()</code> &mdash; same call, different behavior (JDBC vs JPA)</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 9: SOLID Principles -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Design Principles</div>
+  <div class="slide-title">SOLID Principles</div>
+  <div class="slide-subtitle">v2 actively applies O, L, and D</div>
   <div class="solid-grid">
     <div class="solid-item solid-inactive">
       <div class="letter">S</div>
-      <div class="desc">Single Responsibility</div>
+      <div class="sdesc">Single Responsibility</div>
+      <div class="detail">A class should have only<br>one reason to change</div>
     </div>
     <div class="solid-item solid-active">
-      <div class="letter">O</div>
-      <div class="desc">Open-Closed</div>
+      <div class="letter" style="color:var(--green);">O</div>
+      <div class="sdesc" style="color:var(--green);">Open-Closed</div>
+      <div class="detail">Open for extension, closed for modification<br><br><strong style="color:var(--green);">v2: Add JpaAccountRepo without<br>changing TransferServiceImpl</strong></div>
     </div>
     <div class="solid-item solid-active">
-      <div class="letter">L</div>
-      <div class="desc">Liskov Substitution</div>
+      <div class="letter" style="color:var(--teal);">L</div>
+      <div class="sdesc" style="color:var(--teal);">Liskov Substitution</div>
+      <div class="detail">Subtypes must be substitutable<br>for their base types<br><br><strong style="color:var(--teal);">v2: JdbcRepo and JpaRepo<br>are interchangeable</strong></div>
     </div>
     <div class="solid-item solid-inactive">
       <div class="letter">I</div>
-      <div class="desc">Interface Segregation</div>
+      <div class="sdesc">Interface Segregation</div>
+      <div class="detail">Clients should not depend on<br>interfaces they don't use</div>
     </div>
     <div class="solid-item solid-active">
-      <div class="letter">D</div>
-      <div class="desc">Dependency Inversion</div>
+      <div class="letter" style="color:var(--blue);">D</div>
+      <div class="sdesc" style="color:var(--blue);">Dependency Inversion</div>
+      <div class="detail">High-level modules should depend<br>on abstractions, not low-level modules<br><br><strong style="color:var(--blue);">v2: Service depends on<br>AccountRepository interface</strong></div>
     </div>
   </div>
 </div>
 
-<div class="footer">money-transfer-system-v2 | Next: v3 — Spring container automates the assembler role</div>
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 10: Benefits + What's Next -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-label">Summary</div>
+  <div class="slide-title">Benefits of v2 &amp; What's Next</div>
+  <div class="slide-subtitle">Clean design achieved &mdash; but assembly is still manual</div>
+  <div class="benefits-box" style="margin-bottom:24px;">
+    <h2>Benefits of v2</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="benefit-item">
+        <div class="benefit-icon" style="color:var(--green);">&#8644;</div>
+        <div class="benefit-text"><strong>Swappable</strong><br>Switch JDBC to JPA by changing one line in main()</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon" style="color:var(--blue);">&#9881;</div>
+        <div class="benefit-text"><strong>Testable</strong><br>Inject a mock repository for unit testing</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon" style="color:var(--yellow);">&#9889;</div>
+        <div class="benefit-text"><strong>Efficient</strong><br>Single repo instance shared across all calls</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon" style="color:var(--purple);">&#10010;</div>
+        <div class="benefit-text"><strong>Extensible</strong><br>Add new repo impl without touching service code</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="border-color:rgba(129,140,248,0.3);max-width:1100px;width:100%;text-align:center;padding:20px 36px;">
+    <h3 style="color:var(--accent2);font-size:18px;">What's Next &rarr; v3</h3>
+    <p style="font-size:14px;">
+      In v2, <strong style="color:var(--text);">main()</strong> manually creates and wires all components.<br>
+      In v3, the <strong style="color:var(--green);">Spring IoC Container</strong> takes over as the assembler &mdash; you just declare intent with annotations.
+    </p>
+    <div class="tag-row" style="margin-top:14px;">
+      <span class="tag">@Configuration</span>
+      <span class="tag">@ComponentScan</span>
+      <span class="tag">@Autowired</span>
+      <span class="tag">@Qualifier</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- end deck -->
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const navDots = document.getElementById('navDots');
+const navInfo = document.getElementById('navInfo');
+const progressBar = document.getElementById('progressBar');
+const slideCounter = document.getElementById('slideCounter');
+let current = 0;
+
+// Build nav dots
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot';
+  dot.onclick = () => goTo(i);
+  navDots.appendChild(dot);
+});
+
+function goTo(n) {
+  if (n < 0 || n >= slides.length) return;
+  slides[current].classList.remove('active');
+  slides[current].classList.add('exit-left');
+  setTimeout(() => slides[current === n ? current : current].classList.remove('exit-left'), 450);
+
+  const prev = current;
+  current = n;
+  slides[current].classList.remove('exit-left');
+
+  // Direction-aware animation
+  if (n > prev) {
+    slides[current].style.transform = 'translateX(40px)';
+  } else {
+    slides[current].style.transform = 'translateX(-40px)';
+  }
+  // Force reflow
+  void slides[current].offsetWidth;
+  slides[current].classList.add('active');
+
+  // Remove exit from previous
+  setTimeout(() => {
+    slides.forEach((s, i) => { if (i !== current) { s.classList.remove('active', 'exit-left'); }});
+  }, 500);
+
+  updateUI();
+}
+
+function nextSlide() { goTo(current + 1); }
+function prevSlide() { goTo(current - 1); }
+
+function updateUI() {
+  document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  navInfo.textContent = `${current + 1} / ${slides.length}`;
+  progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+  slideCounter.textContent = `${current + 1} / ${slides.length}`;
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End') { e.preventDefault(); goTo(slides.length - 1); }
+});
+
+// Touch swipe support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+document.addEventListener('touchend', e => {
+  const diff = e.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(diff) > 50) { diff > 0 ? prevSlide() : nextSlide(); }
+});
+
+// Init
+slides[0].classList.add('active');
+updateUI();
+</script>
 
 </body>
 </html>

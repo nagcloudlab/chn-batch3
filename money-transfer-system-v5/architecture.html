@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>v4 — Money Transfer System | Spring AOP</title>
+<title>v5 — Money Transfer System | Spring JDBC & @Transactional</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
 
@@ -15,19 +15,16 @@
     --border: #2a2a45;
     --text: #e2e4f0;
     --text-dim: #8888a8;
-    --accent: #6ee7b7;
-    --accent2: #818cf8;
-    --accent3: #f472b6;
-    --accent4: #fbbf24;
-    --accent5: #38bdf8;
-    --blue: #60a5fa;
     --green: #6ee7b7;
+    --blue: #60a5fa;
     --purple: #a78bfa;
     --pink: #f472b6;
     --yellow: #fbbf24;
     --orange: #fb923c;
     --red: #f87171;
     --teal: #2dd4bf;
+    --accent: #6ee7b7;
+    --accent2: #818cf8;
   }
 
   html, body {
@@ -36,7 +33,7 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
-  /* ─── Slide Container ─── */
+  /* Slide Container */
   .deck { position: relative; width: 100%; height: 100%; }
   .slide {
     position: absolute; inset: 0;
@@ -53,7 +50,7 @@
     opacity: 0; transform: translateX(-40px);
   }
 
-  /* ─── Navigation ─── */
+  /* Navigation */
   .nav-bar {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
@@ -90,7 +87,7 @@
   .nav-prev { left: 16px; }
   .nav-next { right: 16px; }
 
-  /* ─── Typography ─── */
+  /* Typography */
   .slide-title {
     font-size: 36px; font-weight: 800; margin-bottom: 8px;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -103,7 +100,7 @@
     color: var(--accent); margin-bottom: 12px;
   }
 
-  /* ─── Cards & Boxes ─── */
+  /* Cards & Boxes */
   .card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 16px; padding: 28px; transition: border-color 0.3s;
@@ -120,7 +117,7 @@
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; width: 100%; max-width: 1100px; }
   .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; width: 100%; max-width: 1100px; }
 
-  /* ─── Code blocks ─── */
+  /* Code blocks */
   .code-box {
     background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
     padding: 20px 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8;
@@ -139,7 +136,7 @@
   .hl-purple { background: rgba(167,139,250,0.08); border-left: 3px solid var(--purple); padding-left: 10px; display: block; }
   .hl-orange { background: rgba(251,146,60,0.08); border-left: 3px solid var(--orange); padding-left: 10px; display: block; }
 
-  /* ─── Flowcharts ─── */
+  /* Flowcharts */
   .flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
   .flow-arrow { font-size: 22px; color: var(--text-dim); margin: 0 14px; }
   .flow-box {
@@ -149,27 +146,29 @@
   .flow-box p { font-size: 11px; color: var(--text-dim); }
   .flow-box code { font-size: 11px; }
 
-  /* ─── Timeline ─── */
+  /* Timeline */
   .tl-bad { background: #2a1020; border: 1px solid var(--red); }
   .tl-bad h4 { color: var(--red); }
   .tl-mid { background: #2a2010; border: 1px solid var(--orange); }
   .tl-mid h4 { color: var(--orange); }
   .tl-good { background: #102a1a; border: 1px solid var(--green); }
   .tl-good h4 { color: var(--green); }
-  .tl-v4 { background: #1a1a3a; border: 2px solid var(--accent2); }
+  .tl-v4 { background: #1a1a3a; border: 1px solid var(--accent2); }
   .tl-v4 h4 { color: var(--accent2); }
+  .tl-v5 { background: #0a2a2a; border: 2px solid var(--teal); }
+  .tl-v5 h4 { color: var(--teal); }
 
-  /* ─── Annotation badges ─── */
+  /* Annotation badges */
   .badge {
     display: inline-block; padding: 8px 22px; border-radius: 8px;
     font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;
   }
   .badge-sm { font-size: 12px; padding: 6px 16px; }
 
-  /* ─── Tags ─── */
+  /* Tags */
   .big-title {
     font-size: 52px; font-weight: 800;
-    background: linear-gradient(135deg, var(--accent2), var(--purple), var(--pink));
+    background: linear-gradient(135deg, var(--teal), var(--blue));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text; margin-bottom: 16px;
   }
@@ -180,11 +179,14 @@
     padding: 6px 16px; border-radius: 20px;
     font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--yellow);
   }
-  .tag-aop {
-    border-color: var(--accent2); color: var(--accent2);
+  .tag-jdbc {
+    border-color: var(--teal); color: var(--teal);
+  }
+  .tag-lifecycle {
+    border-color: var(--orange); color: var(--orange);
   }
 
-  /* ─── Architecture layers ─── */
+  /* Architecture layers */
   .arch-flow {
     display: flex; align-items: flex-start; justify-content: center;
     gap: 0; flex-wrap: wrap;
@@ -209,13 +211,14 @@
   .arch-iface .name { color: var(--blue); font-style: italic; font-size: 13px; }
   .arch-arrow { font-size: 24px; color: var(--text-dim); margin: 0 8px; padding-top: 20px; }
   .arch-aspect { background: rgba(244,114,182,0.1); border: 2px solid var(--pink); }
+  .arch-tx { background: rgba(45,212,191,0.1); border: 2px solid var(--teal); }
   .impl-group { display: flex; gap: 8px; margin-top: 8px; }
   .impl-box {
     padding: 10px 14px; border-radius: 8px; text-align: center;
     font-size: 12px; font-weight: 600;
   }
 
-  /* ─── Steps row ─── */
+  /* Steps row */
   .steps-row { display: flex; gap: 0; align-items: stretch; width: 100%; max-width: 1100px; }
   .step-box {
     flex: 1; background: var(--surface); border: 1px solid var(--border);
@@ -236,7 +239,7 @@
     padding: 0 4px;
   }
 
-  /* ─── Principle box ─── */
+  /* Principle box */
   .principle {
     border: 2px dashed var(--text-dim); border-radius: 16px;
     padding: 30px 50px; text-align: center; max-width: 750px;
@@ -244,23 +247,13 @@
   .principle h3 { font-size: 22px; margin-bottom: 10px; }
   .principle p { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
 
-  /* ─── Benefits ─── */
-  .benefits-box {
-    background: rgba(129,140,248,0.05); border: 2px solid var(--accent2);
-    border-radius: 16px; padding: 30px 40px; width: 100%; max-width: 1100px;
-  }
-  .benefits-box h2 { color: var(--accent2); font-size: 22px; margin-bottom: 20px; }
-  .benefit-item { display: flex; align-items: start; gap: 12px; font-size: 13px; }
-  .benefit-text strong { color: var(--accent2); }
-  .benefit-text { color: var(--text-dim); line-height: 1.6; }
-
-  /* ─── Connector lines ─── */
+  /* Connector lines */
   .connector-line { color: var(--border); font-size: 14px; margin: 8px 0; text-align: center; }
 
   /* Progress bar */
   .progress-bar {
     position: fixed; top: 0; left: 0; height: 3px; z-index: 110;
-    background: linear-gradient(90deg, var(--accent2), var(--pink));
+    background: linear-gradient(90deg, var(--teal), var(--blue));
     transition: width 0.4s ease;
   }
 
@@ -272,21 +265,28 @@
     padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border);
   }
 
-  /* ─── Proxy diagram ─── */
+  /* Proxy diagram */
   .proxy-wrap {
-    border: 2px dashed var(--pink); border-radius: 16px; padding: 20px;
-    position: relative; background: rgba(244,114,182,0.03);
+    border: 2px dashed var(--teal); border-radius: 16px; padding: 20px;
+    position: relative; background: rgba(45,212,191,0.03);
   }
   .proxy-label {
     position: absolute; top: -12px; left: 24px;
-    background: var(--pink); color: var(--bg);
+    background: var(--teal); color: var(--bg);
     font-weight: 800; font-size: 11px; padding: 3px 14px; border-radius: 20px;
     font-family: 'JetBrains Mono', monospace;
   }
 
-  /* ─── Vertical flow ─── */
+  /* Vertical flow */
   .vflow { display: flex; flex-direction: column; align-items: center; gap: 0; }
   .vflow-arrow { font-size: 20px; color: var(--text-dim); margin: 6px 0; }
+
+  /* Lifecycle flow */
+  .lc-box {
+    padding: 14px 20px; border-radius: 10px; text-align: center;
+    font-size: 12px; font-weight: 600; min-width: 140px;
+  }
+  .lc-arrow { font-size: 18px; color: var(--text-dim); margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -305,445 +305,426 @@
 
 <div class="deck" id="deck">
 
-<!-- ════════════════════════════════════════════════════════════════ -->
 <!-- SLIDE 1: Title -->
-<!-- ════════════════════════════════════════════════════════════════ -->
 <div class="slide">
-  <div class="big-title">Money Transfer System v4</div>
-  <div class="big-subtitle">Spring AOP &mdash; Aspect-Oriented Programming</div>
+  <div class="big-title">Money Transfer System v5</div>
+  <div class="big-subtitle">Spring JDBC | @Transactional | Context Lifecycle</div>
   <div class="tag-row">
+    <span class="tag tag-jdbc">JdbcTemplate</span>
+    <span class="tag tag-jdbc">@Transactional</span>
+    <span class="tag tag-jdbc">@EnableTransactionManagement</span>
+    <span class="tag tag-jdbc">PlatformTransactionManager</span>
+    <span class="tag tag-lifecycle">BeanFactoryPostProcessor</span>
+    <span class="tag tag-lifecycle">BeanPostProcessor</span>
     <span class="tag">@Configuration</span>
     <span class="tag">@ComponentScan</span>
-    <span class="tag">@Service</span>
-    <span class="tag">@Repository</span>
-    <span class="tag tag-aop">@Aspect</span>
-    <span class="tag tag-aop">@EnableAspectJAutoProxy</span>
-    <span class="tag tag-aop">@Before</span>
-    <span class="tag tag-aop">@Around</span>
-    <span class="tag tag-aop">@Order</span>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
 <!-- SLIDE 2: Evolution Timeline -->
-<!-- ════════════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="section-label">Journey</div>
-  <div class="slide-title">Evolution: v1 &rarr; v2 &rarr; v3 &rarr; v4</div>
-  <div class="slide-subtitle">From tight coupling to aspect-oriented cross-cutting concerns</div>
+  <div class="slide-title">Evolution: v1 &rarr; v2 &rarr; v3 &rarr; v4 &rarr; v5</div>
+  <div class="slide-subtitle">From tight coupling to declarative transaction management</div>
   <div class="flow">
-    <div class="flow-box tl-bad" style="min-width:140px;padding:14px 18px;">
+    <div class="flow-box tl-bad" style="min-width:130px;padding:14px 16px;">
       <h4>v1 &mdash; Problems</h4>
       <p>Tight coupling<br><code style="color:var(--red)">new</code> inside service</p>
     </div>
     <div class="flow-arrow">&rarr;</div>
-    <div class="flow-box tl-mid" style="min-width:140px;padding:14px 18px;">
+    <div class="flow-box tl-mid" style="min-width:130px;padding:14px 16px;">
       <h4>v2 &mdash; Manual DI</h4>
       <p>Interfaces + Factory<br>main() is assembler</p>
     </div>
     <div class="flow-arrow">&rarr;</div>
-    <div class="flow-box tl-good" style="min-width:140px;padding:14px 18px;">
+    <div class="flow-box tl-good" style="min-width:130px;padding:14px 16px;">
       <h4>v3 &mdash; Spring DI</h4>
       <p>@Configuration<br>@ComponentScan<br>Spring is assembler</p>
     </div>
     <div class="flow-arrow">&rarr;</div>
-    <div class="flow-box tl-v4" style="min-width:140px;padding:14px 18px;">
+    <div class="flow-box tl-v4" style="min-width:130px;padding:14px 16px;">
       <h4>v4 &mdash; Spring AOP</h4>
       <p>@Aspect + @Around<br>Cross-cutting concerns<br>separated from business</p>
     </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box tl-v5" style="min-width:130px;padding:14px 16px;">
+      <h4>v5 &mdash; Spring JDBC</h4>
+      <p>JdbcTemplate<br>@Transactional<br>Context Lifecycle</p>
+    </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 3: The Problem — Cross-Cutting Concerns -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3: What's New in v5 -->
 <div class="slide">
-  <div class="section-label">The Problem</div>
-  <div class="slide-title">Cross-Cutting Concerns</div>
-  <div class="slide-subtitle">Some logic cuts across every layer &mdash; it doesn't belong to one class</div>
-  <div class="grid-2" style="max-width:1050px;">
-    <div class="card" style="border-color:rgba(248,113,113,0.3);">
-      <h3 style="color:var(--red);">Without AOP (scattered code)</h3>
-      <div class="code-box" style="font-size:12px;">
-        <span class="kw">public void</span> <span class="ty">transfer</span>(...) {<br>
-        <span class="hl-red">&nbsp;&nbsp;checkAuthorization();  <span class="cm">// security</span></span>
-        <span class="hl-yellow">&nbsp;&nbsp;beginTransaction();    <span class="cm">// tx mgmt</span></span>
-        <span class="hl-blue">&nbsp;&nbsp;log("transfer start"); <span class="cm">// logging</span></span>
-        <br>
-        &nbsp;&nbsp;<span class="cm">// actual business logic</span><br>
-        &nbsp;&nbsp;from.debit(amount);<br>
-        &nbsp;&nbsp;to.credit(amount);<br>
-        <br>
-        <span class="hl-yellow">&nbsp;&nbsp;commitTransaction();   <span class="cm">// tx mgmt</span></span>
-        <span class="hl-blue">&nbsp;&nbsp;log("transfer done");  <span class="cm">// logging</span></span>
+  <div class="section-label">Overview</div>
+  <div class="slide-title">What's New in v5</div>
+  <div class="slide-subtitle">Four key additions over v4</div>
+  <div class="grid-2" style="max-width:1000px;">
+    <div class="card" style="border-color:rgba(45,212,191,0.4);">
+      <h3 style="color:var(--teal);">JdbcTemplate</h3>
+      <p>Replaces raw JDBC (Connection, PreparedStatement, ResultSet) with Spring's clean abstraction.<br><br>
+      <code>queryForObject()</code> and <code>update()</code> &mdash; no more try/catch/finally boilerplate for resource cleanup.</p>
+    </div>
+    <div class="card" style="border-color:rgba(96,165,250,0.4);">
+      <h3 style="color:var(--blue);">@Transactional</h3>
+      <p>Declarative transaction management replaces the manual <code>AtomicTransactionAspect</code> from v4.<br><br>
+      Normal return &rarr; auto-commit. Exception &rarr; auto-rollback. Uses AOP under the hood!</p>
+    </div>
+    <div class="card" style="border-color:rgba(251,146,60,0.4);">
+      <h3 style="color:var(--orange);">BPP &amp; BFPP</h3>
+      <p>Understand Spring's internal extension points.<br><br>
+      <code>BeanFactoryPostProcessor</code> modifies bean definitions. <code>BeanPostProcessor</code> wraps bean initialization (AOP proxies created here).</p>
+    </div>
+    <div class="card" style="border-color:rgba(167,139,250,0.4);">
+      <h3 style="color:var(--purple);">Context Lifecycle</h3>
+      <p>Full picture of how Spring boots up:<br><br>
+      Bean Definitions &rarr; BFPP &rarr; Create &rarr; DI &rarr; BPP.before &rarr; @PostConstruct &rarr; BPP.after &rarr; Ready</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: JdbcTemplate — Before vs After -->
+<div class="slide">
+  <div class="section-label">Spring JDBC</div>
+  <div class="slide-title">JdbcTemplate &mdash; Bye Bye Boilerplate</div>
+  <div class="slide-subtitle">JdbcAccountRepository: raw JDBC vs JdbcTemplate</div>
+  <div class="grid-2" style="max-width:1100px;">
+    <div class="card" style="border-color:rgba(248,113,113,0.3);padding:20px;">
+      <h3 style="color:var(--red);font-size:14px;">Before (v4 &mdash; raw JDBC)</h3>
+      <div class="code-box" style="font-size:11px;line-height:1.7;">
+        <span class="ty">Connection</span> conn = dataSource.getConnection();<br>
+        <span class="kw">try</span> {<br>
+        &nbsp;&nbsp;<span class="ty">PreparedStatement</span> ps = conn.prepareStatement(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="st">"SELECT number, balance FROM accounts WHERE number = ?"</span>);<br>
+        &nbsp;&nbsp;ps.setString(1, accountNumber);<br>
+        &nbsp;&nbsp;<span class="ty">ResultSet</span> rs = ps.executeQuery();<br>
+        &nbsp;&nbsp;<span class="kw">if</span> (rs.next()) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;account.setAccountNumber(rs.getString(<span class="st">"number"</span>));<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;account.setBalance(rs.getDouble(<span class="st">"balance"</span>));<br>
+        &nbsp;&nbsp;}<br>
+        } <span class="kw">finally</span> {<br>
+        &nbsp;&nbsp;conn.close(); <span class="cm">// don't forget!</span><br>
         }
       </div>
-      <p style="font-size:11px;color:var(--red);margin-top:10px;">Business logic buried under infrastructure code. Violates SRP.</p>
+      <p style="font-size:11px;color:var(--red);margin-top:8px;">Manual connection mgmt, exception handling, resource cleanup</p>
     </div>
-    <div class="card" style="border-color:rgba(110,231,183,0.3);">
-      <h3 style="color:var(--green);">With AOP (clean business code)</h3>
+    <div class="card" style="border-color:rgba(45,212,191,0.3);padding:20px;">
+      <h3 style="color:var(--teal);font-size:14px;">After (v5 &mdash; JdbcTemplate)</h3>
+      <div class="code-box" style="font-size:11px;line-height:1.7;">
+        <span class="ty">String</span> sql = <span class="st">"SELECT number, balance FROM accounts WHERE number = ?"</span>;<br>
+        <br>
+        <span class="hl-green"><span class="kw">return</span> jdbcTemplate.queryForObject(sql,</span>
+        <span class="hl-green">&nbsp;&nbsp;<span class="kw">new</span> Object[]{accountNumber},</span>
+        <span class="hl-green">&nbsp;&nbsp;(rs, rowNum) -&gt; {</span>
+        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">Account</span> account = <span class="kw">new</span> <span class="ty">Account</span>();</span>
+        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;account.setAccountNumber(rs.getString(<span class="st">"number"</span>));</span>
+        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;account.setBalance(rs.getDouble(<span class="st">"balance"</span>));</span>
+        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> account;</span>
+        <span class="hl-green">&nbsp;&nbsp;});</span>
+      </div>
+      <p style="font-size:11px;color:var(--teal);margin-top:8px;">No Connection/PreparedStatement/ResultSet/finally &mdash; Spring handles it all</p>
+    </div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+    <span class="badge badge-sm" style="background:rgba(45,212,191,0.1);border:1px solid var(--teal);color:var(--teal);">queryForObject() &mdash; single row</span>
+    <span class="badge badge-sm" style="background:rgba(96,165,250,0.1);border:1px solid var(--blue);color:var(--blue);">update() &mdash; INSERT/UPDATE/DELETE</span>
+    <span class="badge badge-sm" style="background:rgba(167,139,250,0.1);border:1px solid var(--purple);color:var(--purple);">RowMapper lambda &mdash; maps ResultSet to Object</span>
+  </div>
+</div>
+
+<!-- SLIDE 5: @Transactional -->
+<div class="slide">
+  <div class="section-label">Transaction Management</div>
+  <div class="slide-title">@Transactional &mdash; Declarative Tx Management</div>
+  <div class="slide-subtitle">Replaces v4's manual AtomicTransactionAspect with a single annotation</div>
+  <div class="grid-2" style="max-width:1100px;">
+    <div class="card" style="border-color:rgba(45,212,191,0.4);padding:20px;">
+      <h3 style="color:var(--teal);font-size:14px;">v5 &mdash; @Transactional</h3>
       <div class="code-box" style="font-size:12px;">
-        <span class="kw">public void</span> <span class="ty">transfer</span>(...) {<br>
+        <span class="hl-green"><span class="an">@Transactional</span>(</span>
+        <span class="hl-green">&nbsp;&nbsp;transactionManager = <span class="st">"transactionManager"</span>,</span>
+        <span class="hl-green">&nbsp;&nbsp;rollbackFor = <span class="ty">RuntimeException</span>.<span class="kw">class</span></span>
+        <span class="hl-green">)</span>
+        <span class="kw">public void</span> <span class="ty">transfer</span>(<span class="kw">double</span> amount,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">String</span> from, <span class="ty">String</span> to) {<br>
         <br>
         &nbsp;&nbsp;<span class="cm">// ONLY business logic</span><br>
-        <span class="hl-green">&nbsp;&nbsp;from.debit(amount);</span>
-        <span class="hl-green">&nbsp;&nbsp;to.credit(amount);</span>
-        <br>
-        }<br>
-        <br>
-        <span class="cm">// Auth, Tx, Logging handled</span><br>
-        <span class="cm">// by separate @Aspect classes</span><br>
-        <span class="cm">// Spring auto-weaves them in</span>
-      </div>
-      <p style="font-size:11px;color:var(--green);margin-top:10px;">Clean separation. Business code stays pure. Concerns are modular.</p>
-    </div>
-  </div>
-  <div style="margin-top:24px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
-    <span class="badge badge-sm" style="background:rgba(248,113,113,0.1);border:1px solid var(--red);color:var(--red);">Authorization</span>
-    <span class="badge badge-sm" style="background:rgba(251,191,36,0.1);border:1px solid var(--yellow);color:var(--yellow);">Transactions</span>
-    <span class="badge badge-sm" style="background:rgba(96,165,250,0.1);border:1px solid var(--blue);color:var(--blue);">Logging</span>
-    <span class="badge badge-sm" style="background:rgba(110,231,183,0.1);border:1px solid var(--green);color:var(--green);">Caching</span>
-    <span class="badge badge-sm" style="background:rgba(167,139,250,0.1);border:1px solid var(--purple);color:var(--purple);">Metrics</span>
-    <span class="badge badge-sm" style="background:rgba(251,146,60,0.1);border:1px solid var(--orange);color:var(--orange);">Exception Handling</span>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 4: Proxy Pattern — Manual Approach -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-<div class="slide">
-  <div class="section-label">Foundation</div>
-  <div class="slide-title">Proxy Pattern &mdash; The Idea Behind AOP</div>
-  <div class="slide-subtitle">ProxyPatternExample.java &mdash; manual approach before Spring AOP</div>
-  <div class="grid-2" style="max-width:1050px;">
-    <div class="card" style="border-color:rgba(251,146,60,0.3);">
-      <h3 style="color:var(--orange);">Target Object (Trainer)</h3>
-      <div class="code-box" style="font-size:12px;">
-        <span class="kw">class</span> <span class="ty">Trainer</span> {<br>
-        &nbsp;&nbsp;<span class="cm">// Join Points &mdash; methods AOP can intercept</span><br>
-        <span class="hl-green">&nbsp;&nbsp;<span class="kw">public void</span> getSpringBootTraining() {</span>
-        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;System.out.println(<span class="st">"Spring Boot Training"</span>);</span>
-        <span class="hl-green">&nbsp;&nbsp;}</span>
-        <span class="hl-green">&nbsp;&nbsp;<span class="kw">public void</span> getSQLTraining() {</span>
-        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;System.out.println(<span class="st">"SQL Training"</span>);</span>
-        <span class="hl-green">&nbsp;&nbsp;}</span>
+        &nbsp;&nbsp;<span class="ty">Account</span> fromAcct = repo.loadAccount(from);<br>
+        &nbsp;&nbsp;<span class="ty">Account</span> toAcct = repo.loadAccount(to);<br>
+        &nbsp;&nbsp;fromAcct.debit(amount);<br>
+        &nbsp;&nbsp;toAcct.credit(amount);<br>
+        &nbsp;&nbsp;repo.updateAccount(fromAcct);<br>
+        &nbsp;&nbsp;repo.updateAccount(toAcct);<br>
         }
       </div>
     </div>
-    <div class="card" style="border-color:rgba(244,114,182,0.3);">
-      <h3 style="color:var(--pink);">Proxy (wraps Target + Aspects)</h3>
+    <div class="card" style="border-color:rgba(248,113,113,0.3);padding:20px;">
+      <h3 style="color:var(--red);font-size:14px;">v4 &mdash; Manual @Around Aspect</h3>
       <div class="code-box" style="font-size:12px;">
-        <span class="kw">class</span> <span class="ty">TrainerProxy</span> {<br>
-        &nbsp;&nbsp;<span class="ty">Trainer</span> trainer = <span class="kw">new</span> <span class="ty">Trainer</span>();<br>
-        &nbsp;&nbsp;<span class="ty">Authrization</span> auth = <span class="kw">new</span> <span class="ty">Authrization</span>();<br>
-        &nbsp;&nbsp;<span class="ty">Logging</span> log = <span class="kw">new</span> <span class="ty">Logging</span>();<br><br>
-        &nbsp;&nbsp;<span class="kw">public void</span> getSpringBootTraining() {<br>
-        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;auth.doAuthrization(); <span class="cm">// Aspect 1</span></span>
-        <span class="hl-blue">&nbsp;&nbsp;&nbsp;&nbsp;log.doLogging();       <span class="cm">// Aspect 2</span></span>
-        <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;trainer.getSpringBootTraining(); <span class="cm">// Target</span></span>
+        <span class="an">@Component</span> <span class="an">@Aspect</span> <span class="an">@Order(2)</span><br>
+        <span class="kw">public class</span> <span class="ty">AtomicTransactionAspect</span> {<br>
+        <br>
+        &nbsp;&nbsp;<span class="an">@Around</span>(<span class="st">"execution(void transfer(..))"</span>)<br>
+        &nbsp;&nbsp;<span class="kw">public void</span> aroundTransfer(<span class="ty">ProceedingJoinPoint</span> jp) {<br>
+        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">try</span> {</span>
+        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;beginTransaction();</span>
+        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jp.proceed();</span>
+        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commitTransaction();</span>
+        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;} <span class="kw">catch</span> (<span class="ty">Throwable</span> ex) {</span>
+        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rollbackTransaction();</span>
+        <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;}</span>
         &nbsp;&nbsp;}<br>
         }
       </div>
     </div>
   </div>
-  <p style="color:var(--text-dim);font-size:13px;margin-top:20px;">This works, but you must write proxy code manually for every class. <strong style="color:var(--accent2);">Spring AOP automates this!</strong></p>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 5: AOP Terminology -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-<div class="slide">
-  <div class="section-label">Vocabulary</div>
-  <div class="slide-title">AOP Terminology</div>
-  <div class="slide-subtitle">The key terms you need to know</div>
-  <div class="grid-3" style="max-width:1100px;">
-    <div class="card" style="padding:20px;border-color:rgba(244,114,182,0.3);">
-      <h3 style="color:var(--pink);font-size:14px;">Aspect</h3>
-      <p style="font-size:12px;">A class containing cross-cutting logic.<br><code>@Aspect</code> + <code>@Component</code></p>
-      <p style="font-size:11px;margin-top:6px;color:var(--pink);">e.g. AuthorizationAspect, AtomicTransactionAspect</p>
+  <div style="margin-top:20px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center;">
+    <div class="card" style="padding:12px 20px;border-color:rgba(110,231,183,0.3);">
+      <p style="font-size:12px;"><strong style="color:var(--green);">Normal return</strong> &rarr; auto-commit</p>
     </div>
-    <div class="card" style="padding:20px;border-color:rgba(251,191,36,0.3);">
-      <h3 style="color:var(--yellow);font-size:14px;">Advice</h3>
-      <p style="font-size:12px;">The action taken by an aspect at a join point. The "what to do".</p>
-      <p style="font-size:11px;margin-top:6px;color:var(--yellow);">e.g. @Before, @After, @Around methods</p>
+    <div class="card" style="padding:12px 20px;border-color:rgba(248,113,113,0.3);">
+      <p style="font-size:12px;"><strong style="color:var(--red);">Exception thrown</strong> &rarr; auto-rollback</p>
     </div>
-    <div class="card" style="padding:20px;border-color:rgba(110,231,183,0.3);">
-      <h3 style="color:var(--green);font-size:14px;">Join Point</h3>
-      <p style="font-size:12px;">A point in execution where an aspect can be applied.</p>
-      <p style="font-size:11px;margin-top:6px;color:var(--green);">In Spring AOP: always a method execution</p>
-    </div>
-    <div class="card" style="padding:20px;border-color:rgba(96,165,250,0.3);">
-      <h3 style="color:var(--blue);font-size:14px;">Pointcut</h3>
-      <p style="font-size:12px;">An expression that selects which join points to intercept.</p>
-      <p style="font-size:11px;margin-top:6px;color:var(--blue);">e.g. execution(void transfer(..))</p>
-    </div>
-    <div class="card" style="padding:20px;border-color:rgba(251,146,60,0.3);">
-      <h3 style="color:var(--orange);font-size:14px;">Target</h3>
-      <p style="font-size:12px;">The actual object being advised (proxied).</p>
-      <p style="font-size:11px;margin-top:6px;color:var(--orange);">e.g. TransferServiceImpl instance</p>
-    </div>
-    <div class="card" style="padding:20px;border-color:rgba(167,139,250,0.3);">
-      <h3 style="color:var(--purple);font-size:14px;">Weaving</h3>
-      <p style="font-size:12px;">Linking aspects with target objects to create proxies.</p>
-      <p style="font-size:11px;margin-top:6px;color:var(--purple);">Spring does this at runtime (dynamic proxies)</p>
+    <div class="card" style="padding:12px 20px;border-color:rgba(167,139,250,0.3);">
+      <p style="font-size:12px;"><strong style="color:var(--purple);">Under the hood</strong> &rarr; uses AOP proxy (same mechanism!)</p>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 6: How Spring AOP Works -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6: How @Transactional Works -->
 <div class="slide">
   <div class="section-label">Internals</div>
-  <div class="slide-title">How Spring AOP Works</div>
-  <div class="slide-subtitle">Spring wraps your bean in a proxy &mdash; calls go through aspects first</div>
+  <div class="slide-title">How @Transactional Works</div>
+  <div class="slide-subtitle">Spring creates a proxy around your bean &mdash; same AOP mechanism as @Aspect</div>
   <div style="display:flex;align-items:center;justify-content:center;gap:16px;max-width:1050px;flex-wrap:wrap;">
     <div class="arch-box arch-caller" style="min-width:100px;">
       <div class="name" style="font-size:13px;">main()</div>
       <div class="desc">getBean("transferService")</div>
     </div>
     <div class="arch-arrow" style="padding-top:0;">&rarr;</div>
-    <div class="proxy-wrap" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
-      <div class="proxy-label">Spring AOP Proxy</div>
-      <div class="vflow" style="min-width:160px;margin-top:8px;">
-        <div class="arch-box arch-aspect" style="padding:10px 16px;min-width:160px;">
-          <div class="anno" style="font-size:10px;">@Order(1) @Before</div>
-          <div class="name" style="font-size:12px;">AuthorizationAspect</div>
-          <div class="desc">checkAuthorization()</div>
+    <div class="proxy-wrap" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <div class="proxy-label">Spring Tx Proxy</div>
+      <div class="vflow" style="min-width:200px;margin-top:8px;">
+        <div class="lc-box" style="background:rgba(45,212,191,0.12);border:1px solid var(--teal);color:var(--teal);">
+          Begin Transaction
         </div>
-        <div class="vflow-arrow">&darr;</div>
-        <div class="arch-box arch-aspect" style="padding:10px 16px;min-width:160px;">
-          <div class="anno" style="font-size:10px;">@Order(2) @Around</div>
-          <div class="name" style="font-size:12px;">AtomicTransactionAspect</div>
-          <div class="desc">begin &rarr; proceed &rarr; commit/rollback</div>
+        <div class="lc-arrow">&darr;</div>
+        <div class="lc-box" style="background:rgba(129,140,248,0.12);border:1px solid var(--accent2);color:var(--accent2);">
+          Call real transfer()
+        </div>
+        <div class="lc-arrow">&darr;</div>
+        <div style="display:flex;gap:12px;">
+          <div class="lc-box" style="background:rgba(110,231,183,0.12);border:1px solid var(--green);color:var(--green);min-width:100px;">
+            Commit
+          </div>
+          <div style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;">or</div>
+          <div class="lc-box" style="background:rgba(248,113,113,0.12);border:1px solid var(--red);color:var(--red);min-width:100px;">
+            Rollback
+          </div>
         </div>
       </div>
-      <div style="font-size:22px;color:var(--pink);">&rarr;</div>
+      <div style="font-size:22px;color:var(--teal);">&rarr;</div>
       <div class="arch-box arch-svc" style="padding:14px 18px;">
         <div class="anno" style="font-size:10px;">Target Object</div>
         <div class="name" style="font-size:13px;">TransferServiceImpl</div>
-        <div class="desc">actual transfer() logic</div>
+        <div class="desc">@Transactional transfer()</div>
       </div>
     </div>
   </div>
-  <div style="margin-top:28px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center;">
-    <div class="card" style="padding:16px 20px;border-color:rgba(56,189,248,0.3);max-width:320px;">
-      <h3 style="color:var(--accent5);font-size:13px;">JDK Dynamic Proxy</h3>
-      <p style="font-size:11px;">When target implements an interface<br>(TransferService interface &rarr; used here)</p>
-    </div>
-    <div class="card" style="padding:16px 20px;border-color:rgba(251,146,60,0.3);max-width:320px;">
-      <h3 style="color:var(--orange);font-size:13px;">CGLIB Proxy</h3>
-      <p style="font-size:11px;">When target has no interface<br>(subclass-based, bytecode generation)</p>
-    </div>
-    <div class="card" style="padding:16px 20px;border-color:rgba(167,139,250,0.3);max-width:320px;">
-      <h3 style="color:var(--purple);font-size:13px;">@EnableAspectJAutoProxy</h3>
-      <p style="font-size:11px;">Must be on @Configuration class<br>to activate proxy creation</p>
+  <div style="margin-top:24px;max-width:700px;">
+    <div class="card" style="padding:16px 24px;border-color:rgba(251,191,36,0.3);text-align:center;">
+      <p style="font-size:13px;">
+        <strong style="color:var(--yellow);">Key insight:</strong> <code>@Transactional</code> uses the <strong style="color:var(--text);">exact same AOP proxy mechanism</strong> as <code>@Aspect</code>.
+        <br>Spring's built-in transaction aspect replaces our manual <code>AtomicTransactionAspect</code>.
+      </p>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 7: Advice Types -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7: Transaction Setup — 3 Beans -->
 <div class="slide">
-  <div class="section-label">Advice</div>
-  <div class="slide-title">5 Types of Advice</div>
-  <div class="slide-subtitle">When does the aspect logic run relative to the target method?</div>
-  <div style="display:flex;gap:0;align-items:stretch;max-width:1100px;width:100%;">
-    <div class="step-box" style="border-color:rgba(110,231,183,0.3);">
-      <div style="font-size:11px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace;">@Before</div>
-      <h3 style="color:var(--green);font-size:13px;margin-top:6px;">Before</h3>
-      <p>Runs before method.<br>Cannot prevent execution<br>(unless throws exception).</p>
+  <div class="section-label">Configuration</div>
+  <div class="slide-title">Transaction Setup &mdash; 3 Things You Need</div>
+  <div class="slide-subtitle">MtsConfiguration.java &mdash; beans required for @Transactional to work</div>
+  <div class="grid-3" style="max-width:1100px;">
+    <div class="card" style="border-color:rgba(45,212,191,0.4);padding:20px;">
+      <h3 style="color:var(--teal);font-size:14px;">1. DataSource</h3>
+      <div class="code-box" style="font-size:11px;">
+        <span class="an">@Bean</span><br>
+        <span class="an">@Conditional</span>(<span class="ty">PostgresDriverCondition</span>.<span class="kw">class</span>)<br>
+        <span class="kw">public</span> <span class="ty">DataSource</span> dataSourceChn(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">HikariConfig</span> config) {<br>
+        <span class="hl-green">&nbsp;&nbsp;<span class="kw">return new</span> <span class="ty">HikariDataSource</span>(config);</span>
+        }
+      </div>
+      <p style="font-size:11px;margin-top:8px;">HikariCP connection pool &mdash; manages DB connections efficiently</p>
     </div>
-    <div class="step-arrow">&rarr;</div>
-    <div class="step-box" style="border-color:rgba(129,140,248,0.3);">
-      <div style="font-size:11px;font-weight:800;color:var(--accent2);font-family:'JetBrains Mono',monospace;">@AfterReturning</div>
-      <h3 style="color:var(--accent2);font-size:13px;margin-top:6px;">After Returning</h3>
-      <p>Runs after method<br>returns successfully.<br>Has access to return value.</p>
+    <div class="card" style="border-color:rgba(96,165,250,0.4);padding:20px;">
+      <h3 style="color:var(--blue);font-size:14px;">2. PlatformTransactionManager</h3>
+      <div class="code-box" style="font-size:11px;">
+        <span class="an">@Bean</span><br>
+        <span class="kw">public</span> <span class="ty">PlatformTransactionManager</span><br>
+        &nbsp;&nbsp;transactionManager(<span class="ty">DataSource</span> ds) {<br>
+        <span class="hl-blue">&nbsp;&nbsp;<span class="kw">return new</span> <span class="ty">DataSourceTransactionManager</span>(ds);</span>
+        }
+      </div>
+      <p style="font-size:11px;margin-top:8px;">Spring's tx abstraction &mdash; DataSourceTransactionManager for JDBC</p>
     </div>
-    <div class="step-arrow">&rarr;</div>
-    <div class="step-box" style="border-color:rgba(248,113,113,0.3);">
-      <div style="font-size:11px;font-weight:800;color:var(--red);font-family:'JetBrains Mono',monospace;">@AfterThrowing</div>
-      <h3 style="color:var(--red);font-size:13px;margin-top:6px;">After Throwing</h3>
-      <p>Runs only when method<br>throws an exception.<br>Has access to exception.</p>
+    <div class="card" style="border-color:rgba(167,139,250,0.4);padding:20px;">
+      <h3 style="color:var(--purple);font-size:14px;">3. @EnableTransactionManagement</h3>
+      <div class="code-box" style="font-size:11px;">
+        <span class="an">@Configuration</span><br>
+        <span class="an">@ComponentScan</span>(<span class="st">"com.npci"</span>)<br>
+        <span class="an">@EnableAspectJAutoProxy</span><br>
+        <span class="hl-purple"><span class="an">@EnableTransactionManagement</span></span>
+        <span class="kw">public class</span> <span class="ty">MtsConfiguration</span> {<br>
+        &nbsp;&nbsp;...<br>
+        }
+      </div>
+      <p style="font-size:11px;margin-top:8px;">Activates @Transactional proxy creation &mdash; like @EnableAspectJAutoProxy for tx</p>
     </div>
-    <div class="step-arrow">&rarr;</div>
-    <div class="step-box" style="border-color:rgba(251,146,60,0.3);">
-      <div style="font-size:11px;font-weight:800;color:var(--orange);font-family:'JetBrains Mono',monospace;">@After</div>
-      <h3 style="color:var(--orange);font-size:13px;margin-top:6px;">After (Finally)</h3>
-      <p>Runs after method<br>regardless of outcome.<br>Like a finally block.</p>
+  </div>
+  <div style="margin-top:20px;">
+    <div class="code-box" style="font-size:12px;max-width:600px;text-align:center;padding:14px 24px;">
+      <span class="an">@Bean</span> <span class="kw">public</span> <span class="ty">JdbcTemplate</span> jdbcTemplate(<span class="ty">DataSource</span> ds) { <span class="kw">return new</span> <span class="ty">JdbcTemplate</span>(ds); }
     </div>
-    <div class="step-arrow">&rarr;</div>
-    <div class="step-box" style="border-color:rgba(244,114,182,0.3);background:rgba(244,114,182,0.03);">
-      <div style="font-size:11px;font-weight:800;color:var(--pink);font-family:'JetBrains Mono',monospace;">@Around</div>
-      <h3 style="color:var(--pink);font-size:13px;margin-top:6px;">Around</h3>
-      <p>Wraps entire method.<br>Controls proceed().<br><strong style="color:var(--pink);">Most powerful.</strong></p>
-    </div>
+    <p style="font-size:11px;color:var(--text-dim);margin-top:8px;text-align:center;">Plus: JdbcTemplate bean wired with the same DataSource</p>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 8: Pointcut Expressions -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8: Spring Context Lifecycle -->
 <div class="slide">
-  <div class="section-label">Pointcut</div>
-  <div class="slide-title">Pointcut Expressions</div>
-  <div class="slide-subtitle">Tell Spring which methods the advice should apply to</div>
-  <div style="max-width:900px;width:100%;">
-    <div class="code-box" style="font-size:13px;margin-bottom:24px;text-align:center;">
-      execution(<span class="kw">modifiers?</span> <span class="ty">return-type</span> <span class="cm">declaring-type?</span> <span class="st">method-name</span>(<span class="an">params</span>) <span class="kw">throws?</span>)
+  <div class="section-label">Lifecycle</div>
+  <div class="slide-title">Spring Context Lifecycle</div>
+  <div class="slide-subtitle">The complete init phase &mdash; from bean definitions to application ready</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0;max-width:900px;width:100%;">
+    <div class="lc-box" style="background:rgba(167,139,250,0.12);border:2px solid var(--purple);color:var(--purple);width:100%;">
+      <strong>1. Bean Definition Loading</strong>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">@ComponentScan discovers classes, @Bean methods registered as definitions</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div class="card" style="padding:16px 24px;border-color:rgba(110,231,183,0.3);">
-        <h3 style="color:var(--green);font-size:13px;margin-bottom:6px;">Our AuthorizationAspect pointcut:</h3>
-        <div class="code-box" style="font-size:12px;padding:12px 18px;">
-          <span class="an">@Before</span>(<span class="st">"execution(void com.npci.service.TransferService.*(..))"</span>)
+    <div class="lc-arrow" style="font-size:22px;">&darr;</div>
+    <div class="lc-box" style="background:rgba(251,146,60,0.12);border:2px solid var(--orange);color:var(--orange);width:100%;">
+      <strong>2. BFPP (BeanFactoryPostProcessor)</strong>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">Runs BEFORE any bean is created &mdash; can modify bean definitions (metadata, not instances)</div>
+    </div>
+    <div class="lc-arrow" style="font-size:22px;">&darr;</div>
+    <div style="border:2px dashed var(--teal);border-radius:14px;padding:16px;width:100%;background:rgba(45,212,191,0.03);">
+      <div style="text-align:center;font-size:12px;font-weight:700;color:var(--teal);margin-bottom:12px;">3. For Each Bean Definition:</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;">
+        <div class="lc-box" style="background:rgba(96,165,250,0.12);border:1px solid var(--blue);color:var(--blue);min-width:110px;">
+          <strong>a.</strong> Create<br><span style="font-size:10px;">constructor</span>
         </div>
-        <p style="font-size:11px;margin-top:8px;">Match: any <code>void</code> method in <code>TransferService</code> interface, any arguments</p>
-      </div>
-      <div class="card" style="padding:16px 24px;border-color:rgba(244,114,182,0.3);">
-        <h3 style="color:var(--pink);font-size:13px;margin-bottom:6px;">Our AtomicTransactionAspect pointcut:</h3>
-        <div class="code-box" style="font-size:12px;padding:12px 18px;">
-          <span class="an">@Around</span>(<span class="st">"execution(void transfer(..))"</span>)
+        <div style="color:var(--text-dim);margin:0 6px;">&rarr;</div>
+        <div class="lc-box" style="background:rgba(129,140,248,0.12);border:1px solid var(--accent2);color:var(--accent2);min-width:110px;">
+          <strong>b.</strong> DI<br><span style="font-size:10px;">inject deps</span>
         </div>
-        <p style="font-size:11px;margin-top:8px;">Match: any <code>void</code> method named <code>transfer</code>, any class, any arguments</p>
+        <div style="color:var(--text-dim);margin:0 6px;">&rarr;</div>
+        <div class="lc-box" style="background:rgba(251,191,36,0.12);border:1px solid var(--yellow);color:var(--yellow);min-width:110px;">
+          <strong>c.</strong> BPP.before<br><span style="font-size:10px;">pre-init</span>
+        </div>
+        <div style="color:var(--text-dim);margin:0 6px;">&rarr;</div>
+        <div class="lc-box" style="background:rgba(110,231,183,0.12);border:1px solid var(--green);color:var(--green);min-width:110px;">
+          <strong>d.</strong> @PostConstruct<br><span style="font-size:10px;">init method</span>
+        </div>
+        <div style="color:var(--text-dim);margin:0 6px;">&rarr;</div>
+        <div class="lc-box" style="background:rgba(244,114,182,0.12);border:1px solid var(--pink);color:var(--pink);min-width:110px;">
+          <strong>e.</strong> BPP.after<br><span style="font-size:10px;">proxy creation</span>
+        </div>
       </div>
     </div>
-    <div style="display:flex;gap:16px;margin-top:18px;flex-wrap:wrap;justify-content:center;">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;text-align:center;">
-        <div style="font-size:12px;font-weight:700;color:var(--yellow);font-family:'JetBrains Mono',monospace;">*</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">any single token<br>(type, method name)</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;text-align:center;">
-        <div style="font-size:12px;font-weight:700;color:var(--yellow);font-family:'JetBrains Mono',monospace;">..</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">any number of args<br>or subpackages</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;text-align:center;">
-        <div style="font-size:12px;font-weight:700;color:var(--yellow);font-family:'JetBrains Mono',monospace;">void</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">match return type<br>(use * for any)</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 9: AuthorizationAspect Implementation -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-<div class="slide">
-  <div class="section-label">Our Implementation</div>
-  <div class="slide-title">AuthorizationAspect &mdash; @Before</div>
-  <div class="slide-subtitle">Runs authorization check before every TransferService method</div>
-  <div style="max-width:800px;width:100%;">
-    <div class="code-box" style="font-size:13px;">
-      <span class="hl-green"><span class="an">@Component</span></span>
-      <span class="hl-green"><span class="an">@Aspect</span></span>
-      <span class="hl-green"><span class="an">@Order(1)</span> <span class="cm">// runs FIRST</span></span>
-      <span class="kw">public class</span> <span class="ty">AuthorizationAspect</span> {<br>
-      <br>
-      <span class="hl-yellow">&nbsp;&nbsp;<span class="an">@Before</span>(<span class="st">"execution(void com.npci.service.TransferService.*(..))"</span>)</span>
-      &nbsp;&nbsp;<span class="kw">public void</span> <span class="ty">checkAuthorization</span>() {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;logger.info(<span class="st">">>> checking authorization for transfer."</span>);<br>
-      &nbsp;&nbsp;}<br>
-      <br>
-      }
-    </div>
-    <div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;">
-      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;">
-        <h3 style="color:var(--green);font-size:12px;">@Component</h3>
-        <p style="font-size:11px;">Makes it a Spring bean (discovered by @ComponentScan)</p>
-      </div>
-      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;">
-        <h3 style="color:var(--pink);font-size:12px;">@Aspect</h3>
-        <p style="font-size:11px;">Tells Spring this bean contains AOP advice</p>
-      </div>
-      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;">
-        <h3 style="color:var(--orange);font-size:12px;">@Order(1)</h3>
-        <p style="font-size:11px;">Runs before other aspects (lower = first)</p>
-      </div>
+    <div class="lc-arrow" style="font-size:22px;">&darr;</div>
+    <div class="lc-box" style="background:rgba(110,231,183,0.12);border:2px solid var(--green);color:var(--green);width:100%;">
+      <strong>4. Application Ready</strong>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">All beans created, injected, initialized, and proxied &mdash; context is live</div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 10: AtomicTransactionAspect Implementation -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 9: BeanFactoryPostProcessor (BFPP) -->
 <div class="slide">
-  <div class="section-label">Our Implementation</div>
-  <div class="slide-title">AtomicTransactionAspect &mdash; @Around</div>
-  <div class="slide-subtitle">Wraps transfer() with begin / commit / rollback / end</div>
+  <div class="section-label">Extension Point</div>
+  <div class="slide-title">BeanFactoryPostProcessor (BFPP)</div>
+  <div class="slide-subtitle">Runs BEFORE any bean is created &mdash; inspects and can modify bean definitions</div>
   <div style="max-width:850px;width:100%;">
-    <div class="code-box" style="font-size:12px;">
-      <span class="an">@Component</span>  <span class="an">@Aspect</span>  <span class="an">@Order(2)</span> <span class="cm">// runs AFTER AuthorizationAspect</span><br>
-      <span class="kw">public class</span> <span class="ty">AtomicTransactionAspect</span> {<br>
+    <div class="code-box" style="font-size:13px;">
+      <span class="cm">// @Component  <span style="color:var(--orange);">&larr; commented out (demo only)</span></span><br>
+      <span class="kw">public class</span> <span class="ty">BFPP</span> <span class="kw">implements</span> <span class="ty">BeanFactoryPostProcessor</span> {<br>
       <br>
-      &nbsp;&nbsp;<span class="an">@Around</span>(<span class="st">"execution(void transfer(..))"</span>)<br>
-      &nbsp;&nbsp;<span class="kw">public void</span> <span class="ty">aroundTransfer</span>(<span class="ty">ProceedingJoinPoint</span> joinPoint)<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">throws</span> <span class="ty">Throwable</span> {<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">try</span> {<br>
-      <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;logger.info(<span class="st">">>> begin transaction."</span>);</span>
-      <span class="hl-blue">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;joinPoint.proceed(); <span class="cm">// call actual transfer()</span></span>
-      <span class="hl-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;logger.info(<span class="st">">>> commit transaction."</span>);</span>
-      &nbsp;&nbsp;&nbsp;&nbsp;} <span class="kw">catch</span> (<span class="ty">Throwable</span> ex) {<br>
-      <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;logger.error(<span class="st">">>> rollback transaction: {}"</span>, ex.getMessage());</span>
-      <span class="hl-red">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">throw</span> ex; <span class="cm">// rethrow to propagate</span></span>
-      &nbsp;&nbsp;&nbsp;&nbsp;} <span class="kw">finally</span> {<br>
-      <span class="hl-orange">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;logger.info(<span class="st">">>> end transaction."</span>);</span>
+      <span class="hl-orange">&nbsp;&nbsp;<span class="an">@Override</span></span>
+      <span class="hl-orange">&nbsp;&nbsp;<span class="kw">public void</span> <span class="ty">postProcessBeanFactory</span>(</span>
+      <span class="hl-orange">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">ConfigurableListableBeanFactory</span> beanFactory) {</span>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;logger.info(<span class="st">"BFPP called. Bean count: {}"</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;beanFactory.getBeanDefinitionCount());<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="ty">String</span> name : beanFactory.getBeanDefinitionNames()) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;logger.info(<span class="st">"Bean name: {}"</span>, name);<br>
       &nbsp;&nbsp;&nbsp;&nbsp;}<br>
       &nbsp;&nbsp;}<br>
       }
     </div>
-    <p style="font-size:12px;color:var(--text-dim);margin-top:16px;text-align:center;">
-      <code>ProceedingJoinPoint.proceed()</code> is the key &mdash; it calls the actual target method.
-      <br>Without calling proceed(), the target method <strong style="color:var(--red);">never executes</strong>.
-    </p>
+    <div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;">
+      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;border-color:rgba(251,146,60,0.3);">
+        <h3 style="color:var(--orange);font-size:12px;">When does it run?</h3>
+        <p style="font-size:11px;">After bean definitions are loaded, BEFORE any bean instance is created</p>
+      </div>
+      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;border-color:rgba(251,191,36,0.3);">
+        <h3 style="color:var(--yellow);font-size:12px;">What can it do?</h3>
+        <p style="font-size:11px;">Inspect &amp; modify bean definitions (metadata) &mdash; override properties, add definitions</p>
+      </div>
+      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;border-color:rgba(248,113,113,0.3);">
+        <h3 style="color:var(--red);font-size:12px;">What it cannot do</h3>
+        <p style="font-size:11px;">Cannot work with bean instances &mdash; they don't exist yet at this stage</p>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 11: @Order — Execution Flow -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 10: BeanPostProcessor (BPP) -->
 <div class="slide">
-  <div class="section-label">Ordering</div>
-  <div class="slide-title">@Order &mdash; Aspect Execution Sequence</div>
-  <div class="slide-subtitle">Lower number = higher priority. Controls the nesting order of aspects.</div>
-  <div style="max-width:900px;width:100%;">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2;">
-      <div style="text-align:center;color:var(--text-dim);margin-bottom:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;">Actual execution order when <code style="color:var(--yellow);">transfer()</code> is called:</div>
-      <span style="color:var(--text-dim);">1.</span> <span style="color:var(--pink);">AuthorizationAspect</span> <span class="an">@Before</span> &mdash; <span class="st">"checking authorization"</span><br>
-      <span style="color:var(--text-dim);">2.</span> <span style="color:var(--purple);">AtomicTransactionAspect</span> <span class="an">@Around</span> &mdash; <span class="st">"begin transaction"</span><br>
-      <span style="color:var(--text-dim);">3.</span> &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent2);">TransferServiceImpl</span>.<span style="color:var(--green);">transfer()</span> &mdash; <em style="color:var(--text-dim);">actual business logic</em><br>
-      <span style="color:var(--text-dim);">4.</span> <span style="color:var(--purple);">AtomicTransactionAspect</span> <span class="an">@Around</span> &mdash; <span class="st">"commit transaction"</span><br>
-      <span style="color:var(--text-dim);">5.</span> <span style="color:var(--purple);">AtomicTransactionAspect</span> <span class="an">@Around</span> &mdash; <span class="st">"end transaction"</span>
+  <div class="section-label">Extension Point</div>
+  <div class="slide-title">BeanPostProcessor (BPP)</div>
+  <div class="slide-subtitle">Wraps each bean's initialization phase &mdash; AOP proxy creation happens here</div>
+  <div style="max-width:850px;width:100%;">
+    <div class="code-box" style="font-size:13px;">
+      <span class="cm">// @Component  <span style="color:var(--orange);">&larr; commented out (demo only)</span></span><br>
+      <span class="kw">public class</span> <span class="ty">BPP</span> <span class="kw">implements</span> <span class="ty">BeanPostProcessor</span> {<br>
+      <br>
+      <span class="hl-yellow">&nbsp;&nbsp;<span class="an">@Override</span></span>
+      <span class="hl-yellow">&nbsp;&nbsp;<span class="kw">public</span> <span class="ty">Object</span> <span class="ty">postProcessBeforeInitialization</span>(<span class="ty">Object</span> bean, <span class="ty">String</span> name) {</span>
+      &nbsp;&nbsp;&nbsp;&nbsp;logger.info(<span class="st">"Before Initialization : {}"</span>, name);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> bean;<br>
+      &nbsp;&nbsp;}<br>
+      <br>
+      <span class="hl-pink">&nbsp;&nbsp;<span class="an">@Override</span></span>
+      <span class="hl-pink">&nbsp;&nbsp;<span class="kw">public</span> <span class="ty">Object</span> <span class="ty">postProcessAfterInitialization</span>(<span class="ty">Object</span> bean, <span class="ty">String</span> name) {</span>
+      &nbsp;&nbsp;&nbsp;&nbsp;logger.info(<span class="st">"After Initialization : {}"</span>, name);<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> bean; <span class="cm">// can return a PROXY instead!</span><br>
+      &nbsp;&nbsp;}<br>
+      }
     </div>
-    <div style="display:flex;gap:16px;margin-top:20px;justify-content:center;">
-      <div class="card" style="padding:14px 20px;text-align:center;border-color:rgba(244,114,182,0.3);">
-        <div style="font-size:28px;font-weight:800;color:var(--pink);">1</div>
-        <div style="font-size:12px;font-weight:700;color:var(--pink);">AuthorizationAspect</div>
-        <div style="font-size:10px;color:var(--text-dim);">@Order(1) &mdash; runs first</div>
+    <div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;">
+      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;border-color:rgba(251,191,36,0.3);">
+        <h3 style="color:var(--yellow);font-size:12px;">postProcessBeforeInitialization</h3>
+        <p style="font-size:11px;">Runs BEFORE @PostConstruct. Can inspect or modify the bean.</p>
       </div>
-      <div style="font-size:24px;color:var(--text-dim);display:flex;align-items:center;">&rarr;</div>
-      <div class="card" style="padding:14px 20px;text-align:center;border-color:rgba(167,139,250,0.3);">
-        <div style="font-size:28px;font-weight:800;color:var(--purple);">2</div>
-        <div style="font-size:12px;font-weight:700;color:var(--purple);">AtomicTransactionAspect</div>
-        <div style="font-size:10px;color:var(--text-dim);">@Order(2) &mdash; runs second</div>
+      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;border-color:rgba(244,114,182,0.3);">
+        <h3 style="color:var(--pink);font-size:12px;">postProcessAfterInitialization</h3>
+        <p style="font-size:11px;">Runs AFTER @PostConstruct. <strong style="color:var(--pink);">AOP proxy creation happens here!</strong></p>
       </div>
-      <div style="font-size:24px;color:var(--text-dim);display:flex;align-items:center;">&rarr;</div>
-      <div class="card" style="padding:14px 20px;text-align:center;border-color:rgba(129,140,248,0.3);">
-        <div style="font-size:28px;font-weight:800;color:var(--accent2);">T</div>
-        <div style="font-size:12px;font-weight:700;color:var(--accent2);">TransferServiceImpl</div>
-        <div style="font-size:10px;color:var(--text-dim);">Target &mdash; actual business</div>
+      <div class="card" style="padding:14px 20px;flex:1;min-width:200px;border-color:rgba(45,212,191,0.3);">
+        <h3 style="color:var(--teal);font-size:12px;">Use cases</h3>
+        <p style="font-size:11px;">Custom proxies, validation, metrics wrapping, @Transactional proxy</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 12: Updated Architecture with AOP -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 11: v5 Architecture -->
 <div class="slide">
   <div class="section-label">Architecture</div>
-  <div class="slide-title">v4 Architecture &mdash; With AOP Layer</div>
-  <div class="slide-subtitle">Aspects sit between caller and target, applied transparently by Spring</div>
+  <div class="slide-title">v5 Architecture &mdash; @Transactional Replaces Manual Aspect</div>
+  <div class="slide-subtitle">Spring's built-in transaction proxy replaces the hand-written AtomicTransactionAspect</div>
   <div class="arch-flow">
     <div class="arch-layer">
       <div class="arch-label">Caller</div>
@@ -754,15 +735,16 @@
     </div>
     <div class="arch-arrow">&rarr;</div>
     <div class="arch-layer">
-      <div class="arch-label">AOP Proxy Layer</div>
+      <div class="arch-label">Proxy Layer</div>
       <div style="display:flex;flex-direction:column;gap:6px;">
         <div class="arch-box arch-aspect" style="padding:12px 18px;">
           <div class="anno" style="font-size:10px;">@Order(1) @Before</div>
           <div class="name" style="font-size:12px;">AuthorizationAspect</div>
         </div>
-        <div class="arch-box arch-aspect" style="padding:12px 18px;">
-          <div class="anno" style="font-size:10px;">@Order(2) @Around</div>
-          <div class="name" style="font-size:12px;">AtomicTransactionAspect</div>
+        <div class="arch-box arch-tx" style="padding:12px 18px;">
+          <div class="anno" style="font-size:10px;">@Transactional (built-in)</div>
+          <div class="name" style="font-size:12px;color:var(--teal);">Spring Tx Proxy</div>
+          <div class="desc">auto commit / rollback</div>
         </div>
       </div>
     </div>
@@ -774,7 +756,7 @@
       </div>
       <div class="arch-box arch-svc">
         <div class="name">TransferServiceImpl</div>
-        <div class="anno">@Service</div>
+        <div class="anno">@Service @Transactional</div>
       </div>
     </div>
     <div class="arch-arrow">&rarr;</div>
@@ -784,11 +766,12 @@
         <div class="name">&laquo;AccountRepository&raquo;</div>
       </div>
       <div class="impl-group">
-        <div class="impl-box" style="background:rgba(110,231,183,0.12);border:1px solid var(--green);">
+        <div class="impl-box" style="background:rgba(45,212,191,0.12);border:1px solid var(--teal);">
           <div style="font-size:10px;color:var(--yellow);font-family:'JetBrains Mono',monospace;">@Repository</div>
+          <div style="font-size:11px;color:var(--teal);">JdbcTemplate</div>
           JdbcRepo
         </div>
-        <div class="impl-box" style="background:rgba(45,212,191,0.1);border:1px solid var(--teal);">
+        <div class="impl-box" style="background:rgba(129,140,248,0.1);border:1px solid var(--accent2);">
           <div style="font-size:10px;color:var(--yellow);font-family:'JetBrains Mono',monospace;">@Repository</div>
           JpaRepo
         </div>
@@ -799,133 +782,50 @@
       <div class="arch-label">Config</div>
       <div class="arch-box arch-config" style="padding:14px 18px;">
         <div class="name" style="font-size:12px;">MtsConfiguration</div>
-        <div class="anno" style="font-size:9px;">@EnableAspectJAutoProxy</div>
-        <div class="desc">DataSource + @ComponentScan</div>
+        <div class="anno" style="font-size:9px;">@EnableTransactionManagement</div>
+        <div class="desc">DataSource + JdbcTemplate<br>+ TransactionManager</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 13: @EnableAspectJAutoProxy -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-<div class="slide">
-  <div class="section-label">Setup</div>
-  <div class="slide-title">Enabling AOP in Spring</div>
-  <div class="slide-subtitle">Three things you need for Spring AOP to work</div>
-  <div class="grid-3" style="max-width:1100px;">
-    <div class="card" style="border-color:rgba(167,139,250,0.3);">
-      <h3 style="color:var(--purple);">1. Enable Proxying</h3>
-      <div class="code-box" style="font-size:12px;">
-        <span class="an">@Configuration</span><br>
-        <span class="an">@ComponentScan</span>(<span class="st">"com.npci"</span>)<br>
-        <span class="hl-purple"><span class="an">@EnableAspectJAutoProxy</span></span>
-        <span class="kw">public class</span> <span class="ty">MtsConfiguration</span> {<br>
-        &nbsp;&nbsp;...<br>
-        }
-      </div>
-      <p style="font-size:11px;margin-top:8px;">Without this, @Aspect classes are ignored</p>
-    </div>
-    <div class="card" style="border-color:rgba(244,114,182,0.3);">
-      <h3 style="color:var(--pink);">2. Create Aspect Bean</h3>
-      <div class="code-box" style="font-size:12px;">
-        <span class="hl-pink"><span class="an">@Component</span>  <span class="cm">// Spring bean</span></span>
-        <span class="hl-pink"><span class="an">@Aspect</span>     <span class="cm">// AOP aspect</span></span>
-        <span class="kw">public class</span> <span class="ty">AuthorizationAspect</span> {<br>
-        &nbsp;&nbsp;...<br>
-        }
-      </div>
-      <p style="font-size:11px;margin-top:8px;">Must be both @Component AND @Aspect</p>
-    </div>
-    <div class="card" style="border-color:rgba(251,191,36,0.3);">
-      <h3 style="color:var(--yellow);">3. Add Dependencies</h3>
-      <div class="code-box" style="font-size:11px;">
-        <span class="cm">&lt;!-- pom.xml --&gt;</span><br>
-        <span class="xml-tag">&lt;dependency&gt;</span><br>
-        &nbsp;&nbsp;<span class="ty">spring-aop</span><br>
-        <span class="xml-tag">&lt;/dependency&gt;</span><br>
-        <span class="xml-tag">&lt;dependency&gt;</span><br>
-        &nbsp;&nbsp;<span class="ty">aspectjweaver</span><br>
-        <span class="xml-tag">&lt;/dependency&gt;</span>
-      </div>
-      <p style="font-size:11px;margin-top:8px;">AspectJ weaver for @Aspect processing</p>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 14: All AOP Annotations Summary -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 12: Summary + Annotations -->
 <div class="slide">
   <div class="section-label">Summary</div>
-  <div class="slide-title">AOP Annotations &mdash; Quick Reference</div>
-  <div class="slide-subtitle">Everything covered in v4</div>
-  <div class="grid-4" style="max-width:1100px;">
-    <div class="card" style="padding:18px;">
-      <h3 style="color:var(--pink);font-size:13px;">@Aspect</h3>
-      <p style="font-size:11px;">Marks class as aspect containing cross-cutting advice</p>
+  <div class="slide-title">v5 Concepts &mdash; Quick Reference</div>
+  <div class="slide-subtitle">Everything new in v5</div>
+  <div class="grid-3" style="max-width:1100px;">
+    <div class="card" style="padding:18px;border-color:rgba(45,212,191,0.3);">
+      <h3 style="color:var(--teal);font-size:13px;">JdbcTemplate</h3>
+      <p style="font-size:11px;">Spring's JDBC abstraction. Eliminates boilerplate. queryForObject(), update().</p>
     </div>
-    <div class="card" style="padding:18px;">
-      <h3 style="color:var(--purple);font-size:13px;">@EnableAspectJAutoProxy</h3>
-      <p style="font-size:11px;">Activates AOP proxy creation on @Configuration</p>
+    <div class="card" style="padding:18px;border-color:rgba(96,165,250,0.3);">
+      <h3 style="color:var(--blue);font-size:13px;">@Transactional</h3>
+      <p style="font-size:11px;">Declarative tx management. Replaces manual @Around aspect. Auto commit/rollback.</p>
     </div>
-    <div class="card" style="padding:18px;">
-      <h3 style="color:var(--green);font-size:13px;">@Before</h3>
-      <p style="font-size:11px;">Advice runs before the matched method</p>
+    <div class="card" style="padding:18px;border-color:rgba(167,139,250,0.3);">
+      <h3 style="color:var(--purple);font-size:13px;">@EnableTransactionManagement</h3>
+      <p style="font-size:11px;">On @Configuration class. Enables @Transactional proxy creation.</p>
     </div>
-    <div class="card" style="padding:18px;">
-      <h3 style="color:var(--accent2);font-size:13px;">@AfterReturning</h3>
-      <p style="font-size:11px;">Runs after method returns successfully</p>
+    <div class="card" style="padding:18px;border-color:rgba(110,231,183,0.3);">
+      <h3 style="color:var(--green);font-size:13px;">PlatformTransactionManager</h3>
+      <p style="font-size:11px;">Spring's tx abstraction. DataSourceTransactionManager for JDBC.</p>
     </div>
-    <div class="card" style="padding:18px;">
-      <h3 style="color:var(--red);font-size:13px;">@AfterThrowing</h3>
-      <p style="font-size:11px;">Runs only when method throws exception</p>
+    <div class="card" style="padding:18px;border-color:rgba(251,146,60,0.3);">
+      <h3 style="color:var(--orange);font-size:13px;">BeanFactoryPostProcessor</h3>
+      <p style="font-size:11px;">Runs before any bean created. Inspects/modifies bean definitions.</p>
     </div>
-    <div class="card" style="padding:18px;">
-      <h3 style="color:var(--orange);font-size:13px;">@After</h3>
-      <p style="font-size:11px;">Runs after method (always, like finally)</p>
-    </div>
-    <div class="card" style="padding:18px;">
-      <h3 style="color:var(--pink);font-size:13px;">@Around</h3>
-      <p style="font-size:11px;">Wraps method. Controls proceed(). Most powerful.</p>
-    </div>
-    <div class="card" style="padding:18px;">
-      <h3 style="color:var(--yellow);font-size:13px;">@Order</h3>
-      <p style="font-size:11px;">Controls execution order of multiple aspects</p>
+    <div class="card" style="padding:18px;border-color:rgba(244,114,182,0.3);">
+      <h3 style="color:var(--pink);font-size:13px;">BeanPostProcessor</h3>
+      <p style="font-size:11px;">Wraps bean init. before/after @PostConstruct. AOP proxies created in "after".</p>
     </div>
   </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- SLIDE 15: AOP Principle + Benefits -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-<div class="slide">
-  <div class="principle" style="margin-bottom:30px;">
-    <h3 style="background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Separation of Concerns</h3>
-    <p>In v3, cross-cutting logic (auth, tx) was <strong style="color:var(--text);">inside</strong> business methods.<br>
-    In v4, <strong style="color:var(--text);">aspects handle it separately</strong> &mdash; business code stays clean and focused.</p>
-  </div>
-  <div class="benefits-box">
-    <h2>What v4 (AOP) Gains Over v3</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;">
-      <div class="benefit-item">
-        <div class="benefit-text"><strong>Clean Business Code</strong><br>transfer() only has business logic, nothing else</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-text"><strong>Modular Concerns</strong><br>Auth, Tx, Logging each in their own @Aspect class</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-text"><strong>No Code Duplication</strong><br>One aspect applies to all matching methods</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-text"><strong>Easy to Enable/Disable</strong><br>Remove @Component or change @Order to reconfigure</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-text"><strong>Follows SRP</strong><br>Each class has one reason to change</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-text"><strong>Foundation for Spring TX</strong><br>@Transactional is Spring's built-in AOP aspect</div>
-      </div>
+  <div style="margin-top:28px;">
+    <div class="principle" style="padding:20px 40px;">
+      <h3 style="background:linear-gradient(135deg,var(--teal),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:18px;">v4 &rarr; v5 Key Shift</h3>
+      <p style="font-size:13px;">Manual <code style="color:var(--red);">AtomicTransactionAspect</code> with @Around &rarr; replaced by Spring's built-in <code style="color:var(--teal);">@Transactional</code>.<br>
+      Raw JDBC with Connection/PreparedStatement &rarr; replaced by <code style="color:var(--teal);">JdbcTemplate</code>.<br>
+      Understanding the lifecycle (BFPP, BPP) explains <em>how</em> Spring makes all this work.</p>
     </div>
   </div>
 </div>

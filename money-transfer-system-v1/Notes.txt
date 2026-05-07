@@ -18,3 +18,27 @@ step-2 : know the layer(s) of the application
     - TransferService => money transfer logic
 3. Controller Layer => request/response logic
     - TransferController => money transfer request/response logic
+
+v1 Problems
+-----------------------------
+1. Tight Coupling
+    - TransferServiceImpl directly creates JdbcAccountRepository using "new"
+    - Cannot swap to JPA, MongoDB, or mock without changing service code
+    - Unit testing is difficult — can't isolate the service layer
+
+2. Wasteful Object Creation
+    - Every transfer() call creates a new JdbcAccountRepository
+    - Wastes memory, connections, and increases latency
+
+Root Cause
+-----------------------------
+- The dependent (TransferServiceImpl) creates its own dependency using "new"
+- It controls WHAT to use and WHEN to create — no flexibility
+- "new JdbcAccountRepository()" is hardcoded inside the method
+
+Impact
+-----------------------------
+1. Locked to JDBC    — Can't switch to JPA or any other implementation
+2. Hard to Test      — Can't mock the repository
+3. Slow & Wasteful   — New object created per method call
+4. Hard to Maintain  — Changing the repo means changing the service code
