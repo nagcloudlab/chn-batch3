@@ -281,4 +281,36 @@ Spring Annotations Summary (covered so far)
    Scope & Lifecycle  : @Scope, @Lazy, @PostConstruct, @PreDestroy
    Configuration      : @Value, @PropertySource, @Profile, @Conditional
    Events             : @EventListener, ApplicationEvent, ApplicationEventPublisher
-   AOP               : @Aspect, @EnableAspectJAutoProxy, @Before, @After, @AfterReturning, @AfterThrowing, @Around, @Order
+   AOP                : @Aspect, @EnableAspectJAutoProxy, @Before, @After, @AfterReturning, @AfterThrowing, @Around, @Order
+
+
+
+
+ ----  
+
+
+ create table accounts (
+   number varchar(12) primary key,
+   holder_name varchar(255) not null,
+   balance numeric(15,2) not null
+ );
+ insert into accounts (number, holder_name, balance) values ('A001', 'Alice', 1000.00);
+ insert into accounts (number, holder_name, balance) values ('A002', 'Bob', 500.00);
+ select * from accounts;
+
+
+
+ Spring Context Lifecycle
+===========================
+
+- init phase
+
+   - bean definition loading
+   - BFPP (BeanFactoryPostProcessor) execution
+   - for each bean definition:
+     - create bean instance
+     - DI (constructor/setter/field injection)
+     - BPP before initialization (postProcessBeforeInitialization)
+     - @PostConstruct method execution
+     - BPP after initialization (postProcessAfterInitialization) - proxy creation happens here for AOP
+     
