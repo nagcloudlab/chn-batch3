@@ -1,0 +1,19 @@
+
+
+debug: true
+
+spring:
+  application:
+    name: money-transfer-system-v7
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mydatabase
+    username: postgres
+    password: mysecretpassword
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true

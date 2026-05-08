@@ -1,0 +1,365 @@
+
+
+how to run Application?
+-----------------------------
+mvn spring-boot:run
+
+
+
+What's New in v7
+=================
+1. Spring Boot configuration properties (6+ ways to feed config)
+2. .properties vs .yml format comparison
+3. Custom auto-configuration with @ConditionalOnProperty
+4. Lombok for reducing boilerplate code
+5. Testing with @SpringBootTest
+6. Custom exceptions (AccountNotFoundException, InsufficientBalanceException)
+
+
+
+Spring Boot Configuration Properties
+======================================
+
+6+ ways to feed configuration to a Spring Boot application (highest priority first):
+
+1. Command-line arguments
+   --transfer.limit=5000
+   e.g. mvn spring-boot:run -Dspring-boot.run.arguments="--transfer.limit=5000"
+
+2. Java system properties
+   -Dtransfer.limit=5000
+   e.g. mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dtransfer.limit=5000"
+
+3. OS environment variables
+   export TRANSFER_LIMIT=5000
+   => Spring Boot uses relaxed binding: transfer.limit => TRANSFER_LIMIT
+   => dots become underscores, lowercase becomes uppercase
+
+4. application.properties file
+   transfer.limit=5000
+   lives in src/main/resources/
+
+5. application.yml file
+   transfer:
+     limit: 5000
+   lives in src/main/resources/
+
+6. @PropertySource on @Configuration classes
+   @PropertySource("classpath:custom.properties")
+   => loads additional property files into the Spring Environment
+
+7. Default values in @Value
+   @Value("${transfer.limit:10000}")
+   => if transfer.limit is not set anywhere, use 10000 as default
+
+
+Priority order matters:
+   command-line > system properties > env variables > application.properties > application.yml > @PropertySource > defaults
+
+
+.properties vs .yml format comparison
+---------------------------------------
+
+.properties format:
+   - key=value pairs, one per line
+   - flat structure
+   - e.g.
+     transfer.limit=5000
+     transfer.currency=INR
+     spring.datasource.url=jdbc:postgresql://localhost:5432/mydatabase
+     spring.datasource.username=postgres
+
+.yml format:
+   - hierarchical, indentation-based (use spaces, not tabs)
+   - supports lists and maps natively
+   - cleaner for nested keys
+   - e.g.
+     transfer:
+       limit: 5000
+       currency: INR
+     spring:
+       datasource:
+         url: jdbc:postgresql://localhost:5432/mydatabase
+         username: postgres
+
+Both live in src/main/resources.
+If both application.properties and application.yml exist,
+   => .properties takes precedence for the same keys.
+
+
+@Value injection with default
+-------------------------------
+   @Value("${transfer.limit:10000}")
+   private int transferLimit;
+
+   => injects the value of transfer.limit from any config source
+   => if not found anywhere, uses 10000 as default
+   => colon (:) separates property name from default value
+
+
+@ConfigurationProperties (type-safe binding)
+----------------------------------------------
+   - next step beyond @Value — binds a group of properties to a POJO
+   - e.g. @ConfigurationProperties(prefix = "transfer")
+   - auto-maps transfer.limit, transfer.currency, etc. to fields
+   - type-safe, IDE-friendly, supports validation with @Validated
+   - requires @EnableConfigurationProperties or @ConfigurationPropertiesScan
+
+
+
+Custom Auto-Configuration
+==========================
+
+What is auto-configuration?
+-----------------------------
+   - Spring Boot auto-creates beans based on what's on the classpath + what properties are set
+   - e.g. if spring-boot-starter-data-jpa is on classpath AND spring.datasource.url is configured
+     => Spring Boot auto-creates DataSource, EntityManagerFactory, TransactionManager beans
+   - you don't write @Bean for these — Spring Boot does it for you
+   - this is the magic behind "just add a starter and it works"
+
+
+@ConditionalOnProperty
+------------------------
+   - create a bean only when a specific property has a specific value
+   - e.g.
+
+     @Configuration
+     @ConditionalOnProperty(name = "npci.location", havingValue = "chennai")
+     public class NpciChnAutoConfiguration {
+
+         @Bean
+         public TransferService transferService(AccountRepository repo) {
+             return new TransferServiceImpl(repo);
+         }
+     }
+
+   => this @Configuration class and its beans are only created
+      when npci.location=chennai is set in the config
+   => if npci.location is missing or has a different value, this config is skipped entirely
+
+   - matchIfMissing = true => create bean even if property is not set at all
+     @ConditionalOnProperty(name = "npci.location", havingValue = "chennai", matchIfMissing = true)
+
+
+NpciChnAutoConfiguration example
+----------------------------------
+   - our custom auto-configuration class
+   - only activates when npci.location=chennai
+   - registers beans specific to the Chennai NPCI setup
+   - demonstrates how to build conditional configuration — same pattern Spring Boot uses internally
+
+
+Other @ConditionalOn* annotations
+------------------------------------
+   @ConditionalOnClass       => bean created only if a specific class is on the classpath
+                                e.g. @ConditionalOnClass(DataSource.class)
+
+   @ConditionalOnBean        => bean created only if another specific bean already exists in the context
+                                e.g. @ConditionalOnBean(AccountRepository.class)
+
+   @ConditionalOnMissingBean => bean created only if a specific bean does NOT exist
+                                e.g. @ConditionalOnMissingBean(TransferService.class)
+                                => acts as a fallback — user-defined beans take priority
+
+   @ConditionalOnProperty    => bean created only when a property has a specific value (covered above)
+
+
+How Spring Boot's own auto-configuration works the same way
+-------------------------------------------------------------
+   - DataSourceAutoConfiguration
+     => @ConditionalOnClass(DataSource.class)
+     => only creates DataSource bean if JDBC driver is on classpath
+
+   - JpaRepositoriesAutoConfiguration
+     => @ConditionalOnBean(DataSource.class)
+     => only enables JPA repositories if a DataSource bean exists
+
+   - Spring Boot ships 100+ auto-configuration classes
+   - all use the same @ConditionalOn* pattern we used in NpciChnAutoConfiguration
+   - you can see them: spring-boot-autoconfigure.jar -> META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+
+
+
+Lombok
+=======
+
+What is Lombok?
+-----------------
+   - compile-time annotation processor that generates boilerplate code
+   - reduces repetitive code (getters, setters, constructors, toString, etc.)
+   - code is generated at compile time — not visible in source, but present in .class files
+   - requires: lombok dependency in pom.xml + annotation processor enabled
+
+
+Key Lombok Annotations
+------------------------
+
+   @Getter
+   - generates getter methods for all fields (or specific fields)
+   - e.g. on Account class => generates getAccountId(), getBalance(), etc.
+
+   @Setter
+   - generates setter methods for all fields (or specific fields)
+   - e.g. on Account class => generates setAccountId(), setBalance(), etc.
+
+   @NoArgsConstructor
+   - generates a no-argument constructor
+   - e.g. public Account() {}
+
+   @AllArgsConstructor
+   - generates a constructor with all fields as parameters
+   - e.g. public Account(String accountId, String name, double balance) { ... }
+
+   Other useful ones:
+   @ToString        => generates toString() method
+   @EqualsAndHashCode => generates equals() and hashCode()
+   @Data            => shortcut for @Getter + @Setter + @ToString + @EqualsAndHashCode + @RequiredArgsConstructor
+   @Builder         => generates builder pattern
+
+
+Used on Account entity
+------------------------
+   @Getter
+   @Setter
+   @NoArgsConstructor
+   @AllArgsConstructor
+   public class Account {
+       private String accountId;
+       private String name;
+       private double balance;
+   }
+
+   => no need to write getters, setters, constructors manually
+   => cleaner, shorter entity class
+
+
+Maven dependency
+------------------
+   <dependency>
+       <groupId>org.projectlombok</groupId>
+       <artifactId>lombok</artifactId>
+       <optional>true</optional>
+   </dependency>
+
+   => Spring Boot manages the version via spring-boot-starter-parent
+   => <optional>true</optional> means it won't be transitively included in dependent projects
+
+
+
+Testing with Spring Boot
+==========================
+
+@SpringBootTest
+-----------------
+   - loads the full Spring application context for integration testing
+   - starts the entire Spring Boot application (all beans, config, etc.)
+   - e.g.
+
+     @SpringBootTest
+     class TransferServiceTest {
+
+         @Autowired
+         private TransferService transferService;
+
+         @Test
+         void testTransfer() {
+             transferService.transfer("ACC1", "ACC2", 500);
+             // assertions here
+         }
+     }
+
+   => Spring creates all beans and injects TransferService
+   => test runs against the real application context
+
+
+@Test (JUnit 5)
+-----------------
+   - marks a method as a test method
+   - comes from org.junit.jupiter.api.Test (JUnit 5)
+   - JUnit 5 = JUnit Jupiter
+
+
+spring-boot-starter-test includes
+------------------------------------
+   - JUnit 5 (Jupiter)   => test framework
+   - Mockito             => mocking framework
+   - AssertJ             => fluent assertions
+   - Spring Test         => Spring-specific test utilities
+   - all included automatically — just add spring-boot-starter-test dependency
+
+
+Constructor injection in tests
+--------------------------------
+   @SpringBootTest
+   class TransferServiceTest {
+
+       private final TransferService transferService;
+
+       @Autowired
+       TransferServiceTest(TransferService transferService) {
+           this.transferService = transferService;
+       }
+
+       @Test
+       void testTransfer() {
+           // use transferService
+       }
+   }
+
+   => constructor injection works in test classes too with @Autowired
+   => keeps test classes consistent with production code style
+
+
+
+Custom Exceptions
+==================
+
+AccountNotFoundException
+--------------------------
+   public class AccountNotFoundException extends RuntimeException {
+       public AccountNotFoundException(String message) {
+           super(message);
+       }
+   }
+
+   => thrown when an account is not found in the repository
+   => extends RuntimeException — unchecked exception, no need to declare in throws clause
+
+
+InsufficientBalanceException
+------------------------------
+   public class InsufficientBalanceException extends RuntimeException {
+       public InsufficientBalanceException(String message) {
+           super(message);
+       }
+   }
+
+   => thrown when sender does not have enough balance for the transfer
+   => extends RuntimeException — unchecked exception
+
+
+Why extend RuntimeException?
+------------------------------
+   - checked exceptions (extend Exception) => must be caught or declared — clutters the code
+   - unchecked exceptions (extend RuntimeException) => cleaner API, caller decides whether to handle
+   - Spring framework itself uses unchecked exceptions (e.g. DataAccessException)
+   - best practice for business/domain exceptions in Spring applications
+
+
+
+Spring Annotations Summary (covered so far — v1 through v7)
+=============================================================
+
+   DI & Wiring            : @Bean, @Component, @Autowired, @Primary, @Qualifier
+   Stereotypes            : @Repository, @Service, @Controller, @Configuration
+   Scope & Lifecycle      : @Scope, @Lazy, @PostConstruct, @PreDestroy
+   Configuration          : @Value, @PropertySource, @Profile, @Conditional
+   Events                 : @EventListener, ApplicationEvent, ApplicationEventPublisher
+   Spring Boot Config     : @ConfigurationProperties, @EnableConfigurationProperties
+   Auto-Configuration     : @ConditionalOnProperty, @ConditionalOnClass,
+                            @ConditionalOnBean, @ConditionalOnMissingBean
+   Lombok                 : @Getter, @Setter, @NoArgsConstructor, @AllArgsConstructor,
+                            @Data, @Builder
+   Testing                : @SpringBootTest, @Test
+   Spring Boot            : @SpringBootApplication (= @Configuration + @EnableAutoConfiguration + @ComponentScan)

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Data JPA — Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f1a;
+  --surface: #161625;
+  --surface2: #1c1c30;
+  --border: #2a2a45;
+  --text: #e2e4f0;
+  --text-dim: #8888a8;
+  --green: #6ee7b7;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --pink: #f472b6;
+  --yellow: #fbbf24;
+  --orange: #fb923c;
+  --red: #f87171;
+  --teal: #2dd4bf;
+  --accent: #6ee7b7;
+  --accent2: #818cf8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Progress bar */
+#progress {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--accent2));
+  transition: width 0.4s ease; z-index: 1000;
+}
+
+/* Slide counter */
+#counter {
+  position: fixed; top: 14px; right: 24px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  color: var(--text-dim); z-index: 1000;
+}
+
+/* Nav dots */
+#dots {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; z-index: 1000;
+}
+#dots .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border); cursor: pointer; transition: all 0.3s;
+}
+#dots .dot.active { background: var(--accent); transform: scale(1.3); }
+
+/* Deck & slides */
+.deck { position: relative; width: 100vw; height: 100vh; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 80px;
+  opacity: 0; transform: translateX(60px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none; overflow-y: auto;
+}
+.slide.active {
+  opacity: 1; transform: translateX(0); pointer-events: auto;
+}
+.slide.prev {
+  opacity: 0; transform: translateX(-60px);
+}
+
+/* Typography */
+h1 { font-size: 2.8rem; font-weight: 800; line-height: 1.15; margin-bottom: 8px; }
+h2 { font-size: 2rem; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: 10px; }
+p, li { font-size: 1.05rem; line-height: 1.7; color: var(--text); }
+.subtitle { font-size: 1.2rem; color: var(--text-dim); font-weight: 400; margin-bottom: 18px; }
+.big-title {
+  background: linear-gradient(135deg, var(--teal), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Tags */
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; justify-content: center; }
+.tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  padding: 4px 12px; border-radius: 20px;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--accent);
+}
+
+/* Code */
+.kw { color: var(--purple); }
+.ty { color: var(--blue); }
+.an { color: var(--yellow); }
+.st { color: var(--green); }
+.cm { color: var(--text-dim); }
+.code-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  border-radius: 12px;
+  padding: 20px 24px;
+  line-height: 1.7;
+  width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* Highlight blocks */
+.hl-green  { border-left: 3px solid var(--green);  background: rgba(110,231,183,0.06); padding: 10px 16px; border-radius: 6px; margin: 4px 0; }
+.hl-yellow { border-left: 3px solid var(--yellow); background: rgba(251,191,36,0.06);  padding: 10px 16px; border-radius: 6px; margin: 4px 0; }
+.hl-blue   { border-left: 3px solid var(--blue);   background: rgba(96,165,250,0.06);  padding: 10px 16px; border-radius: 6px; margin: 4px 0; }
+.hl-pink   { border-left: 3px solid var(--pink);   background: rgba(244,114,182,0.06); padding: 10px 16px; border-radius: 6px; margin: 4px 0; }
+.hl-red    { border-left: 3px solid var(--red);     background: rgba(248,113,113,0.06); padding: 10px 16px; border-radius: 6px; margin: 4px 0; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+
+/* Grids */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width: 100%; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; width: 100%; }
+
+/* Flow */
+.flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; }
+.flow-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 22px; font-weight: 600; text-align: center;
+  font-size: 0.95rem;
+}
+.flow-arrow {
+  font-size: 1.4rem; color: var(--text-dim); padding: 0 8px;
+}
+
+/* Utility */
+.w-full { width: 100%; }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.text-center { text-align: center; }
+.text-dim { color: var(--text-dim); }
+.text-sm { font-size: 0.88rem; }
+.text-xs { font-size: 0.78rem; }
+.gap-sm { gap: 12px; }
+.label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 6px;
+}
+
+/* ER diagram styles */
+.er-table {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; min-width: 200px;
+}
+.er-table-header {
+  background: var(--surface2); padding: 10px 16px; font-weight: 700;
+  font-size: 0.95rem; border-bottom: 1px solid var(--border);
+}
+.er-table-row {
+  padding: 5px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+  border-bottom: 1px solid rgba(42,42,69,0.5);
+}
+.er-table-row:last-child { border-bottom: none; }
+.pk { color: var(--yellow); }
+.fk { color: var(--pink); }
+
+.slide-content { max-width: 1100px; width: 100%; }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="counter"></div>
+<div id="dots"></div>
+
+<div class="deck">
+
+<!-- ======================== SLIDE 1: Title ======================== -->
+<div class="slide active">
+  <div class="slide-content text-center">
+    <p class="label" style="color:var(--teal); margin-bottom:12px;">Architecture Deep Dive</p>
+    <h1 class="big-title" style="font-size:3.4rem; margin-bottom:12px;">Spring Data JPA</h1>
+    <p class="subtitle" style="font-size:1.15rem; max-width:700px; margin:0 auto 28px;">ORM | JPA Entities | Relationships | Repositories | JPQL</p>
+    <div class="tags">
+      <span class="tag">@Entity</span>
+      <span class="tag">@Table</span>
+      <span class="tag">@Id</span>
+      <span class="tag">@ManyToOne</span>
+      <span class="tag">@OneToMany</span>
+      <span class="tag">JpaRepository</span>
+      <span class="tag">@Query</span>
+      <span class="tag">@Embeddable</span>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 2: The Problem ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2 style="color:var(--red);">The Problem — JDBC Limitations</h2>
+    <p class="subtitle mb-2">Why raw JDBC is not enough for enterprise applications</p>
+    <div class="grid-3 gap-sm">
+      <div class="card">
+        <h3 style="color:var(--red); font-size:1.1rem;">Too Much Boilerplate</h3>
+        <p class="text-sm text-dim">Open connection, create statement, set parameters, execute, iterate ResultSet, close everything. Repeated for every query.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--red); font-size:1.1rem;">No ORM Support</h3>
+        <p class="text-sm text-dim">Manual mapping between ResultSet columns and Java object fields. No automatic type conversion or relationship mapping.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--red); font-size:1.1rem;">Manual Connections</h3>
+        <p class="text-sm text-dim">Connection management, pooling, and lifecycle must be handled manually. Risk of resource leaks.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--red); font-size:1.1rem;">No Lazy Loading</h3>
+        <p class="text-sm text-dim">Related data must be fetched eagerly with JOINs or with additional queries. No on-demand loading.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--red); font-size:1.1rem;">No DB Independence</h3>
+        <p class="text-sm text-dim">SQL is database-specific. Switching from MySQL to PostgreSQL requires rewriting queries.</p>
+      </div>
+      <div class="card" style="border-color:var(--green); background:rgba(110,231,183,0.05);">
+        <h3 style="color:var(--green); font-size:1.1rem;">Solution</h3>
+        <p class="text-sm" style="color:var(--green);">ORM frameworks + JPA specification give us object-relational mapping, DB independence, and zero boilerplate.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 3: JPA Architecture ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--blue);">JPA Architecture</span></h2>
+    <p class="subtitle mb-2">Java Persistence API — the specification layer between objects and databases</p>
+    <div class="flow mt-2" style="gap:0;">
+      <div class="flow-box" style="border-color:var(--green); color:var(--green);">Java Objects<br><span class="text-xs text-dim">@Entity POJOs</span></div>
+      <div class="flow-arrow">&#8596;</div>
+      <div class="flow-box" style="border-color:var(--blue); color:var(--blue);">JPA<br><span class="text-xs text-dim">Specification</span></div>
+      <div class="flow-arrow">&#8596;</div>
+      <div class="flow-box" style="border-color:var(--purple); color:var(--purple);">Hibernate<br><span class="text-xs text-dim">Provider</span></div>
+      <div class="flow-arrow">&#8596;</div>
+      <div class="flow-box" style="border-color:var(--yellow); color:var(--yellow);">JDBC<br><span class="text-xs text-dim">Driver</span></div>
+      <div class="flow-arrow">&#8596;</div>
+      <div class="flow-box" style="border-color:var(--teal); color:var(--teal);">Database<br><span class="text-xs text-dim">PostgreSQL</span></div>
+    </div>
+    <div class="grid-2 mt-3">
+      <div class="card">
+        <h3 style="color:var(--blue);">EntityManagerFactory</h3>
+        <p class="text-sm text-dim">One per persistence unit. Creates EntityManager instances. Expensive to create, should be shared.</p>
+        <div class="hl-blue mt-1 text-sm" style="font-family:'JetBrains Mono',monospace;">
+          EntityManagerFactory &rarr; EntityManager &rarr; persist/find/merge/remove
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--purple);">JPA Providers</h3>
+        <div class="hl-green mt-1 text-sm"><strong style="color:var(--green);">Hibernate</strong> — Most popular, default in Spring Boot</div>
+        <div class="hl-blue mt-1 text-sm"><strong style="color:var(--blue);">EclipseLink</strong> — Reference implementation</div>
+        <div class="hl-yellow mt-1 text-sm"><strong style="color:var(--yellow);">OpenJPA</strong> — Apache project</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 4: Entity Annotations ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--yellow);">Entity Annotations</span> — Account</h2>
+    <p class="subtitle mb-2">Mapping a Java class to a database table</p>
+    <div class="code-box"><span class="an">@Entity</span>
+<span class="an">@Table</span>(<span class="st">name</span> = <span class="st">"accounts"</span>)
+<span class="kw">public class</span> <span class="ty">Account</span> {
+
+    <span class="an">@Id</span>
+    <span class="kw">private</span> <span class="ty">String</span> number;
+
+    <span class="kw">private</span> <span class="ty">String</span> holderName;
+
+    <span class="kw">private</span> <span class="kw">double</span> balance;
+
+    <span class="an">@ManyToOne</span>(fetch = <span class="ty">FetchType</span>.<span class="st">LAZY</span>)
+    <span class="an">@JoinColumn</span>(<span class="st">name</span> = <span class="st">"customer_id"</span>)
+    <span class="kw">private</span> <span class="ty">Customer</span> customer;
+}</div>
+    <div class="grid-4 mt-2">
+      <div class="hl-yellow text-sm"><strong style="color:var(--yellow);">@Entity</strong><br><span class="text-dim">Marks class as JPA entity</span></div>
+      <div class="hl-green text-sm"><strong style="color:var(--green);">@Table</strong><br><span class="text-dim">Maps to "accounts" table</span></div>
+      <div class="hl-blue text-sm"><strong style="color:var(--blue);">@Id</strong><br><span class="text-dim">Primary key field</span></div>
+      <div class="hl-pink text-sm"><strong style="color:var(--pink);">@ManyToOne</strong><br><span class="text-dim">FK to Customer</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 5: Customer Entity ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--purple);">Customer Entity</span> — Rich Annotations</h2>
+    <p class="subtitle mb-2">Showcasing the full variety of JPA mapping annotations</p>
+    <div class="code-box"><span class="an">@Entity</span>
+<span class="an">@Table</span>(<span class="st">name</span> = <span class="st">"customers"</span>)
+<span class="kw">public class</span> <span class="ty">Customer</span> {
+
+    <span class="an">@Id</span>
+    <span class="kw">private</span> <span class="ty">Long</span> id;
+
+    <span class="an">@Column</span>(<span class="st">name</span> = <span class="st">"customer_name"</span>)
+    <span class="kw">private</span> <span class="ty">String</span> name;
+
+    <span class="an">@Enumerated</span>(<span class="ty">EnumType</span>.<span class="st">STRING</span>)
+    <span class="kw">private</span> <span class="ty">CustomerGender</span> gender;          <span class="cm">// MALE, FEMALE, OTHER</span>
+
+    <span class="an">@Temporal</span>(<span class="ty">TemporalType</span>.<span class="st">DATE</span>)
+    <span class="kw">private</span> <span class="ty">LocalDate</span> dob;
+
+    <span class="an">@ElementCollection</span>(fetch = <span class="ty">FetchType</span>.<span class="st">EAGER</span>)
+    <span class="an">@CollectionTable</span>(<span class="st">name</span> = <span class="st">"customer_addresses"</span>)
+    <span class="kw">private</span> <span class="ty">List</span>&lt;<span class="ty">Address</span>&gt; address;
+
+    <span class="an">@OneToMany</span>(mappedBy = <span class="st">"customer"</span>)
+    <span class="kw">private</span> <span class="ty">List</span>&lt;<span class="ty">Account</span>&gt; accounts;
+}</div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 6: @Embeddable ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--teal);">@Embeddable</span> — Reusable Value Objects</h2>
+    <p class="subtitle mb-2">Not a separate entity — fields are embedded directly into the parent table</p>
+    <div class="grid-2">
+      <div>
+        <div class="code-box"><span class="an">@Embeddable</span>
+<span class="kw">public class</span> <span class="ty">Address</span> {
+
+    <span class="an">@Column</span>(<span class="st">name</span> = <span class="st">"customer_street"</span>)
+    <span class="kw">private</span> <span class="ty">String</span> street;
+
+    <span class="an">@Column</span>(<span class="st">name</span> = <span class="st">"customer_city"</span>)
+    <span class="kw">private</span> <span class="ty">String</span> city;
+
+    <span class="an">@Column</span>(<span class="st">name</span> = <span class="st">"customer_state"</span>)
+    <span class="kw">private</span> <span class="ty">String</span> state;
+
+    <span class="an">@Column</span>(<span class="st">name</span> = <span class="st">"customer_zip"</span>)
+    <span class="kw">private</span> <span class="ty">String</span> zip;
+}</div>
+      </div>
+      <div>
+        <div class="card mb-2">
+          <h3 style="color:var(--teal);">How It Works</h3>
+          <div class="hl-green mt-1 text-sm"><strong>Not a separate entity</strong> — no @Entity, no @Id, no own table</div>
+          <div class="hl-blue mt-1 text-sm"><strong>Embedded in parent</strong> — columns live in customer_addresses table</div>
+          <div class="hl-yellow mt-1 text-sm"><strong>@Column mapping</strong> — each field maps to a specific column name</div>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--text-dim); font-size:0.95rem;">customer_addresses table</h3>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:0.8rem; margin-top:8px;">
+            <div style="color:var(--fk);">customer_id <span class="text-dim">(FK)</span></div>
+            <div>customer_street</div>
+            <div>customer_city</div>
+            <div>customer_state</div>
+            <div>customer_zip</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 7: Relationship Mappings ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--pink);">Relationship Mappings</span></h2>
+    <p class="subtitle mb-2">Bidirectional @OneToMany / @ManyToOne between Customer and Account</p>
+    <div class="flow mt-2 mb-2">
+      <div class="er-table">
+        <div class="er-table-header" style="color:var(--purple);">Customer</div>
+        <div class="er-table-row"><span class="pk">PK</span> id</div>
+        <div class="er-table-row">customer_name</div>
+        <div class="er-table-row">gender</div>
+        <div class="er-table-row">dob</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; padding:0 24px;">
+        <div style="font-size:1.6rem; color:var(--accent);">1 &#8592;&#8594; N</div>
+        <div style="font-size:0.75rem; color:var(--text-dim); margin-top:4px;">mappedBy = "customer"</div>
+      </div>
+      <div class="er-table">
+        <div class="er-table-header" style="color:var(--blue);">Account</div>
+        <div class="er-table-row"><span class="pk">PK</span> number</div>
+        <div class="er-table-row">holderName</div>
+        <div class="er-table-row">balance</div>
+        <div class="er-table-row"><span class="fk">FK</span> customer_id</div>
+      </div>
+    </div>
+    <div class="grid-2 mt-2">
+      <div class="card">
+        <h3 style="color:var(--purple);">Customer Side — @OneToMany</h3>
+        <div class="code-box" style="font-size:0.82rem;"><span class="an">@OneToMany</span>(mappedBy = <span class="st">"customer"</span>)
+<span class="kw">private</span> <span class="ty">List</span>&lt;<span class="ty">Account</span>&gt; accounts;</div>
+        <p class="text-sm text-dim mt-1">Inverse side — does NOT own the FK. Just references the owning field name.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--blue);">Account Side — @ManyToOne</h3>
+        <div class="code-box" style="font-size:0.82rem;"><span class="an">@ManyToOne</span>(fetch = <span class="ty">FetchType</span>.<span class="st">LAZY</span>)
+<span class="an">@JoinColumn</span>(<span class="st">name</span> = <span class="st">"customer_id"</span>)
+<span class="kw">private</span> <span class="ty">Customer</span> customer;</div>
+        <p class="text-sm text-dim mt-1">Owning side — HAS the foreign key column in the accounts table.</p>
+      </div>
+    </div>
+    <div class="hl-green mt-2 text-sm text-center"><strong>Rule:</strong> The @ManyToOne side always OWNS the relationship (it has the FK column)</div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 8: FetchType ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--orange);">FetchType</span> — LAZY vs EAGER</h2>
+    <p class="subtitle mb-2">When to load related entities</p>
+    <div class="grid-2">
+      <div class="card" style="border-color:var(--red);">
+        <h3 style="color:var(--red);">EAGER Loading</h3>
+        <div class="hl-red text-sm mt-1">Loads everything immediately with the parent</div>
+        <div class="hl-red text-sm">N+1 problem risk — extra queries for each relationship</div>
+        <div class="hl-red text-sm">Default for <span style="color:var(--yellow);">@ManyToOne</span> and <span style="color:var(--yellow);">@OneToOne</span></div>
+        <div class="code-box mt-2" style="font-size:0.8rem;"><span class="cm">// Loads Customer immediately with Account</span>
+<span class="an">@ManyToOne</span>  <span class="cm">// default is EAGER</span>
+<span class="kw">private</span> <span class="ty">Customer</span> customer;</div>
+      </div>
+      <div class="card" style="border-color:var(--green);">
+        <h3 style="color:var(--green);">LAZY Loading</h3>
+        <div class="hl-green text-sm mt-1">Loads on first access only (proxy object)</div>
+        <div class="hl-green text-sm">Better performance — no unnecessary queries</div>
+        <div class="hl-green text-sm">Default for <span style="color:var(--yellow);">@OneToMany</span> and <span style="color:var(--yellow);">@ManyToMany</span></div>
+        <div class="code-box mt-2" style="font-size:0.8rem;"><span class="cm">// We override default to LAZY</span>
+<span class="an">@ManyToOne</span>(fetch = <span class="ty">FetchType</span>.<span class="st">LAZY</span>)
+<span class="kw">private</span> <span class="ty">Customer</span> customer;</div>
+      </div>
+    </div>
+    <div class="hl-yellow mt-2 text-sm text-center">
+      <strong>In our project:</strong> Account.customer uses <span style="color:var(--green);">FetchType.LAZY</span> — we override the @ManyToOne default (EAGER) for better performance
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 9: JpaRepository ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--green);">Spring Data JPA</span> — JpaRepository</h2>
+    <p class="subtitle mb-2">Extend the interface, get ALL CRUD for free. Zero implementation code!</p>
+    <div class="code-box mb-2"><span class="kw">public interface</span> <span class="ty">CustomerRepository</span> <span class="kw">extends</span> <span class="ty">JpaRepository</span>&lt;<span class="ty">Customer</span>, <span class="ty">Long</span>&gt; {
+    <span class="cm">// That's it! Empty interface — all CRUD methods are inherited</span>
+}</div>
+    <h3 class="mt-2" style="color:var(--text-dim);">Built-in Methods You Get For Free</h3>
+    <div class="grid-3 mt-1 gap-sm">
+      <div class="hl-green text-sm"><strong style="font-family:'JetBrains Mono',monospace;">findAll()</strong><br><span class="text-dim">Get all entities</span></div>
+      <div class="hl-green text-sm"><strong style="font-family:'JetBrains Mono',monospace;">findById(id)</strong><br><span class="text-dim">Get by primary key</span></div>
+      <div class="hl-green text-sm"><strong style="font-family:'JetBrains Mono',monospace;">save(entity)</strong><br><span class="text-dim">Insert or update</span></div>
+      <div class="hl-green text-sm"><strong style="font-family:'JetBrains Mono',monospace;">deleteById(id)</strong><br><span class="text-dim">Delete by primary key</span></div>
+      <div class="hl-green text-sm"><strong style="font-family:'JetBrains Mono',monospace;">count()</strong><br><span class="text-dim">Count all rows</span></div>
+      <div class="hl-green text-sm"><strong style="font-family:'JetBrains Mono',monospace;">existsById(id)</strong><br><span class="text-dim">Check existence</span></div>
+    </div>
+    <div class="flow mt-3">
+      <div class="flow-box" style="color:var(--blue);">JpaRepository</div>
+      <div class="flow-arrow">&larr;</div>
+      <div class="flow-box" style="color:var(--purple);">ListCrudRepository</div>
+      <div class="flow-arrow">&larr;</div>
+      <div class="flow-box" style="color:var(--green);">CrudRepository</div>
+      <div class="flow-arrow">&larr;</div>
+      <div class="flow-box" style="color:var(--teal);">Repository</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 10: Custom Queries ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--accent2);">Custom Queries</span> — @Query & Method Names</h2>
+    <p class="subtitle mb-2">Two powerful ways to define custom queries</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="color:var(--yellow);">@Query with JPQL</h3>
+        <div class="code-box mt-1" style="font-size:0.8rem;"><span class="kw">public interface</span> <span class="ty">AccountRepository</span>
+    <span class="kw">extends</span> <span class="ty">JpaRepository</span>&lt;<span class="ty">Account</span>, <span class="ty">String</span>&gt; {
+
+  <span class="an">@Query</span>(<span class="st">"SELECT a FROM Account a</span>
+         <span class="st">WHERE a.customer.id = :customerId"</span>)
+  <span class="ty">List</span>&lt;<span class="ty">Account</span>&gt; <span class="st">findByCustomer</span>(
+      <span class="an">@Param</span>(<span class="st">"customerId"</span>) <span class="ty">Long</span> customerId
+  );
+}</div>
+        <div class="hl-yellow mt-1 text-sm">
+          <strong>JPQL</strong> uses <em>entity names</em> (Account, Customer) not table names (accounts, customers)
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--green);">Query Derivation from Method Names</h3>
+        <p class="text-sm text-dim mt-1">Spring parses the method name and generates the query automatically!</p>
+        <div class="hl-green mt-1 text-sm" style="font-family:'JetBrains Mono',monospace;">findByName(String name)</div>
+        <div class="hl-green text-sm" style="font-family:'JetBrains Mono',monospace;">findByBalanceGreaterThan(double bal)</div>
+        <div class="hl-green text-sm" style="font-family:'JetBrains Mono',monospace;">findByCustomerIdAndBalance(Long, double)</div>
+        <div class="hl-green text-sm" style="font-family:'JetBrains Mono',monospace;">findByHolderNameContaining(String s)</div>
+        <div class="hl-blue mt-2 text-sm">
+          <strong>How?</strong> Spring reads <code>findBy</code> + <code>PropertyName</code> + <code>Keyword</code> and builds the WHERE clause
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 11: Service Layer ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--teal);">Service Layer</span> — AccountService</h2>
+    <p class="subtitle mb-2">Clean, simple service with constructor injection and @Transactional</p>
+    <div class="code-box"><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="ty">AccountService</span> {
+
+    <span class="kw">private final</span> <span class="ty">AccountRepository</span> accountRepository;
+
+    <span class="cm">// Constructor Injection — recommended approach</span>
+    <span class="kw">public</span> <span class="ty">AccountService</span>(<span class="ty">AccountRepository</span> accountRepository) {
+        <span class="kw">this</span>.accountRepository = accountRepository;
+    }
+
+    <span class="an">@Transactional</span>(readOnly = <span class="kw">true</span>)
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Account</span>&gt; <span class="st">findAll</span>() {
+        <span class="kw">return</span> accountRepository.findAll();
+    }
+
+    <span class="an">@Transactional</span>(readOnly = <span class="kw">true</span>)
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Account</span>&gt; <span class="st">findByCustomer</span>(<span class="ty">Long</span> customerId) {
+        <span class="kw">return</span> accountRepository.findByCustomer(customerId);
+    }
+}</div>
+    <div class="grid-3 mt-2 gap-sm">
+      <div class="hl-green text-sm"><strong style="color:var(--green);">Constructor Injection</strong><br>No @Autowired needed — Spring auto-injects single constructor</div>
+      <div class="hl-yellow text-sm"><strong style="color:var(--yellow);">@Transactional</strong><br>Manages transaction boundaries — commit on success, rollback on exception</div>
+      <div class="hl-blue text-sm"><strong style="color:var(--blue);">readOnly = true</strong><br>Optimization hint — Hibernate skips dirty checking for read operations</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 12: JPA Configuration ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--yellow);">JPA Configuration</span></h2>
+    <p class="subtitle mb-2">application.properties — Spring Boot auto-configures everything</p>
+    <div class="code-box mb-2"><span class="cm"># Datasource</span>
+<span class="ty">spring.datasource.url</span>=<span class="st">jdbc:postgresql://localhost:5432/mydb</span>
+<span class="ty">spring.datasource.username</span>=<span class="st">postgres</span>
+<span class="ty">spring.datasource.password</span>=<span class="st">password</span>
+
+<span class="cm"># JPA / Hibernate</span>
+<span class="ty">spring.jpa.hibernate.ddl-auto</span>=<span class="st">update</span>
+<span class="ty">spring.jpa.show-sql</span>=<span class="st">true</span>
+<span class="ty">spring.jpa.properties.hibernate.format_sql</span>=<span class="st">true</span></div>
+    <h3 style="color:var(--text-dim);">ddl-auto Options</h3>
+    <div class="grid-4 mt-1 gap-sm" style="grid-template-columns: repeat(5, 1fr);">
+      <div class="hl-green text-sm text-center"><strong style="color:var(--green);">update</strong><br><span class="text-dim text-xs">Add new columns/tables, keep data</span></div>
+      <div class="hl-blue text-sm text-center"><strong style="color:var(--blue);">create</strong><br><span class="text-dim text-xs">Drop & recreate on startup</span></div>
+      <div class="hl-yellow text-sm text-center"><strong style="color:var(--yellow);">create-drop</strong><br><span class="text-dim text-xs">Create on start, drop on stop</span></div>
+      <div class="hl-pink text-sm text-center"><strong style="color:var(--pink);">validate</strong><br><span class="text-dim text-xs">Validate only, no changes</span></div>
+      <div class="hl-red text-sm text-center"><strong style="color:var(--red);">none</strong><br><span class="text-dim text-xs">Do nothing</span></div>
+    </div>
+    <div class="grid-2 mt-2 gap-sm">
+      <div class="hl-yellow text-sm"><strong>show-sql: true</strong> — See all generated SQL in console output</div>
+      <div class="hl-blue text-sm"><strong>format_sql: true</strong> — Pretty-print SQL with indentation</div>
+    </div>
+    <div class="hl-green mt-2 text-sm text-center">
+      <strong>spring-boot-starter-data-jpa</strong> auto-configures EntityManagerFactory, DataSource, TransactionManager — just add the dependency!
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 13: ER Diagram ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2><span style="color:var(--accent2);">Entity-Relationship Diagram</span></h2>
+    <p class="subtitle mb-2">Full data model of the application</p>
+    <div style="display:flex; align-items:flex-start; justify-content:center; gap:40px; flex-wrap:wrap;">
+      <!-- Customer Table -->
+      <div class="er-table" style="min-width:220px;">
+        <div class="er-table-header" style="color:var(--purple);">customers</div>
+        <div class="er-table-row"><span class="pk">PK</span> <span style="color:var(--blue);">id</span> <span class="text-dim">BIGINT</span></div>
+        <div class="er-table-row">customer_name <span class="text-dim">VARCHAR</span></div>
+        <div class="er-table-row">gender <span class="text-dim">VARCHAR (ENUM)</span></div>
+        <div class="er-table-row">dob <span class="text-dim">DATE</span></div>
+      </div>
+      <!-- Arrows -->
+      <div style="display:flex; flex-direction:column; justify-content:center; gap:40px; padding-top:20px;">
+        <div style="text-align:center;">
+          <div style="font-size:1.4rem; color:var(--accent);">1 &mdash;&mdash; N &rarr;</div>
+          <div class="text-xs text-dim">@OneToMany</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.4rem; color:var(--teal);">1 &mdash;&mdash; N &darr;</div>
+          <div class="text-xs text-dim">@ElementCollection</div>
+        </div>
+      </div>
+      <!-- Account Table -->
+      <div class="er-table" style="min-width:220px;">
+        <div class="er-table-header" style="color:var(--blue);">accounts</div>
+        <div class="er-table-row"><span class="pk">PK</span> <span style="color:var(--blue);">number</span> <span class="text-dim">VARCHAR</span></div>
+        <div class="er-table-row">holderName <span class="text-dim">VARCHAR</span></div>
+        <div class="er-table-row">balance <span class="text-dim">DOUBLE</span></div>
+        <div class="er-table-row"><span class="fk">FK</span> <span style="color:var(--pink);">customer_id</span> <span class="text-dim">BIGINT</span></div>
+      </div>
+    </div>
+    <!-- customer_addresses -->
+    <div style="display:flex; justify-content:center; margin-top:24px;">
+      <div class="er-table" style="min-width:280px;">
+        <div class="er-table-header" style="color:var(--teal);">customer_addresses <span class="text-dim text-xs">(collection table)</span></div>
+        <div class="er-table-row"><span class="fk">FK</span> <span style="color:var(--pink);">customer_id</span> <span class="text-dim">BIGINT</span></div>
+        <div class="er-table-row">customer_street <span class="text-dim">VARCHAR</span></div>
+        <div class="er-table-row">customer_city <span class="text-dim">VARCHAR</span></div>
+        <div class="er-table-row">customer_state <span class="text-dim">VARCHAR</span></div>
+        <div class="er-table-row">customer_zip <span class="text-dim">VARCHAR</span></div>
+      </div>
+    </div>
+    <div class="hl-blue mt-2 text-sm text-center">
+      Address is <strong>@Embeddable</strong> — no separate entity, stored as columns in the collection table
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SLIDE 14: Annotations Summary ======================== -->
+<div class="slide">
+  <div class="slide-content">
+    <h2 class="big-title">Annotations Summary</h2>
+    <p class="subtitle mb-2">All JPA annotations covered in this project</p>
+    <div class="grid-3 gap-sm">
+      <div class="card">
+        <h3 style="color:var(--yellow); font-size:1rem;">Entity Mapping</h3>
+        <div class="hl-yellow text-sm mt-1" style="font-family:'JetBrains Mono',monospace;">@Entity</div>
+        <div class="hl-yellow text-sm" style="font-family:'JetBrains Mono',monospace;">@Table</div>
+        <div class="hl-yellow text-sm" style="font-family:'JetBrains Mono',monospace;">@Id</div>
+        <div class="hl-yellow text-sm" style="font-family:'JetBrains Mono',monospace;">@Column</div>
+        <div class="hl-yellow text-sm" style="font-family:'JetBrains Mono',monospace;">@Enumerated(STRING)</div>
+        <div class="hl-yellow text-sm" style="font-family:'JetBrains Mono',monospace;">@Temporal(DATE)</div>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--teal); font-size:1rem;">Embeddable</h3>
+        <div class="hl-green text-sm mt-1" style="font-family:'JetBrains Mono',monospace;">@Embeddable</div>
+        <div class="hl-green text-sm" style="font-family:'JetBrains Mono',monospace;">@ElementCollection</div>
+        <div class="hl-green text-sm" style="font-family:'JetBrains Mono',monospace;">@CollectionTable</div>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--pink); font-size:1rem;">Relationships</h3>
+        <div class="hl-pink text-sm mt-1" style="font-family:'JetBrains Mono',monospace;">@ManyToOne</div>
+        <div class="hl-pink text-sm" style="font-family:'JetBrains Mono',monospace;">@OneToMany</div>
+        <div class="hl-pink text-sm" style="font-family:'JetBrains Mono',monospace;">@JoinColumn</div>
+        <div class="hl-pink text-sm" style="font-family:'JetBrains Mono',monospace;">FetchType.LAZY/EAGER</div>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--blue); font-size:1rem;">Repository</h3>
+        <div class="hl-blue text-sm mt-1" style="font-family:'JetBrains Mono',monospace;">JpaRepository&lt;T, ID&gt;</div>
+        <div class="hl-blue text-sm" style="font-family:'JetBrains Mono',monospace;">@Query (JPQL)</div>
+        <div class="hl-blue text-sm" style="font-family:'JetBrains Mono',monospace;">@Param</div>
+        <div class="hl-blue text-sm" style="font-family:'JetBrains Mono',monospace;">Method name derivation</div>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--purple); font-size:1rem;">Service / Spring</h3>
+        <div class="hl-pink text-sm mt-1" style="font-family:'JetBrains Mono',monospace; border-color:var(--purple); background:rgba(167,139,250,0.06);">@Service</div>
+        <div class="hl-pink text-sm" style="font-family:'JetBrains Mono',monospace; border-color:var(--purple); background:rgba(167,139,250,0.06);">@Transactional</div>
+        <div class="hl-pink text-sm" style="font-family:'JetBrains Mono',monospace; border-color:var(--purple); background:rgba(167,139,250,0.06);">@SpringBootApplication</div>
+        <div class="hl-pink text-sm" style="font-family:'JetBrains Mono',monospace; border-color:var(--purple); background:rgba(167,139,250,0.06);">CommandLineRunner</div>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--orange); font-size:1rem;">Configuration</h3>
+        <div class="hl-yellow text-sm mt-1" style="font-family:'JetBrains Mono',monospace; border-color:var(--orange); background:rgba(251,146,60,0.06);">ddl-auto: update</div>
+        <div class="hl-yellow text-sm" style="font-family:'JetBrains Mono',monospace; border-color:var(--orange); background:rgba(251,146,60,0.06);">show-sql: true</div>
+        <div class="hl-yellow text-sm" style="font-family:'JetBrains Mono',monospace; border-color:var(--orange); background:rgba(251,146,60,0.06);">format_sql: true</div>
+        <div class="hl-yellow text-sm" style="font-family:'JetBrains Mono',monospace; border-color:var(--orange); background:rgba(251,146,60,0.06);">starter-data-jpa</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .deck -->
+
+<script>
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
+  const dotsContainer = document.getElementById('dots');
+
+  // Create dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    dotsContainer.appendChild(dot);
+  });
+
+  function updateUI() {
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + total;
+    const dots = dotsContainer.querySelectorAll('.dot');
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  function goTo(n) {
+    if (n < 0 || n >= total || n === current) return;
+    slides.forEach((s, i) => {
+      s.classList.remove('active', 'prev');
+      if (i < n) s.classList.add('prev');
+    });
+    slides[n].classList.add('active');
+    current = n;
+    updateUI();
+  }
+
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+  });
+
+  // Touch swipe
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    const dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) next(); else prev();
+    }
+  });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
