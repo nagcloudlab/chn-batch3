@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Money Transfer System v7 - Architecture</title>
+<title>Money Transfer System v8 - Architecture</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -36,359 +36,158 @@ body {
     width: 100vw;
 }
 
-/* Progress bar */
 #progress-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--orange), var(--yellow));
-    z-index: 1000;
-    transition: width 0.4s ease;
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--teal), var(--blue));
+    z-index: 1000; transition: width 0.4s ease;
 }
-
-/* Slide counter */
 #slide-counter {
-    position: fixed;
-    top: 16px;
-    right: 24px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    color: var(--text-dim);
-    z-index: 1000;
+    position: fixed; top: 16px; right: 24px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: var(--text-dim); z-index: 1000;
 }
-
-/* Nav dots */
 #nav-dots {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8px;
-    z-index: 1000;
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 1000;
 }
 .nav-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--border);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    padding: 0;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border); cursor: pointer;
+    transition: all 0.3s ease; border: none; padding: 0;
 }
 .nav-dot.active {
-    background: var(--orange);
-    box-shadow: 0 0 8px var(--orange);
-    transform: scale(1.3);
+    background: var(--teal); box-shadow: 0 0 8px var(--teal); transform: scale(1.3);
 }
-.nav-dot:hover {
-    background: var(--yellow);
-}
+.nav-dot:hover { background: var(--blue); }
 
-/* Deck and slides */
-.deck {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-}
+.deck { position: relative; width: 100vw; height: 100vh; }
 .slide {
-    position: absolute;
-    inset: 0;
-    padding: 60px 80px;
-    opacity: 0;
-    transform: translateX(60px);
+    position: absolute; inset: 0; padding: 60px 80px;
+    opacity: 0; transform: translateX(60px);
     transition: opacity 0.5s ease, transform 0.5s ease;
-    pointer-events: none;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+    pointer-events: none; overflow-y: auto;
+    display: flex; flex-direction: column;
 }
-.slide.active {
-    opacity: 1;
-    transform: translateX(0);
-    pointer-events: auto;
-}
-.slide.prev {
-    transform: translateX(-60px);
-}
-
-/* Scrollbar */
+.slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+.slide.prev { transform: translateX(-60px); }
 .slide::-webkit-scrollbar { width: 6px; }
 .slide::-webkit-scrollbar-track { background: transparent; }
 .slide::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* Typography */
-h1 {
-    font-size: 3rem;
-    font-weight: 800;
-    margin-bottom: 8px;
-    line-height: 1.1;
-}
-h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 24px;
-}
-h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 12px;
-}
-p {
-    font-size: 1.05rem;
-    line-height: 1.7;
-    color: var(--text-dim);
-}
+h1 { font-size: 3rem; font-weight: 800; margin-bottom: 8px; line-height: 1.1; }
+h2 { font-size: 2rem; font-weight: 700; margin-bottom: 24px; }
+h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 12px; }
+p { font-size: 1.05rem; line-height: 1.7; color: var(--text-dim); }
 
 .gradient-text {
-    background: linear-gradient(135deg, var(--orange), var(--yellow));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg, var(--teal), var(--blue));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
+.subtitle { font-size: 1.3rem; color: var(--text-dim); font-weight: 400; margin-bottom: 32px; }
 
-.subtitle {
-    font-size: 1.3rem;
-    color: var(--text-dim);
-    font-weight: 400;
-    margin-bottom: 32px;
-}
-
-/* Tags */
-.tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 16px;
-}
+.tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.82rem;
-    padding: 6px 14px;
-    border-radius: 20px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--yellow);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+    padding: 6px 14px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--teal);
 }
 
-/* Code syntax */
-.kw { color: var(--purple); }
-.ty { color: var(--blue); }
-.an { color: var(--yellow); }
-.st { color: var(--green); }
-.cm { color: var(--text-dim); }
+.kw { color: var(--purple); } .ty { color: var(--blue); } .an { color: var(--yellow); }
+.st { color: var(--green); } .cm { color: var(--text-dim); }
 
-/* Highlight blocks */
 .hl-green { border-left: 3px solid var(--green); background: rgba(110,231,183,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 6px 0; }
 .hl-yellow { border-left: 3px solid var(--yellow); background: rgba(251,191,36,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 6px 0; }
 .hl-blue { border-left: 3px solid var(--blue); background: rgba(96,165,250,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 6px 0; }
 .hl-pink { border-left: 3px solid var(--pink); background: rgba(244,114,182,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 6px 0; }
 .hl-red { border-left: 3px solid var(--red); background: rgba(248,113,113,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 6px 0; }
 .hl-orange { border-left: 3px solid var(--orange); background: rgba(251,146,60,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 6px 0; }
+.hl-teal { border-left: 3px solid var(--teal); background: rgba(45,212,191,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 6px 0; }
+.hl-purple { border-left: 3px solid var(--purple); background: rgba(167,139,250,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 6px 0; }
 
-/* Cards */
 .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
     transition: border-color 0.3s ease, transform 0.2s ease;
 }
-.card:hover {
-    border-color: var(--orange);
-    transform: translateY(-2px);
-}
+.card:hover { border-color: var(--teal); transform: translateY(-2px); }
 .code-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.88rem;
-    line-height: 1.7;
-    overflow-x: auto;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.88rem;
+    line-height: 1.7; overflow-x: auto;
 }
 
-/* Grids */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
 .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
 
-/* Flow */
-.flow {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    flex-wrap: wrap;
-    justify-content: center;
-}
+.flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; }
 .flow-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 22px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-align: center;
-    white-space: nowrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 22px;
+    font-weight: 600; font-size: 0.95rem; text-align: center; white-space: nowrap;
 }
-.flow-arrow {
-    font-size: 1.4rem;
-    color: var(--text-dim);
-    padding: 0 8px;
-}
+.flow-arrow { font-size: 1.4rem; color: var(--text-dim); padding: 0 8px; }
 
-/* Utility */
-.mb-8 { margin-bottom: 8px; }
-.mb-16 { margin-bottom: 16px; }
-.mb-24 { margin-bottom: 24px; }
-.mb-32 { margin-bottom: 32px; }
-.mt-16 { margin-top: 16px; }
-.mt-24 { margin-top: 24px; }
-.text-dim { color: var(--text-dim); }
-.text-green { color: var(--green); }
-.text-blue { color: var(--blue); }
-.text-purple { color: var(--purple); }
-.text-pink { color: var(--pink); }
-.text-yellow { color: var(--yellow); }
-.text-orange { color: var(--orange); }
-.text-red { color: var(--red); }
-.text-teal { color: var(--teal); }
-.text-center { text-align: center; }
-.flex-1 { flex: 1; }
-.mono { font-family: 'JetBrains Mono', monospace; }
-.small { font-size: 0.85rem; }
+.mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; } .mb-32 { margin-bottom: 32px; }
+.mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
+.text-dim { color: var(--text-dim); } .text-green { color: var(--green); }
+.text-blue { color: var(--blue); } .text-purple { color: var(--purple); }
+.text-pink { color: var(--pink); } .text-yellow { color: var(--yellow); }
+.text-orange { color: var(--orange); } .text-red { color: var(--red); }
+.text-teal { color: var(--teal); } .text-center { text-align: center; }
+.mono { font-family: 'JetBrains Mono', monospace; } .small { font-size: 0.85rem; }
 .inline-code {
     font-family: 'JetBrains Mono', monospace;
-    background: var(--surface2);
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 0.88rem;
-    border: 1px solid var(--border);
+    background: var(--surface2); padding: 2px 8px; border-radius: 6px;
+    font-size: 0.88rem; border: 1px solid var(--border);
 }
 
-/* Priority tower */
-.priority-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 20px;
-    border-radius: 12px;
-    margin-bottom: 8px;
-    transition: transform 0.2s ease;
-}
-.priority-item:hover { transform: translateX(4px); }
-.priority-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.4rem;
-    font-weight: 800;
-    min-width: 36px;
-}
-
-/* Timeline */
 .timeline {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    margin: 32px 0;
-    flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; margin: 32px 0; flex-wrap: wrap;
 }
-.timeline-node {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
+.timeline-node { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .timeline-circle {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 0.85rem;
-    border: 2px solid var(--border);
-    background: var(--surface);
-    color: var(--text-dim);
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.8rem;
+    border: 2px solid var(--border); background: var(--surface); color: var(--text-dim);
 }
 .timeline-circle.highlight {
-    border-color: var(--orange);
-    background: linear-gradient(135deg, var(--orange), var(--yellow));
-    color: var(--bg);
-    box-shadow: 0 0 20px rgba(251,146,60,0.3);
+    border-color: var(--teal);
+    background: linear-gradient(135deg, var(--teal), var(--blue));
+    color: var(--bg); box-shadow: 0 0 20px rgba(45,212,191,0.3);
 }
-.timeline-label {
-    font-size: 0.78rem;
-    color: var(--text-dim);
-    text-align: center;
-    max-width: 90px;
-}
-.timeline-line {
-    width: 40px;
-    height: 2px;
-    background: var(--border);
-    margin-bottom: 28px;
-}
+.timeline-label { font-size: 0.72rem; color: var(--text-dim); text-align: center; max-width: 80px; }
+.timeline-line { width: 30px; height: 2px; background: var(--border); margin-bottom: 28px; }
 
-/* Card icon */
-.card-icon {
-    font-size: 2rem;
-    margin-bottom: 12px;
-}
+.card-icon { font-size: 2rem; margin-bottom: 12px; }
 
-/* Comparison */
-.vs-badge {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--orange);
-    color: var(--bg);
-    font-weight: 800;
-    font-size: 0.85rem;
-    padding: 6px 14px;
-    border-radius: 20px;
-    z-index: 10;
-}
-
-/* Conditional grid */
-.cond-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px;
-    transition: border-color 0.3s;
-}
-.cond-card:hover { border-color: var(--yellow); }
-
-/* Architecture diagram */
-.arch-layer {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin: 8px 0;
-    flex-wrap: wrap;
-}
+.arch-layer { display: flex; justify-content: center; gap: 16px; margin: 8px 0; flex-wrap: wrap; }
 .arch-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 20px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    text-align: center;
-    min-width: 140px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 20px;
+    font-size: 0.88rem; font-weight: 600; text-align: center; min-width: 140px;
 }
-.arch-arrow-down {
-    text-align: center;
-    font-size: 1.3rem;
-    color: var(--text-dim);
-    margin: 4px 0;
+.arch-arrow-down { text-align: center; font-size: 1.3rem; color: var(--text-dim); margin: 4px 0; }
+
+.cmp-table {
+    width: 100%; max-width: 950px; border-collapse: separate; border-spacing: 0;
+    border-radius: 14px; overflow: hidden; border: 1px solid var(--border);
 }
+.cmp-table th {
+    background: var(--surface2); padding: 14px 20px; font-size: 14px;
+    font-weight: 700; text-align: left;
+}
+.cmp-table td {
+    background: var(--surface); padding: 12px 20px; font-size: 13px;
+    border-top: 1px solid var(--border); color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+}
+.cmp-table td:first-child { color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; }
+.cmp-table tr:hover td { background: var(--surface2); }
 </style>
 </head>
 <body>
@@ -402,17 +201,17 @@ p {
 <!-- ============== SLIDE 1: Title ============== -->
 <div class="slide active">
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
-        <p class="mono small mb-16" style="color:var(--orange);">v7</p>
-        <h1 style="font-size:3.5rem;" class="mb-16"><span class="gradient-text">Money Transfer System v7</span></h1>
-        <p class="subtitle" style="max-width:700px;">Spring Boot Configuration | Properties | Custom Auto-Configuration</p>
+        <p class="mono small mb-16" style="color:var(--teal);">v8</p>
+        <h1 style="font-size:3.5rem;" class="mb-16"><span class="gradient-text">Money Transfer System v8</span></h1>
+        <p class="subtitle" style="max-width:700px;">Spring Data JPA | Entity Mapping | Transactions &amp; Propagation</p>
         <div class="tags" style="justify-content:center;">
-            <span class="tag">application.properties</span>
-            <span class="tag">application.yml</span>
-            <span class="tag">@Value</span>
-            <span class="tag">@ConditionalOnProperty</span>
-            <span class="tag">@ConfigurationProperties</span>
-            <span class="tag">Lombok</span>
-            <span class="tag">@SpringBootTest</span>
+            <span class="tag">JpaRepository</span>
+            <span class="tag">@Entity</span>
+            <span class="tag">@ManyToOne</span>
+            <span class="tag">@Query (JPQL)</span>
+            <span class="tag">@Transactional</span>
+            <span class="tag">Propagation</span>
+            <span class="tag">ACID</span>
         </div>
     </div>
 </div>
@@ -420,7 +219,7 @@ p {
 <!-- ============== SLIDE 2: Evolution ============== -->
 <div class="slide">
     <h2><span class="gradient-text">Evolution</span> Timeline</h2>
-    <p class="mb-32">How we got here: from raw Java to externalized configuration</p>
+    <p class="mb-32">How we got here: from raw Java to Spring Data JPA</p>
     <div class="timeline">
         <div class="timeline-node">
             <div class="timeline-circle">v1</div>
@@ -451,472 +250,532 @@ p {
             <div class="timeline-circle">v6</div>
             <div class="timeline-label">Boot</div>
         </div>
-        <div class="timeline-line" style="background:var(--orange);"></div>
+        <div class="timeline-line"></div>
         <div class="timeline-node">
-            <div class="timeline-circle highlight">v7</div>
-            <div class="timeline-label" style="color:var(--orange);font-weight:700;">Config + AutoConfig</div>
+            <div class="timeline-circle">v7</div>
+            <div class="timeline-label">Config</div>
+        </div>
+        <div class="timeline-line" style="background:var(--teal);"></div>
+        <div class="timeline-node">
+            <div class="timeline-circle highlight">v8</div>
+            <div class="timeline-label" style="color:var(--teal);font-weight:700;">JPA + Transactions</div>
         </div>
     </div>
     <div class="mt-24" style="max-width:700px;margin-left:auto;margin-right:auto;">
-        <div class="hl-orange">
-            <strong class="text-orange">v7 Focus:</strong> Externalized configuration with <span class="inline-code">application.properties</span> / <span class="inline-code">application.yml</span>, <span class="inline-code">@Value</span> injection, custom auto-configuration with <span class="inline-code">@ConditionalOnProperty</span>, Lombok, and testing.
+        <div class="hl-teal">
+            <strong class="text-teal">v8 Focus:</strong> Replace manual JDBC with <span class="inline-code">JpaRepository</span>, JPA entity annotations (<span class="inline-code">@Entity</span>, <span class="inline-code">@ManyToOne</span>), custom JPQL queries, advanced <span class="inline-code">@Transactional</span> attributes, and transaction propagation.
         </div>
     </div>
 </div>
 
 <!-- ============== SLIDE 3: What's New ============== -->
 <div class="slide">
-    <h2><span class="gradient-text">What's New</span> in v7</h2>
-    <p class="mb-24">Six major additions to our money transfer system</p>
+    <h2><span class="gradient-text">What's New</span> in v8</h2>
+    <p class="mb-24">From JDBC to JPA &mdash; seven major changes</p>
     <div class="grid-3">
         <div class="card">
-            <div class="card-icon">&#9881;</div>
-            <h3 class="text-orange">Configuration Sources</h3>
-            <p class="small">Multiple ways to configure: CLI args, env vars, properties, YAML files with defined priority order</p>
+            <div class="card-icon">&#128218;</div>
+            <h3 class="text-teal">Spring Data JPA</h3>
+            <p class="small">JpaRepository replaces manual JDBC. No implementation classes needed &mdash; just interfaces.</p>
         </div>
         <div class="card">
-            <div class="card-icon">&#128221;</div>
-            <h3 class="text-yellow">.properties vs .yml</h3>
-            <p class="small">Two config file formats: flat key-value pairs vs hierarchical YAML structure</p>
+            <div class="card-icon">&#127981;</div>
+            <h3 class="text-blue">JPA Entities</h3>
+            <p class="small">@Entity, @Table, @Id, @Column, @GeneratedValue, @Enumerated, @Temporal &mdash; ORM mapping.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#128279;</div>
+            <h3 class="text-purple">@ManyToOne</h3>
+            <p class="small">Entity relationships with @ManyToOne + @JoinColumn. Transaction belongs to Account.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#128269;</div>
+            <h3 class="text-yellow">@Query (JPQL)</h3>
+            <p class="small">Custom queries using JPQL &mdash; object-oriented queries on entities, not SQL on tables.</p>
         </div>
         <div class="card">
             <div class="card-icon">&#9889;</div>
-            <h3 class="text-purple">Custom Auto-Configuration</h3>
-            <p class="small">@ConditionalOnProperty to conditionally create beans based on config values</p>
+            <h3 class="text-orange">@Transactional Advanced</h3>
+            <p class="small">isolation, rollbackFor, noRollbackFor, timeout, readOnly &mdash; fine-grained TX control.</p>
         </div>
         <div class="card">
-            <div class="card-icon">&#128293;</div>
-            <h3 class="text-green">Lombok</h3>
-            <p class="small">@Getter, @Setter, @NoArgsConstructor, @AllArgsConstructor &mdash; eliminate boilerplate</p>
-        </div>
-        <div class="card">
-            <div class="card-icon">&#9888;</div>
-            <h3 class="text-red">Custom Exceptions</h3>
-            <p class="small">Domain-specific exceptions for better error handling and clarity</p>
-        </div>
-        <div class="card">
-            <div class="card-icon">&#9989;</div>
-            <h3 class="text-blue">Testing</h3>
-            <p class="small">@SpringBootTest for integration tests with full application context loading</p>
+            <div class="card-icon">&#128257;</div>
+            <h3 class="text-pink">Propagation</h3>
+            <p class="small">Propagation.REQUIRED &mdash; nested service calls share the same transaction.</p>
         </div>
     </div>
 </div>
 
-<!-- ============== SLIDE 4: Configuration Priority ============== -->
+<!-- ============== SLIDE 4: v7 vs v8 Repository ============== -->
 <div class="slide">
-    <h2><span class="gradient-text">Configuration Sources</span> &mdash; Priority Order</h2>
-    <p class="mb-24">Higher priority wins when the same key is defined in multiple sources</p>
-    <div style="max-width:750px;margin:0 auto;">
-        <div class="priority-item" style="background:linear-gradient(90deg,rgba(248,113,113,0.15),transparent);border-left:3px solid var(--red);">
-            <span class="priority-num text-red">1</span>
-            <div>
-                <strong>Command-line arguments</strong>
-                <div class="code-box mt-16" style="padding:10px 16px;"><span class="st">--transfer.limit=5000</span></div>
+    <h2><span class="gradient-text">v7 vs v8</span> &mdash; Repository Layer</h2>
+    <p class="mb-24">From manual JDBC to zero-implementation JPA repositories</p>
+    <div class="grid-2">
+        <div class="card" style="border-color:var(--red);">
+            <h3 class="text-red mb-16">v7 &mdash; JDBC (~50 lines)</h3>
+            <div class="code-box" style="font-size:0.78rem;line-height:1.6;">
+<span class="an">@Repository</span>
+<span class="kw">public class</span> <span class="ty">JdbcAccountRepository</span>
+        <span class="kw">implements</span> <span class="ty">AccountRepository</span> {
+
+    <span class="kw">private final</span> <span class="ty">JdbcTemplate</span> jdbcTemplate;
+
+    <span class="kw">public</span> <span class="ty">Account</span> findById(<span class="ty">String</span> id) {
+        <span class="kw">return</span> jdbcTemplate.queryForObject(
+            <span class="st">"SELECT * FROM accounts WHERE number = ?"</span>,
+            <span class="kw">new</span> <span class="ty">AccountRowMapper</span>(), id);
+    }
+
+    <span class="kw">public void</span> save(<span class="ty">Account</span> account) {
+        jdbcTemplate.update(
+            <span class="st">"UPDATE accounts SET balance = ? WHERE number = ?"</span>,
+            account.getBalance(),
+            account.getAccountNumber());
+    }
+    <span class="cm">// + RowMapper class, other methods...</span>
+}
             </div>
+            <p class="small text-red mt-16">Manual SQL, RowMapper, implementation class</p>
         </div>
-        <div class="priority-item" style="background:linear-gradient(90deg,rgba(251,146,60,0.12),transparent);border-left:3px solid var(--orange);">
-            <span class="priority-num text-orange">2</span>
-            <div>
-                <strong>Java system properties</strong>
-                <div class="code-box mt-16" style="padding:10px 16px;"><span class="kw">-D</span><span class="st">transfer.limit=5000</span></div>
+        <div class="card" style="border-color:var(--green);">
+            <h3 class="text-green mb-16">v8 &mdash; JPA (1 line)</h3>
+            <div class="code-box" style="font-size:0.95rem;line-height:1.9;">
+<span class="kw">public interface</span> <span class="ty">AccountRepository</span>
+        <span class="kw">extends</span> <span class="ty">JpaRepository</span>&lt;<span class="ty">Account</span>, <span class="ty">String</span>&gt; {
+}
             </div>
-        </div>
-        <div class="priority-item" style="background:linear-gradient(90deg,rgba(251,191,36,0.12),transparent);border-left:3px solid var(--yellow);">
-            <span class="priority-num text-yellow">3</span>
-            <div>
-                <strong>OS environment variables</strong>
-                <div class="code-box mt-16" style="padding:10px 16px;"><span class="st">TRANSFER_LIMIT=5000</span></div>
+            <div class="hl-green mt-24">
+                <p class="small" style="color:var(--text);"><strong>Zero implementation code.</strong> Spring Data JPA auto-generates: <span class="inline-code">save()</span>, <span class="inline-code">findById()</span>, <span class="inline-code">findAll()</span>, <span class="inline-code">deleteById()</span>, <span class="inline-code">count()</span>, and more.</p>
             </div>
-        </div>
-        <div class="priority-item" style="background:linear-gradient(90deg,rgba(110,231,183,0.12),transparent);border-left:3px solid var(--green);">
-            <span class="priority-num text-green">4</span>
-            <div><strong>application.properties</strong></div>
-        </div>
-        <div class="priority-item" style="background:linear-gradient(90deg,rgba(96,165,250,0.12),transparent);border-left:3px solid var(--blue);">
-            <span class="priority-num text-blue">5</span>
-            <div><strong>application.yml</strong></div>
-        </div>
-        <div class="priority-item" style="background:linear-gradient(90deg,rgba(167,139,250,0.12),transparent);border-left:3px solid var(--purple);">
-            <span class="priority-num text-purple">6</span>
-            <div><strong>@PropertySource</strong></div>
-        </div>
-        <div class="priority-item" style="background:linear-gradient(90deg,rgba(136,136,168,0.12),transparent);border-left:3px solid var(--text-dim);">
-            <span class="priority-num text-dim">7</span>
-            <div>
-                <strong>Default in @Value</strong>
-                <div class="code-box mt-16" style="padding:10px 16px;"><span class="an">@Value</span>(<span class="st">"${transfer.limit:<span class="text-orange">10000</span>}"</span>)</div>
+            <div class="hl-blue mt-16">
+                <p class="small" style="color:var(--text);"><strong>Dependency change:</strong><br><span class="inline-code text-red" style="text-decoration:line-through;">spring-boot-starter-data-jdbc</span><br><span class="inline-code text-green">spring-boot-starter-data-jpa</span></p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ============== SLIDE 5: .properties vs .yml ============== -->
+<!-- ============== SLIDE 5: JPA Entity Annotations ============== -->
 <div class="slide">
-    <h2><span class="gradient-text">.properties</span> vs <span class="gradient-text">.yml</span></h2>
-    <p class="mb-24">Two formats for externalizing configuration</p>
-    <div class="grid-2" style="position:relative;">
-        <div class="card">
-            <h3 class="text-orange" style="margin-bottom:16px;">application.properties</h3>
-            <p class="small text-dim mb-16">Flat key=value format</p>
-            <div class="code-box">
-<span class="cm"># Database configuration</span>
-<span class="ty">spring.datasource.url</span>=<span class="st">jdbc:postgresql://localhost:5432/mydatabase</span>
-<span class="ty">spring.datasource.username</span>=<span class="st">postgres</span>
-<span class="ty">spring.datasource.password</span>=<span class="st">mysecretpassword</span>
+    <h2><span class="gradient-text">JPA Entity</span> Annotations</h2>
+    <p class="mb-24">Mapping Java classes to database tables</p>
+    <div class="grid-2">
+        <div>
+            <h3 class="text-teal mb-16">Account Entity</h3>
+            <div class="code-box" style="font-size:0.88rem;line-height:1.8;">
+<span class="an">@NoArgsConstructor</span>
+<span class="an">@AllArgsConstructor</span>
+<span class="an">@Setter</span>  <span class="an">@Getter</span>
+<span class="an">@Entity</span>
+<span class="an">@Table</span>(<span class="ty">name</span> = <span class="st">"accounts"</span>, <span class="ty">schema</span> = <span class="st">"public"</span>)
+<span class="kw">public class</span> <span class="ty">Account</span> {
 
-<span class="cm"># Transfer settings</span>
-<span class="ty">transfer.limit</span>=<span class="st">10000</span>
+    <span class="an">@Id</span>
+    <span class="an">@Column</span>(<span class="ty">name</span> = <span class="st">"number"</span>,
+            <span class="ty">nullable</span> = <span class="kw">false</span>,
+            <span class="ty">unique</span> = <span class="kw">true</span>)
+    <span class="kw">private</span> <span class="ty">String</span> accountNumber;
 
-<span class="cm"># App settings</span>
-<span class="ty">debug</span>=<span class="st">false</span>
-<span class="ty">npci.location</span>=<span class="st">chennai</span>
+    <span class="an">@Column</span>(<span class="ty">name</span> = <span class="st">"holder_name"</span>)
+    <span class="kw">private</span> <span class="ty">String</span> accountHolderName;
+
+    <span class="kw">private double</span> balance;
+}
             </div>
         </div>
-        <div class="card">
-            <h3 class="text-yellow" style="margin-bottom:16px;">application.yml</h3>
-            <p class="small text-dim mb-16">Hierarchical YAML format</p>
-            <div class="code-box">
-<span class="ty">debug</span>: <span class="st">true</span>
+        <div>
+            <h3 class="text-blue mb-16">Annotation Reference</h3>
+            <div class="hl-teal mb-8">
+                <strong class="text-teal">@Entity</strong>
+                <p class="small" style="color:var(--text);">Marks this class as a JPA entity &mdash; mapped to a DB table</p>
+            </div>
+            <div class="hl-blue mb-8">
+                <strong class="text-blue">@Table(name, schema)</strong>
+                <p class="small" style="color:var(--text);">Specifies table name and schema</p>
+            </div>
+            <div class="hl-purple mb-8">
+                <strong class="text-purple">@Id</strong>
+                <p class="small" style="color:var(--text);">Primary key field &mdash; every entity must have one</p>
+            </div>
+            <div class="hl-yellow mb-8">
+                <strong class="text-yellow">@Column(name, nullable, unique)</strong>
+                <p class="small" style="color:var(--text);">Maps field to specific column with constraints</p>
+            </div>
+            <div class="hl-green">
+                <strong class="text-green">Lombok</strong>
+                <p class="small" style="color:var(--text);">@Getter/@Setter/@NoArgsConstructor/@AllArgsConstructor &mdash; same as v7</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============== SLIDE 6: Transaction Entity ============== -->
+<div class="slide">
+    <h2><span class="gradient-text">Transaction Entity</span> &mdash; New in v8</h2>
+    <p class="mb-24">Tracking every debit and credit with entity relationships</p>
+    <div class="grid-2">
+        <div>
+            <div class="code-box" style="font-size:0.85rem;line-height:1.8;">
+<span class="an">@Entity</span>
+<span class="an">@Table</span>(<span class="ty">name</span> = <span class="st">"transactions"</span>, <span class="ty">schema</span> = <span class="st">"public"</span>)
+<span class="kw">public class</span> <span class="ty">Transaction</span> {
+
+    <span class="an">@Id</span>
+    <span class="an">@GeneratedValue</span>(<span class="ty">strategy</span> = <span class="ty">GenerationType</span>.<span class="st">IDENTITY</span>)
+    <span class="kw">private</span> <span class="ty">Long</span> id;
+
+    <span class="kw">private</span> <span class="ty">Double</span> amount;
+
+    <span class="an">@Temporal</span>(<span class="ty">TemporalType</span>.<span class="st">TIMESTAMP</span>)
+    <span class="kw">private</span> <span class="ty">LocalDateTime</span> timestamp;
+
+    <span class="an">@Enumerated</span>(<span class="ty">EnumType</span>.<span class="st">STRING</span>)
+    <span class="kw">private</span> <span class="ty">TransactionType</span> type;
+
+    <span class="an">@ManyToOne</span>
+    <span class="an">@JoinColumn</span>(<span class="ty">name</span> = <span class="st">"account_number"</span>,
+        <span class="ty">referencedColumnName</span> = <span class="st">"number"</span>)
+    <span class="kw">private</span> <span class="ty">Account</span> account;
+}
+            </div>
+        </div>
+        <div>
+            <div class="hl-orange mb-8">
+                <strong class="text-orange">@GeneratedValue(IDENTITY)</strong>
+                <p class="small" style="color:var(--text);">Database auto-increments the ID. No need to set it manually.</p>
+            </div>
+            <div class="hl-yellow mb-8">
+                <strong class="text-yellow">@Enumerated(EnumType.STRING)</strong>
+                <p class="small" style="color:var(--text);">Stores enum as string: <span class="inline-code">"DEPOSIT"</span> or <span class="inline-code">"WITHDRAWAL"</span>. Avoids fragile ordinals.</p>
+            </div>
+            <div class="hl-pink mb-8">
+                <strong class="text-pink">@ManyToOne + @JoinColumn</strong>
+                <p class="small" style="color:var(--text);">Many transactions belong to one account. Foreign key: <span class="inline-code">transactions.account_number</span> &rarr; <span class="inline-code">accounts.number</span></p>
+            </div>
+            <div class="hl-blue">
+                <strong class="text-blue">@Temporal(TIMESTAMP)</strong>
+                <p class="small" style="color:var(--text);">Stores both date and time. Options: DATE, TIME, TIMESTAMP.</p>
+            </div>
+            <div class="mt-24">
+                <div class="code-box" style="font-size:0.85rem;padding:14px 18px;">
+<span class="kw">public enum</span> <span class="ty">TransactionType</span> {
+    <span class="st">DEPOSIT</span>,
+    <span class="st">WITHDRAWAL</span>
+}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============== SLIDE 7: @Query (JPQL) ============== -->
+<div class="slide">
+    <h2><span class="gradient-text">@Query</span> &mdash; Custom JPQL Queries</h2>
+    <p class="mb-24">Object-oriented queries on entities, not SQL on tables</p>
+    <div style="max-width:850px;margin:0 auto;">
+        <div class="code-box mb-24" style="font-size:0.95rem;line-height:1.9;">
+<span class="kw">public interface</span> <span class="ty">TransactionRepository</span>
+        <span class="kw">extends</span> <span class="ty">JpaRepository</span>&lt;<span class="ty">Transaction</span>, <span class="ty">Long</span>&gt; {
+
+    <span class="an">@Query</span>(<span class="st">"SELECT t FROM Transaction t WHERE t.account.accountNumber = :accountNumber ORDER BY t.timestamp DESC"</span>)
+    <span class="ty">List</span>&lt;<span class="ty">Transaction</span>&gt; <span class="ty">findByAccountNumber</span>(<span class="ty">String</span> accountNumber);
+}
+        </div>
+        <div class="grid-3">
+            <div class="hl-teal">
+                <h3 class="text-teal small">JPQL vs SQL</h3>
+                <p class="small" style="color:var(--text);"><span class="inline-code">Transaction t</span> &mdash; refers to the entity class, not the table name.</p>
+            </div>
+            <div class="hl-purple">
+                <h3 class="text-purple small">Relationship Navigation</h3>
+                <p class="small" style="color:var(--text);"><span class="inline-code">t.account.accountNumber</span> &mdash; navigates @ManyToOne to Account's field.</p>
+            </div>
+            <div class="hl-yellow">
+                <h3 class="text-yellow small">Named Parameters</h3>
+                <p class="small" style="color:var(--text);"><span class="inline-code">:accountNumber</span> &mdash; bound from the method argument automatically.</p>
+            </div>
+        </div>
+        <div class="hl-green mt-24" style="text-align:center;">
+            <strong class="text-green">Still zero implementation code!</strong> Spring Data JPA generates the query execution, parameter binding, and result mapping.
+        </div>
+    </div>
+</div>
+
+<!-- ============== SLIDE 8: @Transactional Advanced ============== -->
+<div class="slide">
+    <h2><span class="gradient-text">@Transactional</span> &mdash; Advanced Attributes</h2>
+    <p class="mb-24">Fine-grained transaction control on the transfer method</p>
+    <div style="max-width:900px;margin:0 auto;">
+        <div class="code-box mb-24" style="font-size:0.88rem;line-height:1.8;">
+<span class="an">@Transactional</span>(
+    <span class="ty">transactionManager</span> = <span class="st">"transactionManager"</span>,
+    <span class="ty">isolation</span>           = <span class="ty">Isolation</span>.<span class="st">READ_COMMITTED</span>,
+    <span class="ty">rollbackFor</span>         = <span class="ty">RuntimeException</span>.<span class="kw">class</span>,
+    <span class="ty">noRollbackFor</span>       = <span class="ty">AccountNotFoundException</span>.<span class="kw">class</span>,
+    <span class="ty">timeout</span>             = <span class="st">30</span>,
+    <span class="ty">readOnly</span>            = <span class="kw">false</span>
+)
+<span class="kw">public void</span> <span class="ty">transfer</span>(<span class="ty">double</span> amount, <span class="ty">String</span> from, <span class="ty">String</span> to) { ... }
+        </div>
+        <div class="grid-3" style="gap:14px;">
+            <div class="hl-blue">
+                <strong class="text-blue small">isolation</strong>
+                <p class="small" style="color:var(--text);">READ_COMMITTED &mdash; prevents dirty reads. Other transactions see only committed data.</p>
+            </div>
+            <div class="hl-red">
+                <strong class="text-red small">rollbackFor</strong>
+                <p class="small" style="color:var(--text);">RuntimeException &mdash; any runtime exception triggers a full rollback.</p>
+            </div>
+            <div class="hl-orange">
+                <strong class="text-orange small">noRollbackFor</strong>
+                <p class="small" style="color:var(--text);">AccountNotFoundException &mdash; don't rollback if account not found.</p>
+            </div>
+            <div class="hl-yellow">
+                <strong class="text-yellow small">timeout</strong>
+                <p class="small" style="color:var(--text);">30 seconds max. Auto-rollback if exceeded.</p>
+            </div>
+            <div class="hl-green">
+                <strong class="text-green small">readOnly</strong>
+                <p class="small" style="color:var(--text);">false &mdash; this transaction writes data. Set true for read-only optimization.</p>
+            </div>
+            <div class="hl-purple">
+                <strong class="text-purple small">transactionManager</strong>
+                <p class="small" style="color:var(--text);">Which TX manager bean to use. Default: "transactionManager".</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============== SLIDE 9: Transaction Propagation ============== -->
+<div class="slide">
+    <h2><span class="gradient-text">Transaction Propagation</span></h2>
+    <p class="mb-24">How transactions behave when one @Transactional method calls another</p>
+    <div style="max-width:900px;margin:0 auto;">
+        <div class="grid-2 mb-24">
+            <div class="card" style="border-color:var(--teal);">
+                <h3 class="text-teal mb-16">Propagation.REQUIRED (default)</h3>
+                <div class="code-box" style="font-size:0.85rem;line-height:1.7;">
+<span class="an">@Service</span>
+<span class="kw">public class</span> <span class="ty">FooService</span> {
+
+    <span class="an">@Transactional</span>(<span class="ty">propagation</span> =
+        <span class="ty">Propagation</span>.<span class="st">REQUIRED</span>)
+    <span class="kw">public void</span> <span class="ty">doWriteWithDatabase</span>() {
+        <span class="cm">// joins the SAME transaction</span>
+        <span class="cm">// if this fails, everything</span>
+        <span class="cm">// rolls back</span>
+    }
+}
+                </div>
+            </div>
+            <div class="card" style="border-color:var(--blue);">
+                <h3 class="text-blue mb-16">Execution Flow (single TX)</h3>
+                <div style="font-size:0.82rem;line-height:2.2;font-family:'JetBrains Mono',monospace;">
+                    <div class="hl-teal mb-8"><strong>transfer()</strong> &mdash; TX starts here</div>
+                    <div class="hl-blue mb-8">&nbsp;&nbsp;accountRepo.save(from) <span class="text-dim">&larr; same TX</span></div>
+                    <div class="hl-blue mb-8">&nbsp;&nbsp;accountRepo.save(to) <span class="text-dim">&larr; same TX</span></div>
+                    <div class="hl-purple mb-8">&nbsp;&nbsp;txRepo.save(withdrawal) <span class="text-dim">&larr; same TX</span></div>
+                    <div class="hl-purple mb-8">&nbsp;&nbsp;txRepo.save(deposit) <span class="text-dim">&larr; same TX</span></div>
+                    <div class="hl-pink">&nbsp;&nbsp;fooService.doWrite() <span class="text-dim">&larr; same TX (REQUIRED joins)</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="hl-teal" style="text-align:center;">
+            <strong class="text-teal">All 6 operations share ONE transaction.</strong> If any fails, ALL are rolled back &mdash; this is <strong>Atomicity</strong>.
+        </div>
+    </div>
+</div>
+
+<!-- ============== SLIDE 10: Propagation Types ============== -->
+<div class="slide">
+    <h2><span class="gradient-text">Propagation</span> Types</h2>
+    <p class="mb-24">Seven propagation strategies for nested transactional methods</p>
+    <div style="max-width:850px;margin:0 auto;">
+        <table class="cmp-table">
+            <thead>
+                <tr>
+                    <th style="width:25%;">Propagation</th>
+                    <th style="width:45%;">Behavior</th>
+                    <th style="width:30%;">Use Case</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="color:var(--teal);font-weight:700;">REQUIRED</td>
+                    <td>Join existing TX, or create new</td>
+                    <td style="color:var(--green);">Default &mdash; most common</td>
+                </tr>
+                <tr>
+                    <td style="color:var(--blue);">REQUIRES_NEW</td>
+                    <td>Always create a NEW TX (suspend existing)</td>
+                    <td>Audit logs that must persist</td>
+                </tr>
+                <tr>
+                    <td style="color:var(--purple);">MANDATORY</td>
+                    <td>Must run inside existing TX (throws if none)</td>
+                    <td>Enforce caller has a TX</td>
+                </tr>
+                <tr>
+                    <td style="color:var(--yellow);">SUPPORTS</td>
+                    <td>Run inside TX if one exists, otherwise without</td>
+                    <td>Read operations</td>
+                </tr>
+                <tr>
+                    <td style="color:var(--orange);">NOT_SUPPORTED</td>
+                    <td>Always run without TX (suspend existing)</td>
+                    <td>Long-running reads</td>
+                </tr>
+                <tr>
+                    <td style="color:var(--red);">NEVER</td>
+                    <td>Must NOT run inside TX (throws if one exists)</td>
+                    <td>Ensure no TX context</td>
+                </tr>
+                <tr>
+                    <td style="color:var(--pink);">NESTED</td>
+                    <td>Run in a nested TX (savepoint)</td>
+                    <td>Partial rollback</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============== SLIDE 11: ACID Properties ============== -->
+<div class="slide">
+    <h2><span class="gradient-text">ACID</span> Properties</h2>
+    <p class="mb-24">How our transfer method guarantees data integrity</p>
+    <div class="grid-2" style="max-width:950px;margin:0 auto;">
+        <div class="card" style="border-color:var(--teal);">
+            <h3 class="text-teal">Atomicity</h3>
+            <p class="small">The entire transfer is one unit of work. Debit + credit + transaction records &mdash; <strong>all or nothing</strong>. If credit fails after debit, everything rolls back.</p>
+        </div>
+        <div class="card" style="border-color:var(--blue);">
+            <h3 class="text-blue">Consistency</h3>
+            <p class="small">System goes from one valid state to another. Balance checks prevent negative amounts. Both accounts updated correctly or not at all.</p>
+        </div>
+        <div class="card" style="border-color:var(--purple);">
+            <h3 class="text-purple">Isolation</h3>
+            <p class="small"><span class="inline-code">READ_COMMITTED</span> &mdash; other transactions don't see intermediate states. No dirty reads. Only committed data is visible.</p>
+        </div>
+        <div class="card" style="border-color:var(--green);">
+            <h3 class="text-green">Durability</h3>
+            <p class="small">Once committed, changes survive system failures. Updated balances and transaction records persist permanently in PostgreSQL.</p>
+        </div>
+    </div>
+    <div class="hl-teal mt-24" style="text-align:center;max-width:700px;margin-left:auto;margin-right:auto;">
+        <strong class="text-teal">Spring's @Transactional + JPA + PostgreSQL</strong> together enforce all four ACID properties on every transfer operation.
+    </div>
+</div>
+
+<!-- ============== SLIDE 12: Hibernate Config ============== -->
+<div class="slide">
+    <h2><span class="gradient-text">Hibernate</span> Configuration</h2>
+    <p class="mb-24">JPA/Hibernate settings in application.yml</p>
+    <div class="grid-2" style="max-width:950px;margin:0 auto;">
+        <div>
+            <h3 class="text-teal mb-16">application.yml</h3>
+            <div class="code-box" style="font-size:0.92rem;line-height:1.9;">
 <span class="ty">spring</span>:
-  <span class="ty">application</span>:
-    <span class="ty">name</span>: <span class="st">money-transfer-system-v7</span>
   <span class="ty">datasource</span>:
     <span class="ty">url</span>: <span class="st">jdbc:postgresql://...</span>
     <span class="ty">username</span>: <span class="st">postgres</span>
     <span class="ty">password</span>: <span class="st">mysecretpassword</span>
-<span class="ty">transfer</span>:
-  <span class="ty">limit</span>: <span class="st">10000</span>
-            </div>
-        </div>
-    </div>
-    <div class="hl-yellow mt-24" style="text-align:center;">
-        <strong class="text-yellow">Note:</strong> If both files exist and define the same key, <strong>application.properties wins</strong> (higher priority).
-    </div>
-</div>
-
-<!-- ============== SLIDE 6: @Value ============== -->
-<div class="slide">
-    <h2><span class="gradient-text">@Value</span> &mdash; Injecting Properties</h2>
-    <p class="mb-24">Reading externalized configuration into Spring beans</p>
-    <div style="max-width:750px;margin:0 auto;">
-        <div class="code-box mb-24" style="font-size:1rem;line-height:1.9;">
-<span class="an">@Service</span>
-<span class="kw">public class</span> <span class="ty">TransferServiceImpl</span> <span class="kw">implements</span> <span class="ty">TransferService</span> {
-
-    <span class="an">@Value</span>(<span class="st">"${transfer.limit:10000}"</span>)
-    <span class="kw">private</span> <span class="ty">double</span> transferLimit;
-
-    <span class="kw">public void</span> <span class="ty">transfer</span>(<span class="ty">String</span> from, <span class="ty">String</span> to, <span class="ty">double</span> amount) {
-        <span class="kw">if</span> (amount > transferLimit) {
-            <span class="kw">throw new</span> <span class="ty">RuntimeException</span>(<span class="st">"Exceeds limit"</span>);
-        }
-        <span class="cm">// ... perform transfer</span>
-    }
-}
-        </div>
-        <div class="grid-2">
-            <div class="hl-green">
-                <h3 class="text-green small">Syntax</h3>
-                <p class="small" style="color:var(--text);"><span class="inline-code">${property.name:defaultValue}</span></p>
-                <p class="small mt-16">The colon separates the property key from its default. If no source provides the value, the default is used.</p>
-            </div>
-            <div class="hl-blue">
-                <h3 class="text-blue small">Resolution Order</h3>
-                <p class="small" style="color:var(--text);">Spring checks each source in priority order:</p>
-                <p class="small mt-16">CLI args &rarr; System props &rarr; Env vars &rarr; .properties &rarr; .yml &rarr; default</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============== SLIDE 7: Relaxed Binding ============== -->
-<div class="slide">
-    <h2><span class="gradient-text">Relaxed Binding</span></h2>
-    <p class="mb-24">Spring Boot automatically maps between different naming conventions</p>
-    <div style="max-width:700px;margin:0 auto;">
-        <div class="card mb-24" style="text-align:center;">
-            <h3 class="text-orange mb-16">All of these map to the same value!</h3>
-            <div class="grid-2" style="gap:12px;">
-                <div class="hl-orange">
-                    <p class="small text-dim">Properties / YAML key</p>
-                    <p class="mono" style="color:var(--text);font-size:1.1rem;">transfer.limit</p>
-                </div>
-                <div class="hl-yellow">
-                    <p class="small text-dim">Kebab-case (recommended)</p>
-                    <p class="mono" style="color:var(--text);font-size:1.1rem;">transfer.limit</p>
-                </div>
-                <div class="hl-green">
-                    <p class="small text-dim">Environment variable</p>
-                    <p class="mono" style="color:var(--text);font-size:1.1rem;">TRANSFER_LIMIT</p>
-                </div>
-                <div class="hl-blue">
-                    <p class="small text-dim">System property</p>
-                    <p class="mono" style="color:var(--text);font-size:1.1rem;">transfer.limit</p>
-                </div>
-            </div>
-        </div>
-        <div class="hl-green" style="text-align:center;">
-            <strong class="text-green">Spring Boot handles the conversion automatically.</strong>
-            <p class="small mt-16" style="color:var(--text);">No extra configuration needed &mdash; just use any naming style that fits your source, and Spring Boot will find the right value.</p>
-        </div>
-    </div>
-</div>
-
-<!-- ============== SLIDE 8: Custom Auto-Configuration ============== -->
-<div class="slide">
-    <h2><span class="gradient-text">Custom Auto-Configuration</span></h2>
-    <p class="mb-24">Conditionally creating beans based on property values</p>
-    <div class="grid-2">
-        <div>
-            <h3 class="text-yellow mb-16">NpciChnAutoConfiguration.java</h3>
-            <div class="code-box" style="font-size:0.92rem;line-height:1.8;">
-<span class="an">@Configuration</span>
-<span class="an">@ConditionalOnProperty</span>(
-    <span class="ty">name</span> = <span class="st">"npci.location"</span>,
-    <span class="ty">havingValue</span> = <span class="st">"chennai"</span>
-)
-<span class="kw">public class</span> <span class="ty">NpciChnAutoConfiguration</span> {
-
-    <span class="an">@Bean</span>
-    <span class="kw">public</span> <span class="ty">String</span> <span class="ty">bean1</span>() {
-        <span class="kw">return</span> <span class="st">"Bean 1"</span>;
-    }
-}
+  <span class="ty">jpa</span>:
+    <span class="ty">hibernate</span>:
+      <span class="ty">ddl-auto</span>: <span class="st">update</span>
+    <span class="ty">show-sql</span>: <span class="st">true</span>
+    <span class="ty">properties</span>:
+      <span class="ty">hibernate</span>:
+        <span class="ty">format_sql</span>: <span class="st">true</span>
             </div>
         </div>
         <div>
-            <h3 class="text-orange mb-16">How it works</h3>
-            <div class="hl-yellow mb-16">
-                <strong class="text-yellow">@ConditionalOnProperty</strong>
-                <p class="small mt-16" style="color:var(--text);">This entire @Configuration class (and all its @Bean methods) only activates when the specified condition is met.</p>
+            <h3 class="text-blue mb-16">ddl-auto options</h3>
+            <div class="hl-green mb-8">
+                <strong class="text-green small">update</strong>
+                <p class="small" style="color:var(--text);">Auto-update schema to match entities. Adds columns/tables, never drops. <strong>Used in v8.</strong></p>
             </div>
-            <div class="hl-green mb-16">
-                <strong class="text-green">application.properties</strong>
-                <div class="code-box mt-16" style="padding:10px 16px;">
-<span class="ty">npci.location</span>=<span class="st">chennai</span>
-                </div>
-                <p class="small mt-16" style="color:var(--text);">Since npci.location=chennai, the condition is <strong class="text-green">TRUE</strong> and bean1 is created.</p>
+            <div class="hl-blue mb-8">
+                <strong class="text-blue small">validate</strong>
+                <p class="small" style="color:var(--text);">Validate schema matches entities. Fail on mismatch. Good for production.</p>
             </div>
-            <div class="hl-red">
-                <p class="small" style="color:var(--text);">If npci.location were "mumbai" or missing, this configuration class would be <strong class="text-red">completely skipped</strong>.</p>
+            <div class="hl-yellow mb-8">
+                <strong class="text-yellow small">create</strong>
+                <p class="small" style="color:var(--text);">Drop and recreate schema on every startup.</p>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============== SLIDE 9: @ConditionalOn* Family ============== -->
-<div class="slide">
-    <h2><span class="gradient-text">@ConditionalOn*</span> Family</h2>
-    <p class="mb-24">Spring Boot's conditional bean creation annotations</p>
-    <div class="grid-2" style="gap:16px;">
-        <div class="cond-card" style="border-left:3px solid var(--yellow);">
-            <h3 class="text-yellow">@ConditionalOnProperty</h3>
-            <p class="small">When a property has a specific value</p>
-            <div class="code-box mt-16" style="padding:8px 12px;font-size:0.8rem;">
-<span class="an">@ConditionalOnProperty</span>(<span class="ty">name</span>=<span class="st">"npci.location"</span>, <span class="ty">havingValue</span>=<span class="st">"chennai"</span>)
+            <div class="hl-red mb-8">
+                <strong class="text-red small">create-drop</strong>
+                <p class="small" style="color:var(--text);">Create on startup, drop on shutdown. For tests.</p>
             </div>
-        </div>
-        <div class="cond-card" style="border-left:3px solid var(--blue);">
-            <h3 class="text-blue">@ConditionalOnClass</h3>
-            <p class="small">When a class is on the classpath</p>
-            <div class="code-box mt-16" style="padding:8px 12px;font-size:0.8rem;">
-<span class="an">@ConditionalOnClass</span>(<span class="ty">DataSource</span>.<span class="kw">class</span>)
-            </div>
-        </div>
-        <div class="cond-card" style="border-left:3px solid var(--green);">
-            <h3 class="text-green">@ConditionalOnBean</h3>
-            <p class="small">When another bean exists in the context</p>
-            <div class="code-box mt-16" style="padding:8px 12px;font-size:0.8rem;">
-<span class="an">@ConditionalOnBean</span>(<span class="ty">DataSource</span>.<span class="kw">class</span>)
-            </div>
-        </div>
-        <div class="cond-card" style="border-left:3px solid var(--pink);">
-            <h3 class="text-pink">@ConditionalOnMissingBean</h3>
-            <p class="small">When a bean does NOT exist (provide default)</p>
-            <div class="code-box mt-16" style="padding:8px 12px;font-size:0.8rem;">
-<span class="an">@ConditionalOnMissingBean</span>(<span class="ty">TransferService</span>.<span class="kw">class</span>)
-            </div>
-        </div>
-        <div class="cond-card" style="border-left:3px solid var(--purple);">
-            <h3 class="text-purple">@ConditionalOnWebApplication</h3>
-            <p class="small">Only when running as a web application</p>
-            <div class="code-box mt-16" style="padding:8px 12px;font-size:0.8rem;">
-<span class="an">@ConditionalOnWebApplication</span>
-            </div>
-        </div>
-        <div class="cond-card" style="border-left:3px solid var(--orange);">
-            <h3 class="text-orange">@ConditionalOnExpression</h3>
-            <p class="small">When a SpEL expression evaluates to true</p>
-            <div class="code-box mt-16" style="padding:8px 12px;font-size:0.8rem;">
-<span class="an">@ConditionalOnExpression</span>(<span class="st">"${feature.enabled:false}"</span>)
-            </div>
-        </div>
-    </div>
-    <div class="hl-orange mt-24" style="text-align:center;">
-        <strong class="text-orange">This is how Spring Boot auto-configuration works internally!</strong> Each starter uses @ConditionalOn* to decide what beans to create.
-    </div>
-</div>
-
-<!-- ============== SLIDE 10: How Auto-Configuration Works ============== -->
-<div class="slide">
-    <h2><span class="gradient-text">How Auto-Configuration</span> Works</h2>
-    <p class="mb-24">The lifecycle from startup to bean creation</p>
-    <div style="max-width:800px;margin:0 auto;">
-        <div class="flow mb-24">
-            <div class="flow-box" style="border-color:var(--orange);">
-                <span class="text-orange">Spring Boot Starts</span>
-            </div>
-            <div class="flow-arrow">&rarr;</div>
-            <div class="flow-box" style="border-color:var(--yellow);">
-                <span class="text-yellow">Scan META-INF/<br>auto-configuration imports</span>
-            </div>
-            <div class="flow-arrow">&rarr;</div>
-            <div class="flow-box" style="border-color:var(--purple);">
-                <span class="text-purple">Check @ConditionalOn*</span>
-            </div>
-            <div class="flow-arrow">&rarr;</div>
-            <div class="flow-box" style="border-color:var(--green);">
-                <span class="text-green">Create Matching Beans</span>
-            </div>
-        </div>
-
-        <div class="grid-2" style="gap:16px;">
-            <div class="card" style="border-color:var(--blue);">
-                <h3 class="text-blue mb-16">Built-in: DataSourceAutoConfiguration</h3>
-                <div class="hl-blue mb-8">
-                    <p class="small"><strong>Checks:</strong> Is <span class="inline-code">DataSource</span> class on classpath?</p>
-                </div>
-                <div class="hl-blue mb-8">
-                    <p class="small"><strong>Checks:</strong> Are <span class="inline-code">spring.datasource.*</span> properties set?</p>
-                </div>
-                <div class="hl-green">
-                    <p class="small"><strong>Creates:</strong> <span class="inline-code">HikariDataSource</span> bean automatically</p>
-                </div>
-            </div>
-            <div class="card" style="border-color:var(--orange);">
-                <h3 class="text-orange mb-16">Custom: NpciChnAutoConfiguration</h3>
-                <div class="hl-orange mb-8">
-                    <p class="small"><strong>Checks:</strong> Is <span class="inline-code">npci.location</span> = "chennai"?</p>
-                </div>
-                <div class="hl-green mb-8">
-                    <p class="small"><strong>Result:</strong> YES &mdash; property is set in application.properties</p>
-                </div>
-                <div class="hl-green">
-                    <p class="small"><strong>Creates:</strong> <span class="inline-code">bean1</span> (String bean)</p>
-                </div>
+            <div class="hl-purple">
+                <strong class="text-purple small">none</strong>
+                <p class="small" style="color:var(--text);">Don't touch the schema at all.</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ============== SLIDE 11: Lombok ============== -->
+<!-- ============== SLIDE 13: v7 vs v8 Comparison ============== -->
 <div class="slide">
-    <h2><span class="gradient-text">Lombok</span> &mdash; Less Boilerplate</h2>
-    <p class="mb-24">Annotations that generate code at compile time</p>
-    <div class="grid-2">
-        <div class="card" style="border-color:var(--red);">
-            <h3 class="text-red mb-16">Without Lombok (~40 lines)</h3>
-            <div class="code-box" style="font-size:0.78rem;line-height:1.6;">
-<span class="kw">public class</span> <span class="ty">Account</span> {
-    <span class="kw">private</span> <span class="ty">Long</span> id;
-    <span class="kw">private</span> <span class="ty">String</span> name;
-    <span class="kw">private</span> <span class="ty">double</span> balance;
-
-    <span class="kw">public</span> <span class="ty">Account</span>() {}
-
-    <span class="kw">public</span> <span class="ty">Account</span>(<span class="ty">Long</span> id, <span class="ty">String</span> name,
-                   <span class="ty">double</span> balance) {
-        <span class="kw">this</span>.id = id;
-        <span class="kw">this</span>.name = name;
-        <span class="kw">this</span>.balance = balance;
-    }
-
-    <span class="kw">public</span> <span class="ty">Long</span> getId() { <span class="kw">return</span> id; }
-    <span class="kw">public void</span> setId(<span class="ty">Long</span> id) {
-        <span class="kw">this</span>.id = id;
-    }
-    <span class="kw">public</span> <span class="ty">String</span> getName() { <span class="kw">return</span> name; }
-    <span class="kw">public void</span> setName(<span class="ty">String</span> name) {
-        <span class="kw">this</span>.name = name;
-    }
-    <span class="kw">public</span> <span class="ty">double</span> getBalance() {
-        <span class="kw">return</span> balance;
-    }
-    <span class="kw">public void</span> setBalance(<span class="ty">double</span> bal) {
-        <span class="kw">this</span>.balance = bal;
-    }
-}
-            </div>
-        </div>
-        <div class="card" style="border-color:var(--green);">
-            <h3 class="text-green mb-16">With Lombok (~10 lines)</h3>
-            <div class="code-box" style="font-size:0.92rem;line-height:1.8;">
-<span class="an">@NoArgsConstructor</span>
-<span class="an">@AllArgsConstructor</span>
-<span class="an">@Setter</span>
-<span class="an">@Getter</span>
-<span class="kw">public class</span> <span class="ty">Account</span> {
-
-    <span class="kw">private</span> <span class="ty">Long</span> id;
-    <span class="kw">private</span> <span class="ty">String</span> name;
-    <span class="kw">private</span> <span class="ty">double</span> balance;
-}
-            </div>
-            <div class="hl-green mt-24">
-                <p class="small" style="color:var(--text);"><strong>4 annotations</strong> replace ~30 lines of boilerplate code. Lombok generates getters, setters, and constructors at compile time.</p>
-            </div>
-        </div>
-    </div>
+    <h2><span class="gradient-text">v7 vs v8</span> &mdash; Side by Side</h2>
+    <p class="mb-24">What changed from JDBC to JPA</p>
+    <table class="cmp-table" style="margin:0 auto;">
+        <thead>
+            <tr>
+                <th style="width:25%;">Concern</th>
+                <th style="width:37%;color:var(--orange);">v7 (JDBC)</th>
+                <th style="width:38%;color:var(--teal);">v8 (JPA)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Starter</td>
+                <td style="color:var(--orange);">spring-boot-starter-data-jdbc</td>
+                <td style="color:var(--teal);">spring-boot-starter-data-jpa</td>
+            </tr>
+            <tr>
+                <td>Repository</td>
+                <td style="color:var(--orange);">Class + JdbcTemplate + SQL</td>
+                <td style="color:var(--teal);">Interface extends JpaRepository</td>
+            </tr>
+            <tr>
+                <td>Entity</td>
+                <td style="color:var(--orange);">Plain POJO + Lombok</td>
+                <td style="color:var(--teal);">@Entity @Table @Id @Column</td>
+            </tr>
+            <tr>
+                <td>Queries</td>
+                <td style="color:var(--orange);">Raw SQL strings</td>
+                <td style="color:var(--teal);">JPQL with @Query</td>
+            </tr>
+            <tr>
+                <td>Relationships</td>
+                <td style="color:var(--orange);">Manual JOIN queries</td>
+                <td style="color:var(--teal);">@ManyToOne @JoinColumn</td>
+            </tr>
+            <tr>
+                <td>Schema</td>
+                <td style="color:var(--orange);">Manual SQL scripts</td>
+                <td style="color:var(--teal);">Hibernate ddl-auto: update</td>
+            </tr>
+            <tr>
+                <td>Transaction tracking</td>
+                <td style="color:var(--orange);">Not implemented</td>
+                <td style="color:var(--teal);">Transaction entity + history</td>
+            </tr>
+            <tr>
+                <td>Propagation</td>
+                <td style="color:var(--orange);">Not demonstrated</td>
+                <td style="color:var(--teal);">FooService with REQUIRED</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
-<!-- ============== SLIDE 12: Testing ============== -->
+<!-- ============== SLIDE 14: Architecture ============== -->
 <div class="slide">
-    <h2><span class="gradient-text">Testing</span> with @SpringBootTest</h2>
-    <p class="mb-24">Integration testing with full application context</p>
-    <div style="max-width:800px;margin:0 auto;">
-        <div class="code-box mb-24" style="font-size:0.92rem;line-height:1.8;">
-<span class="an">@SpringBootTest</span>
-<span class="kw">public class</span> <span class="ty">JdbcAccountRepositoryTest</span> {
-
-    <span class="kw">private final</span> <span class="ty">JdbcAccountRepository</span> repository;
-
-    <span class="an">@Autowired</span>
-    <span class="kw">public</span> <span class="ty">JdbcAccountRepositoryTest</span>(<span class="ty">JdbcAccountRepository</span> repository) {
-        <span class="kw">this</span>.repository = repository;
-    }
-
-    <span class="an">@Test</span>
-    <span class="kw">void</span> <span class="ty">shouldFindAccountById</span>() {
-        <span class="ty">Account</span> account = repository.findById(<span class="st">1L</span>);
-        assertNotNull(account);
-    }
-}
-        </div>
-        <div class="grid-3">
-            <div class="hl-yellow">
-                <h3 class="text-yellow small">@SpringBootTest</h3>
-                <p class="small" style="color:var(--text);">Loads the <strong>full</strong> application context &mdash; all beans, config, auto-configuration</p>
-            </div>
-            <div class="hl-green">
-                <h3 class="text-green small">@Autowired</h3>
-                <p class="small" style="color:var(--text);">Constructor injection of real beans from the Spring context</p>
-            </div>
-            <div class="hl-blue">
-                <h3 class="text-blue small">@Test</h3>
-                <p class="small" style="color:var(--text);">JUnit 5 annotation marking a test method</p>
-            </div>
-        </div>
-        <div class="hl-pink mt-24" style="text-align:center;">
-            <strong class="text-pink">spring-boot-starter-test</strong> includes JUnit 5 + Mockito + AssertJ + Spring Test utilities
-        </div>
-    </div>
-</div>
-
-<!-- ============== SLIDE 13: Architecture ============== -->
-<div class="slide">
-    <h2><span class="gradient-text">v7 Architecture</span></h2>
-    <p class="mb-16">Configuration-driven bean creation with auto-configuration</p>
-    <div style="max-width:850px;margin:0 auto;">
+    <h2><span class="gradient-text">v8 Architecture</span></h2>
+    <p class="mb-16">JPA-based architecture with entity relationships and transaction propagation</p>
+    <div style="max-width:900px;margin:0 auto;">
         <div class="arch-layer">
             <div class="arch-box" style="border-color:var(--orange);background:rgba(251,146,60,0.08);">
                 <span class="text-orange">application.properties</span><br>
@@ -924,102 +783,195 @@ p {
             </div>
             <div class="arch-box" style="border-color:var(--yellow);background:rgba(251,191,36,0.08);">
                 <span class="text-yellow">application.yml</span><br>
-                <span class="small text-dim">datasource, app name</span>
+                <span class="small text-dim">datasource, jpa, hibernate</span>
             </div>
         </div>
         <div class="arch-arrow-down">&darr;</div>
         <div class="arch-layer">
             <div class="arch-box" style="border-color:var(--purple);background:rgba(167,139,250,0.08);min-width:500px;">
-                <span class="text-purple">Spring Boot Auto-Configuration Engine</span>
+                <span class="text-purple">Spring Boot Auto-Configuration</span><br>
+                <span class="small text-dim">DataSource + EntityManagerFactory + TransactionManager + JPA Repositories</span>
             </div>
         </div>
-        <div class="arch-arrow-down">&darr;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;</div>
+        <div class="arch-arrow-down">&darr;</div>
         <div class="grid-2" style="gap:16px;">
-            <div class="card" style="border-color:var(--blue);padding:16px;">
-                <h3 class="text-blue small mb-8">Auto-Created Beans (built-in)</h3>
+            <div class="card" style="border-color:var(--teal);padding:16px;">
+                <h3 class="text-teal small mb-8">Service Layer</h3>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <span class="inline-code text-blue">HikariDataSource</span>
-                    <span class="inline-code text-blue">JdbcTemplate</span>
-                    <span class="inline-code text-blue">TransactionManager</span>
+                    <span class="inline-code text-teal">TransferServiceImpl</span>
+                    <span class="inline-code text-pink">FooService</span>
                 </div>
-                <p class="small text-dim mt-16">Created by DataSourceAutoConfiguration when spring.datasource.* properties are found</p>
+                <p class="small text-dim mt-16">@Transactional (isolation, propagation, rollback)</p>
             </div>
-            <div class="card" style="border-color:var(--orange);padding:16px;">
-                <h3 class="text-orange small mb-8">Custom Conditional Beans</h3>
+            <div class="card" style="border-color:var(--blue);padding:16px;">
+                <h3 class="text-blue small mb-8">Repository Layer (JPA)</h3>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <span class="inline-code text-orange">NpciChnAutoConfiguration</span>
-                    <span class="inline-code text-orange">bean1</span>
+                    <span class="inline-code text-blue">AccountRepository</span>
+                    <span class="inline-code text-blue">TransactionRepository</span>
                 </div>
-                <p class="small text-dim mt-16">Created only when npci.location=chennai via @ConditionalOnProperty</p>
+                <p class="small text-dim mt-16">JpaRepository &mdash; auto-generated CRUD + @Query</p>
             </div>
         </div>
         <div class="arch-arrow-down">&darr;</div>
         <div class="grid-3" style="gap:12px;">
             <div class="arch-box" style="border-color:var(--green);">
-                <span class="text-green">Service Layer</span><br>
-                <span class="small text-dim">TransferServiceImpl</span><br>
-                <span class="small text-dim">@Value("${transfer.limit:10000}")</span>
-            </div>
-            <div class="arch-box" style="border-color:var(--teal);">
-                <span class="text-teal">Repository Layer</span><br>
-                <span class="small text-dim">JdbcAccountRepository</span>
+                <span class="text-green">Account</span><br>
+                <span class="small text-dim">@Entity @Table @Id</span>
             </div>
             <div class="arch-box" style="border-color:var(--pink);">
-                <span class="text-pink">Entity</span><br>
-                <span class="small text-dim">Account (Lombok)</span>
+                <span class="text-pink">Transaction</span><br>
+                <span class="small text-dim">@Entity @ManyToOne</span>
+            </div>
+            <div class="arch-box" style="border-color:var(--yellow);">
+                <span class="text-yellow">TransactionType</span><br>
+                <span class="small text-dim">DEPOSIT | WITHDRAWAL</span>
+            </div>
+        </div>
+        <div class="arch-arrow-down">&darr;</div>
+        <div class="arch-layer">
+            <div class="arch-box" style="border-color:var(--text-dim);min-width:300px;">
+                <span class="text-dim">PostgreSQL</span><br>
+                <span class="small text-dim">accounts + transactions tables</span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ============== SLIDE 14: Summary ============== -->
+<!-- ============== SLIDE 15: All Annotations ============== -->
+<div class="slide">
+    <h2><span class="gradient-text">All Annotations</span> &mdash; v1 through v8</h2>
+    <p class="mb-24">Complete reference grouped by category</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-width:1100px;width:100%;">
+        <div class="card" style="padding:16px;border-color:rgba(110,231,183,0.3);">
+            <h3 style="color:var(--green);font-size:12px;">DI &amp; Wiring</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--yellow);">@Bean</span>  <span style="color:var(--yellow);">@Component</span><br>
+                <span style="color:var(--yellow);">@Autowired</span>  <span style="color:var(--yellow);">@Primary</span><br>
+                <span style="color:var(--yellow);">@Qualifier</span>
+            </p>
+        </div>
+        <div class="card" style="padding:16px;border-color:rgba(96,165,250,0.3);">
+            <h3 style="color:var(--blue);font-size:12px;">Stereotypes</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--yellow);">@Repository</span>  <span style="color:var(--yellow);">@Service</span><br>
+                <span style="color:var(--yellow);">@Controller</span><br>
+                <span style="color:var(--yellow);">@Configuration</span>
+            </p>
+        </div>
+        <div class="card" style="padding:16px;border-color:rgba(251,146,60,0.3);">
+            <h3 style="color:var(--orange);font-size:12px;">Scope &amp; Lifecycle</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--yellow);">@Scope</span>  <span style="color:var(--yellow);">@Lazy</span><br>
+                <span style="color:var(--yellow);">@PostConstruct</span><br>
+                <span style="color:var(--yellow);">@PreDestroy</span>
+            </p>
+        </div>
+        <div class="card" style="padding:16px;border-color:rgba(167,139,250,0.3);">
+            <h3 style="color:var(--purple);font-size:12px;">Configuration</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--yellow);">@Value</span>  <span style="color:var(--yellow);">@PropertySource</span><br>
+                <span style="color:var(--yellow);">@Profile</span>  <span style="color:var(--yellow);">@Conditional</span>
+            </p>
+        </div>
+        <div class="card" style="padding:16px;border-color:rgba(244,114,182,0.3);">
+            <h3 style="color:var(--pink);font-size:12px;">Auto-Configuration</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--yellow);">@ConditionalOnProperty</span><br>
+                <span style="color:var(--yellow);">@ConditionalOnClass</span><br>
+                <span style="color:var(--yellow);">@ConditionalOnBean</span><br>
+                <span style="color:var(--yellow);">@ConditionalOnMissingBean</span>
+            </p>
+        </div>
+        <div class="card" style="padding:16px;border-color:rgba(248,113,113,0.3);">
+            <h3 style="color:var(--red);font-size:12px;">Lombok</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--yellow);">@Getter</span>  <span style="color:var(--yellow);">@Setter</span><br>
+                <span style="color:var(--yellow);">@NoArgsConstructor</span><br>
+                <span style="color:var(--yellow);">@AllArgsConstructor</span><br>
+                <span style="color:var(--yellow);">@Data</span>  <span style="color:var(--yellow);">@Builder</span>
+            </p>
+        </div>
+        <div class="card" style="padding:16px;border-color:rgba(45,212,191,0.4);background:rgba(45,212,191,0.03);border-width:2px;">
+            <h3 style="color:var(--teal);font-size:12px;">JPA Entities (v8)</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--teal);">@Entity</span>  <span style="color:var(--teal);">@Table</span><br>
+                <span style="color:var(--teal);">@Id</span>  <span style="color:var(--teal);">@Column</span><br>
+                <span style="color:var(--teal);">@GeneratedValue</span><br>
+                <span style="color:var(--teal);">@ManyToOne</span>  <span style="color:var(--teal);">@JoinColumn</span><br>
+                <span style="color:var(--teal);">@Enumerated</span>  <span style="color:var(--teal);">@Temporal</span>
+            </p>
+        </div>
+        <div class="card" style="padding:16px;border-color:rgba(96,165,250,0.4);background:rgba(96,165,250,0.03);border-width:2px;">
+            <h3 style="color:var(--blue);font-size:12px;">Spring Data JPA (v8)</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--blue);">JpaRepository</span><br>
+                <span style="color:var(--teal);">@Query</span> (JPQL)
+            </p>
+        </div>
+        <div class="card" style="padding:16px;border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.03);border-width:2px;">
+            <h3 style="color:var(--yellow);font-size:12px;">Transactions (v8)</h3>
+            <p style="font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.9;">
+                <span style="color:var(--yellow);">@Transactional</span><br>
+                <span style="color:var(--text-dim);">isolation, rollbackFor</span><br>
+                <span style="color:var(--text-dim);">noRollbackFor, timeout</span><br>
+                <span style="color:var(--text-dim);">readOnly, propagation</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ============== SLIDE 16: Summary ============== -->
 <div class="slide">
     <h2><span class="gradient-text">Summary</span></h2>
-    <p class="mb-24">Everything new in v7</p>
-    <div class="grid-4" style="gap:14px;">
+    <p class="mb-24">Everything new in v8</p>
+    <div class="grid-3" style="gap:14px;">
         <div class="card" style="padding:18px;text-align:center;">
-            <div style="font-size:1.5rem;margin-bottom:8px;">&#9881;</div>
-            <h3 class="text-orange small">Configuration Sources</h3>
-            <p class="small text-dim" style="font-size:0.78rem;">7-level priority hierarchy from CLI args to @Value defaults</p>
+            <div style="font-size:1.5rem;margin-bottom:8px;">&#128218;</div>
+            <h3 class="text-teal small">JpaRepository</h3>
+            <p class="small text-dim" style="font-size:0.78rem;">Zero-implementation CRUD. Just extend the interface.</p>
         </div>
         <div class="card" style="padding:18px;text-align:center;">
-            <div style="font-size:1.5rem;margin-bottom:8px;">&#128221;</div>
-            <h3 class="text-yellow small">.properties vs .yml</h3>
-            <p class="small text-dim" style="font-size:0.78rem;">Flat vs hierarchical config formats; .properties wins</p>
+            <div style="font-size:1.5rem;margin-bottom:8px;">&#127981;</div>
+            <h3 class="text-blue small">JPA Entities</h3>
+            <p class="small text-dim" style="font-size:0.78rem;">@Entity @Table @Id @Column @GeneratedValue</p>
+        </div>
+        <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:1.5rem;margin-bottom:8px;">&#128279;</div>
+            <h3 class="text-purple small">@ManyToOne</h3>
+            <p class="small text-dim" style="font-size:0.78rem;">Entity relationships with @JoinColumn FK mapping</p>
         </div>
         <div class="card" style="padding:18px;text-align:center;">
             <div style="font-size:1.5rem;margin-bottom:8px;">&#128269;</div>
-            <h3 class="text-green small">@Value + Defaults</h3>
-            <p class="small text-dim" style="font-size:0.78rem;">${key:default} syntax for injecting properties with fallback</p>
-        </div>
-        <div class="card" style="padding:18px;text-align:center;">
-            <div style="font-size:1.5rem;margin-bottom:8px;">&#128260;</div>
-            <h3 class="text-blue small">Relaxed Binding</h3>
-            <p class="small text-dim" style="font-size:0.78rem;">transfer.limit = TRANSFER_LIMIT = transfer-limit</p>
+            <h3 class="text-yellow small">@Query (JPQL)</h3>
+            <p class="small text-dim" style="font-size:0.78rem;">Object-oriented queries on entity fields</p>
         </div>
         <div class="card" style="padding:18px;text-align:center;">
             <div style="font-size:1.5rem;margin-bottom:8px;">&#9889;</div>
-            <h3 class="text-purple small">@ConditionalOnProperty</h3>
-            <p class="small text-dim" style="font-size:0.78rem;">Bean creation based on property values</p>
+            <h3 class="text-orange small">@Transactional</h3>
+            <p class="small text-dim" style="font-size:0.78rem;">isolation, rollbackFor, timeout, readOnly</p>
         </div>
         <div class="card" style="padding:18px;text-align:center;">
-            <div style="font-size:1.5rem;margin-bottom:8px;">&#128640;</div>
-            <h3 class="text-pink small">Custom Auto-Config</h3>
-            <p class="small text-dim" style="font-size:0.78rem;">NpciChnAutoConfiguration with conditional bean creation</p>
-        </div>
-        <div class="card" style="padding:18px;text-align:center;">
-            <div style="font-size:1.5rem;margin-bottom:8px;">&#128293;</div>
-            <h3 class="text-red small">Lombok</h3>
-            <p class="small text-dim" style="font-size:0.78rem;">@Getter @Setter @NoArgsConstructor @AllArgsConstructor</p>
-        </div>
-        <div class="card" style="padding:18px;text-align:center;">
-            <div style="font-size:1.5rem;margin-bottom:8px;">&#9989;</div>
-            <h3 class="text-teal small">@SpringBootTest</h3>
-            <p class="small text-dim" style="font-size:0.78rem;">Full context integration testing with JUnit 5</p>
+            <div style="font-size:1.5rem;margin-bottom:8px;">&#128257;</div>
+            <h3 class="text-pink small">Propagation</h3>
+            <p class="small text-dim" style="font-size:0.78rem;">REQUIRED, REQUIRES_NEW, MANDATORY, NESTED...</p>
         </div>
     </div>
-    <div class="hl-orange mt-24" style="text-align:center;max-width:650px;margin-left:auto;margin-right:auto;">
-        <strong class="text-orange">Next:</strong> <span class="inline-code">@ConfigurationProperties</span> for type-safe configuration binding &mdash; group related properties into a POJO.
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:24px;">
+        <span style="background:rgba(248,113,113,0.1);border:1px solid var(--red);color:var(--red);padding:4px 12px;border-radius:16px;font-size:0.78rem;font-weight:600;">v1 Problems</span>
+        <span class="text-dim">&rarr;</span>
+        <span style="background:rgba(251,146,60,0.1);border:1px solid var(--orange);color:var(--orange);padding:4px 12px;border-radius:16px;font-size:0.78rem;font-weight:600;">v2 DI</span>
+        <span class="text-dim">&rarr;</span>
+        <span style="background:rgba(110,231,183,0.1);border:1px solid var(--green);color:var(--green);padding:4px 12px;border-radius:16px;font-size:0.78rem;font-weight:600;">v3 Spring</span>
+        <span class="text-dim">&rarr;</span>
+        <span style="background:rgba(129,140,248,0.1);border:1px solid var(--accent2);color:var(--accent2);padding:4px 12px;border-radius:16px;font-size:0.78rem;font-weight:600;">v4 AOP</span>
+        <span class="text-dim">&rarr;</span>
+        <span style="background:rgba(96,165,250,0.1);border:1px solid var(--blue);color:var(--blue);padding:4px 12px;border-radius:16px;font-size:0.78rem;font-weight:600;">v5 JDBC</span>
+        <span class="text-dim">&rarr;</span>
+        <span style="background:rgba(110,231,183,0.1);border:1px solid var(--green);color:var(--green);padding:4px 12px;border-radius:16px;font-size:0.78rem;font-weight:600;">v6 Boot</span>
+        <span class="text-dim">&rarr;</span>
+        <span style="background:rgba(251,146,60,0.1);border:1px solid var(--orange);color:var(--orange);padding:4px 12px;border-radius:16px;font-size:0.78rem;font-weight:600;">v7 Config</span>
+        <span class="text-dim">&rarr;</span>
+        <span style="background:rgba(45,212,191,0.15);border:2px solid var(--teal);color:var(--teal);padding:4px 12px;border-radius:16px;font-size:0.78rem;font-weight:800;">v8 JPA</span>
     </div>
 </div>
 
@@ -1031,7 +983,6 @@ p {
     const totalSlides = slides.length;
     let currentSlide = 0;
 
-    // Create nav dots
     const dotsContainer = document.getElementById('nav-dots');
     slides.forEach((_, i) => {
         const dot = document.createElement('button');
@@ -1041,26 +992,16 @@ p {
     });
 
     function updateUI() {
-        // Update slides
         slides.forEach((slide, i) => {
             slide.classList.remove('active', 'prev');
-            if (i === currentSlide) {
-                slide.classList.add('active');
-            } else if (i < currentSlide) {
-                slide.classList.add('prev');
-            }
+            if (i === currentSlide) slide.classList.add('active');
+            else if (i < currentSlide) slide.classList.add('prev');
         });
-
-        // Update dots
         document.querySelectorAll('.nav-dot').forEach((dot, i) => {
             dot.classList.toggle('active', i === currentSlide);
         });
-
-        // Update progress bar
         const progress = ((currentSlide) / (totalSlides - 1)) * 100;
         document.getElementById('progress-bar').style.width = progress + '%';
-
-        // Update counter
         document.getElementById('slide-counter').textContent = (currentSlide + 1) + ' / ' + totalSlides;
     }
 
@@ -1070,73 +1011,33 @@ p {
         updateUI();
     }
 
-    function nextSlide() {
-        if (currentSlide < totalSlides - 1) {
-            currentSlide++;
-            updateUI();
-        }
-    }
+    function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateUI(); } }
+    function prevSlide() { if (currentSlide > 0) { currentSlide--; updateUI(); } }
 
-    function prevSlide() {
-        if (currentSlide > 0) {
-            currentSlide--;
-            updateUI();
-        }
-    }
-
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
         switch(e.key) {
-            case 'ArrowRight':
-            case 'ArrowDown':
-            case ' ':
-            case 'PageDown':
-                e.preventDefault();
-                nextSlide();
-                break;
-            case 'ArrowLeft':
-            case 'ArrowUp':
-            case 'PageUp':
-                e.preventDefault();
-                prevSlide();
-                break;
-            case 'Home':
-                e.preventDefault();
-                goToSlide(0);
-                break;
-            case 'End':
-                e.preventDefault();
-                goToSlide(totalSlides - 1);
-                break;
+            case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown':
+                e.preventDefault(); nextSlide(); break;
+            case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+                e.preventDefault(); prevSlide(); break;
+            case 'Home': e.preventDefault(); goToSlide(0); break;
+            case 'End': e.preventDefault(); goToSlide(totalSlides - 1); break;
         }
     });
 
-    // Touch swipe
-    let touchStartX = 0;
-    let touchStartY = 0;
-
+    let touchStartX = 0, touchStartY = 0;
     document.addEventListener('touchstart', (e) => {
         touchStartX = e.changedTouches[0].screenX;
         touchStartY = e.changedTouches[0].screenY;
     }, { passive: true });
-
     document.addEventListener('touchend', (e) => {
-        const touchEndX = e.changedTouches[0].screenX;
-        const touchEndY = e.changedTouches[0].screenY;
-        const diffX = touchStartX - touchEndX;
-        const diffY = touchStartY - touchEndY;
-
-        // Only handle horizontal swipes (ignore vertical scrolling)
+        const diffX = touchStartX - e.changedTouches[0].screenX;
+        const diffY = touchStartY - e.changedTouches[0].screenY;
         if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-            if (diffX > 0) {
-                nextSlide();
-            } else {
-                prevSlide();
-            }
+            diffX > 0 ? nextSlide() : prevSlide();
         }
     }, { passive: true });
 
-    // Initialize
     updateUI();
 })();
 </script>

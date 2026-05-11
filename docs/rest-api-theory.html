@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REST API - Theory &amp; Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #ffffff; --surface: #f8f9fb; --surface2: #f0f1f5; --surface3: #e8e9f0;
+    --border: #d8dae5; --text: #1a1a2e; --text-dim: #6b7280;
+    --green: #059669; --blue: #2563eb; --purple: #7c3aed; --pink: #db2777;
+    --yellow: #d97706; --orange: #ea580c; --red: #dc2626; --teal: #0d9488;
+    --cyan: #0891b2; --lime: #65a30d; --amber: #d97706;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
+
+/* Progress */
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple)); z-index: 1000; transition: width 0.4s; }
+#counter { position: fixed; top: 14px; right: 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-dim); z-index: 1000; background: var(--surface2); padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border); }
+#dots { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1000; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); cursor: pointer; border: none; padding: 0; transition: all 0.3s; }
+.dot.active { background: var(--cyan); box-shadow: 0 0 8px rgba(8,145,178,0.4); transform: scale(1.4); }
+.dot:hover { background: var(--blue); }
+
+/* Deck */
+.deck { position: relative; width: 100vw; height: 100vh; }
+.slide { position: absolute; inset: 0; padding: 56px 72px; opacity: 0; transform: translateX(50px); transition: opacity 0.5s, transform 0.5s; pointer-events: none; overflow-y: auto; display: flex; flex-direction: column; }
+.slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+.slide.prev { transform: translateX(-50px); }
+.slide::-webkit-scrollbar { width: 5px; }
+.slide::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.slide::-webkit-scrollbar-track { background: var(--bg); }
+
+/* Type */
+h1 { font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin-bottom: 8px; }
+h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; }
+h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+p, li { font-size: 0.95rem; line-height: 1.7; color: var(--text-dim); }
+.grad-cyan { background: linear-gradient(135deg, var(--cyan), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.grad-green { background: linear-gradient(135deg, var(--green), var(--teal)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.grad-orange { background: linear-gradient(135deg, var(--orange), var(--red)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.grad-pink { background: linear-gradient(135deg, var(--pink), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.sub { font-size: 1.15rem; color: var(--text-dim); margin-bottom: 28px; }
+.label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--cyan); margin-bottom: 10px; }
+
+/* Layout */
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+.full { width: 100%; max-width: 1100px; margin: 0 auto; }
+
+/* Card */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; transition: border-color 0.3s, transform 0.2s; }
+.card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+.card h3 { font-size: 0.95rem; }
+.card p { font-size: 0.85rem; }
+.card-icon { font-size: 1.8rem; margin-bottom: 10px; }
+
+/* Code */
+.code { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.8; overflow-x: auto; }
+.kw { color: var(--purple); } .ty { color: var(--blue); } .an { color: var(--yellow); }
+.st { color: var(--green); } .cm { color: var(--text-dim); } .num { color: var(--orange); }
+.ic { font-family: 'JetBrains Mono', monospace; background: var(--surface2); padding: 2px 8px; border-radius: 6px; font-size: 0.82rem; border: 1px solid var(--border); }
+
+/* Highlight blocks */
+.hl { padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 5px 0; }
+.hl-cyan { border-left: 3px solid var(--cyan); background: rgba(8,145,178,0.06); }
+.hl-green { border-left: 3px solid var(--green); background: rgba(5,150,105,0.06); }
+.hl-blue { border-left: 3px solid var(--blue); background: rgba(37,99,235,0.06); }
+.hl-yellow { border-left: 3px solid var(--yellow); background: rgba(217,119,6,0.06); }
+.hl-red { border-left: 3px solid var(--red); background: rgba(220,38,38,0.06); }
+.hl-pink { border-left: 3px solid var(--pink); background: rgba(219,39,119,0.06); }
+.hl-orange { border-left: 3px solid var(--orange); background: rgba(234,88,12,0.06); }
+.hl-purple { border-left: 3px solid var(--purple); background: rgba(124,58,237,0.06); }
+
+/* Tags */
+.tags { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
+.tag { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; padding: 5px 14px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--border); color: var(--cyan); }
+
+/* Flow */
+.flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+.flow-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 22px; font-weight: 600; font-size: 0.88rem; text-align: center; }
+.flow-arrow { font-size: 1.3rem; color: var(--text-dim); padding: 0 10px; }
+
+/* Arch diagram */
+.arch-center { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.arch-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.arch-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 22px; text-align: center; min-width: 120px; font-size: 0.85rem; font-weight: 600; }
+.arch-darr { font-size: 1.2rem; color: var(--text-dim); margin: 6px 0; }
+.arch-connector { width: 2px; height: 24px; background: var(--border); margin: 0 auto; }
+
+/* Table */
+.tbl { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
+.tbl th { background: var(--surface2); padding: 12px 18px; font-size: 0.8rem; font-weight: 700; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+.tbl td { background: var(--surface); padding: 11px 18px; font-size: 0.85rem; border-top: 1px solid var(--border); color: var(--text-dim); }
+.tbl tr:hover td { background: var(--surface2); }
+.tbl td:first-child { color: var(--text); font-weight: 600; }
+
+/* Badge */
+.badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+.b-green { background: rgba(5,150,105,0.08); color: var(--green); border: 1px solid rgba(5,150,105,0.25); }
+.b-red { background: rgba(220,38,38,0.08); color: var(--red); border: 1px solid rgba(220,38,38,0.25); }
+.b-yellow { background: rgba(217,119,6,0.08); color: var(--yellow); border: 1px solid rgba(217,119,6,0.25); }
+.b-blue { background: rgba(37,99,235,0.08); color: var(--blue); border: 1px solid rgba(37,99,235,0.25); }
+.b-purple { background: rgba(124,58,237,0.08); color: var(--purple); border: 1px solid rgba(124,58,237,0.25); }
+.b-cyan { background: rgba(8,145,178,0.08); color: var(--cyan); border: 1px solid rgba(8,145,178,0.25); }
+
+/* Utility */
+.mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; } .mb-32 { margin-bottom: 32px; }
+.mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
+.sm { font-size: 0.82rem; } .mono { font-family: 'JetBrains Mono', monospace; }
+.tc { text-align: center; }
+.c-cyan { color: var(--cyan); } .c-green { color: var(--green); } .c-blue { color: var(--blue); }
+.c-purple { color: var(--purple); } .c-pink { color: var(--pink); } .c-yellow { color: var(--yellow); }
+.c-orange { color: var(--orange); } .c-red { color: var(--red); } .c-teal { color: var(--teal); }
+.c-dim { color: var(--text-dim); }
+
+/* Pyramid */
+.pyramid { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.pyramid-row { padding: 16px; text-align: center; font-weight: 700; font-size: 0.9rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="counter"></div>
+<div id="dots"></div>
+
+<div class="deck">
+
+<!-- ==================== SLIDE 1: Title ==================== -->
+<div class="slide active">
+  <div class="center">
+    <p class="label">Foundation for Building APIs</p>
+    <h1 style="font-size:3.5rem;" class="mb-16"><span class="grad-cyan">REST API</span></h1>
+    <p class="sub" style="max-width:600px;">Theory &amp; Concepts &mdash; Everything you need to know before building REST APIs</p>
+    <div class="tags">
+      <span class="tag">HTTP Methods</span>
+      <span class="tag">Status Codes</span>
+      <span class="tag">JSON</span>
+      <span class="tag">Headers</span>
+      <span class="tag">Authentication</span>
+      <span class="tag">Stateless</span>
+      <span class="tag">REST-Assured</span>
+    </div>
+    <div style="margin-top:48px;font-size:0.8rem;color:var(--text-dim);">For: Development Team</div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 2: Agenda ==================== -->
+<div class="slide">
+  <h2><span class="grad-cyan">Today's</span> Journey</h2>
+  <div class="grid-3 full">
+    <div class="card" style="border-color:rgba(34,211,238,0.3);">
+      <h3 class="c-cyan">Part 1: The "Why"</h3>
+      <p>The problem APIs solve. Real-world analogies. Why modularity matters.</p>
+    </div>
+    <div class="card" style="border-color:rgba(96,165,250,0.3);">
+      <h3 class="c-blue">Part 2: Fundamentals</h3>
+      <p>What is an API? Types of APIs. Client-Server architecture.</p>
+    </div>
+    <div class="card" style="border-color:rgba(167,139,250,0.3);">
+      <h3 class="c-purple">Part 3: REST Deep Dive</h3>
+      <p>HTTP Methods, Status Codes, Headers, Request-Response cycle.</p>
+    </div>
+    <div class="card" style="border-color:rgba(110,231,183,0.3);">
+      <h3 class="c-green">Part 4: JSON</h3>
+      <p>The data language. Structure, rules, common mistakes.</p>
+    </div>
+    <div class="card" style="border-color:rgba(251,146,60,0.3);">
+      <h3 class="c-orange">Part 5: Auth &amp; Security</h3>
+      <p>Authentication vs Authorization. JWT tokens. 401 vs 403.</p>
+    </div>
+    <div class="card" style="border-color:rgba(244,114,182,0.3);">
+      <h3 class="c-pink">Part 6: Building REST with Spring Boot</h3>
+      <p>@RestController, @RequestBody, @PathVariable, ResponseEntity.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 3: The Problem ==================== -->
+<div class="slide">
+  <p class="label">Part 1</p>
+  <h2><span class="grad-orange">The Problem</span> &mdash; Before APIs</h2>
+  <p class="sub">The Old World: Tightly Coupled Monolith</p>
+  <div class="full tc mb-24">
+    <div style="background:var(--surface);border:2px solid rgba(248,113,113,0.3);border-radius:16px;padding:28px 32px;max-width:800px;margin:0 auto;">
+      <p class="sm c-red mb-16" style="font-weight:700;text-transform:uppercase;letter-spacing:1px;">Monolithic System</p>
+      <div class="flow">
+        <div class="flow-box" style="border-color:var(--red);">UI Layer</div>
+        <div class="flow-arrow" style="color:var(--red);">&harr;</div>
+        <div class="flow-box" style="border-color:var(--red);">Business Logic</div>
+        <div class="flow-arrow" style="color:var(--red);">&harr;</div>
+        <div class="flow-box" style="border-color:var(--red);">Account Logic</div>
+        <div class="flow-arrow" style="color:var(--red);">&harr;</div>
+        <div class="flow-box" style="border-color:var(--red);">Database</div>
+      </div>
+      <p class="sm c-dim mt-16">Everything is ONE BIG APPLICATION</p>
+    </div>
+  </div>
+  <div class="grid-4 full">
+    <div class="hl hl-red"><p class="sm" style="color:var(--text);">&#10007; Change one part &rarr; entire system affected</p></div>
+    <div class="hl hl-red"><p class="sm" style="color:var(--text);">&#10007; Mobile app needed? Rewrite everything!</p></div>
+    <div class="hl hl-red"><p class="sm" style="color:var(--text);">&#10007; Partner wants data? Custom connection!</p></div>
+    <div class="hl hl-red"><p class="sm" style="color:var(--text);">&#10007; Scale one feature? Scale entire app!</p></div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 4: The Solution ==================== -->
+<div class="slide">
+  <p class="label">The Solution</p>
+  <h2><span class="grad-green">APIs Enable</span> Modularity</h2>
+  <p class="sub">The New World: Loosely Coupled via APIs</p>
+  <div class="full">
+    <div class="arch-center">
+      <!-- Consumers -->
+      <div class="arch-row mb-8">
+        <div class="arch-box" style="border-color:var(--cyan);background:rgba(34,211,238,0.06);">
+          <div style="font-size:1.3rem;">&#128241;</div><span class="c-cyan">Mobile App</span>
+        </div>
+        <div class="arch-box" style="border-color:var(--blue);background:rgba(96,165,250,0.06);">
+          <div style="font-size:1.3rem;">&#127760;</div><span class="c-blue">Web App (SPA)</span>
+        </div>
+        <div class="arch-box" style="border-color:var(--purple);background:rgba(167,139,250,0.06);">
+          <div style="font-size:1.3rem;">&#127912;</div><span class="c-purple">Plain Browser</span>
+        </div>
+        <div class="arch-box" style="border-color:var(--orange);background:rgba(251,146,60,0.06);">
+          <div style="font-size:1.3rem;">&#127970;</div><span class="c-orange">Partner Bank</span>
+        </div>
+        <div class="arch-box" style="border-color:var(--pink);background:rgba(244,114,182,0.06);">
+          <div style="font-size:1.3rem;">&#9881;</div><span class="c-pink">Internal Service</span>
+        </div>
+      </div>
+      <!-- Protocols -->
+      <div style="display:flex;gap:32px;margin:4px 0;font-size:0.7rem;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">
+        <span style="color:var(--green);">REST</span>
+        <span style="color:var(--green);">REST</span>
+        <span style="color:var(--green);">REST</span>
+        <span style="color:var(--yellow);">GraphQL</span>
+        <span style="color:var(--orange);">gRPC</span>
+      </div>
+      <div class="arch-darr">&darr; &darr; &darr; &darr; &darr;</div>
+      <!-- API Layer -->
+      <div class="arch-box mb-8" style="border:2px solid var(--green);background:rgba(110,231,183,0.08);min-width:500px;padding:18px 32px;">
+        <div style="font-size:0.7rem;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:2px;">Interface aka API</div>
+        <div style="font-size:1.1rem;font-weight:800;color:var(--green);margin-top:4px;">SOAP | REST | GraphQL | gRPC</div>
+      </div>
+      <div class="arch-darr">&darr;</div>
+      <!-- MTS -->
+      <div class="arch-box" style="border:2px solid var(--cyan);background:rgba(34,211,238,0.06);min-width:400px;padding:20px 32px;">
+        <div style="font-size:1.1rem;font-weight:800;color:var(--cyan);">MTS &mdash; Implementation</div>
+        <div class="sm c-dim mt-16">Account Service &bull; Payment Service &bull; Fraud Service</div>
+      </div>
+    </div>
+    <div class="grid-4 full mt-24">
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);">&#10003; Services independent</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);">&#10003; Multiple consumers</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);">&#10003; Scale independently</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);">&#10003; Tech flexibility</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 5: What is an API ==================== -->
+<div class="slide">
+  <p class="label">Fundamentals</p>
+  <h2><span class="grad-cyan">What Exactly</span> is an API?</h2>
+  <div class="grid-2 full">
+    <div>
+      <div style="background:var(--surface);border:2px solid var(--cyan);border-radius:16px;padding:28px;margin-bottom:20px;">
+        <h3 class="c-cyan mb-8">API = Application Programming Interface</h3>
+        <p class="sm" style="color:var(--text);">A <strong>CONTRACT</strong> that defines:</p>
+        <div class="hl hl-cyan mt-16"><p class="sm" style="color:var(--text);"><strong>HOW</strong> to request something (format, rules)</p></div>
+        <div class="hl hl-blue"><p class="sm" style="color:var(--text);"><strong>WHAT</strong> you'll get back (response structure)</p></div>
+        <div class="hl hl-purple"><p class="sm" style="color:var(--text);"><strong>WHAT</strong> errors might occur</p></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="border-color:rgba(251,191,36,0.3);">
+        <h3 class="c-yellow mb-16">&#127869; Restaurant Analogy</h3>
+        <div class="flow mb-16">
+          <div class="flow-box" style="border-color:var(--yellow);min-width:100px;">
+            <div style="font-size:1.3rem;">&#128100;</div>
+            <div class="sm">Customer<br><span class="c-dim">(Client)</span></div>
+          </div>
+          <div class="flow-arrow">&harr;</div>
+          <div class="flow-box" style="border-color:var(--green);background:rgba(110,231,183,0.06);min-width:100px;">
+            <div style="font-size:1.3rem;">&#128209;</div>
+            <div class="sm">Menu<br><span class="c-green">(API)</span></div>
+          </div>
+          <div class="flow-arrow">&harr;</div>
+          <div class="flow-box" style="border-color:var(--orange);min-width:100px;">
+            <div style="font-size:1.3rem;">&#127859;</div>
+            <div class="sm">Kitchen<br><span class="c-dim">(Server)</span></div>
+          </div>
+        </div>
+        <p class="sm">You don't need to know <strong>HOW</strong> the kitchen cooks. You just need to know <strong>HOW TO ORDER</strong> (the interface).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 6: Banking Context ==================== -->
+<div class="slide">
+  <p class="label">Real Scenario</p>
+  <h2><span class="grad-cyan">API in</span> Banking Context</h2>
+  <p class="sub">Check Account Balance &mdash; what actually happens</p>
+  <div class="full">
+    <div class="grid-2 mb-24">
+      <div class="card" style="border-color:rgba(248,113,113,0.3);">
+        <h3 class="c-red">Without API Knowledge</h3>
+        <p class="sm">"I click button, balance shows" &mdash; <strong>Black Box</strong></p>
+      </div>
+      <div class="card" style="border-color:rgba(110,231,183,0.3);">
+        <h3 class="c-green">With API Knowledge</h3>
+        <p class="sm">You know the endpoint, method, response structure &mdash; <strong>you can design &amp; build this!</strong></p>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:800px;margin:0 auto;">
+      <div class="flow mb-16">
+        <div class="flow-box" style="border-color:var(--cyan);">
+          <span class="c-cyan">&#128241; Mobile App</span>
+        </div>
+        <div style="text-align:center;padding:0 16px;">
+          <div class="mono sm c-green">GET /accounts/123</div>
+          <div class="flow-arrow">&rarr;</div>
+        </div>
+        <div class="flow-box" style="border-color:var(--green);">
+          <span class="c-green">&#9881; Account Service</span>
+        </div>
+      </div>
+      <div class="flow">
+        <div class="flow-box" style="border-color:var(--cyan);">
+          <span class="c-cyan">&#128241; Mobile App</span>
+        </div>
+        <div style="text-align:center;padding:0 16px;">
+          <div class="flow-arrow">&larr;</div>
+          <div class="mono sm c-yellow">{"balance": 50000}</div>
+        </div>
+        <div class="flow-box" style="border-color:var(--green);">
+          <span class="c-green">&#9881; Account Service</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid-4 full mt-24">
+      <div class="hl hl-cyan"><p class="sm" style="color:var(--text);">&#128205; <strong>Endpoint</strong><br>/accounts/123</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);">&#128295; <strong>Method</strong><br>GET</p></div>
+      <div class="hl hl-yellow"><p class="sm" style="color:var(--text);">&#128230; <strong>Response</strong><br>JSON with balance</p></div>
+      <div class="hl hl-purple"><p class="sm" style="color:var(--text);">&#9989; <strong>Buildable</strong><br>With Spring Boot!</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 7: Types of APIs ==================== -->
+<div class="slide">
+  <p class="label">API Types</p>
+  <h2><span class="grad-cyan">Types of</span> APIs</h2>
+  <div class="grid-4 full mb-24">
+    <div class="card" style="border:2px solid var(--green);background:rgba(110,231,183,0.04);">
+      <div class="card-icon">&#9889;</div>
+      <h3 class="c-green">REST</h3>
+      <p class="sm">Lightweight, JSON, Popular<br><strong class="c-green">~90% of modern APIs</strong></p>
+      <div class="badge b-green mt-16" style="font-size:0.7rem;">OUR FOCUS</div>
+    </div>
+    <div class="card"><div class="card-icon">&#128230;</div><h3 class="c-blue">SOAP</h3><p class="sm">Heavy, XML, Legacy<br>Banking &amp; Enterprise</p></div>
+    <div class="card"><div class="card-icon">&#128302;</div><h3 class="c-purple">GraphQL</h3><p class="sm">Flexible queries<br>Modern frontend apps</p></div>
+    <div class="card"><div class="card-icon">&#128640;</div><h3 class="c-orange">gRPC</h3><p class="sm">Binary, Fast<br>Internal microservices</p></div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 28px;max-width:700px;margin:0 auto;">
+    <h3 class="c-green sm mb-8">Why REST Dominates:</h3>
+    <p class="sm" style="color:var(--text);">Simple &bull; Uses standard HTTP &bull; Lightweight JSON &bull; Stateless &amp; scalable &bull; Universal support</p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 8: REST Definition ==================== -->
+<div class="slide">
+  <p class="label">Deep Dive</p>
+  <h2><span class="grad-cyan">REST</span> &mdash; Representational State Transfer</h2>
+  <p class="sub">An architectural style, not a protocol &mdash; Roy Fielding, 2000</p>
+  <div class="full">
+    <div class="grid-3 mb-24">
+      <div class="card" style="border-color:rgba(34,211,238,0.3);text-align:center;">
+        <h3 style="font-size:2rem;" class="c-cyan">RE</h3>
+        <p class="sm c-cyan" style="font-weight:700;">Representational</p>
+        <p class="sm">Resources are <strong>represented</strong><br>(usually as JSON)</p>
+      </div>
+      <div class="card" style="border-color:rgba(110,231,183,0.3);text-align:center;">
+        <h3 style="font-size:2rem;" class="c-green">S</h3>
+        <p class="sm c-green" style="font-weight:700;">State</p>
+        <p class="sm">Each request contains<br><strong>all needed state</strong></p>
+      </div>
+      <div class="card" style="border-color:rgba(167,139,250,0.3);text-align:center;">
+        <h3 style="font-size:2rem;" class="c-purple">T</h3>
+        <p class="sm c-purple" style="font-weight:700;">Transfer</p>
+        <p class="sm">State is <strong>transferred</strong><br>between client &amp; server</p>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:2px solid var(--cyan);border-radius:16px;padding:24px 32px;max-width:700px;margin:0 auto;text-align:center;">
+      <p style="font-size:1rem;color:var(--text);">Everything is a <strong class="c-cyan">RESOURCE</strong> (noun), and we perform<br><strong class="c-green">ACTIONS</strong> (verbs / HTTP methods) on those resources</p>
+      <div class="flow mt-16">
+        <div class="ic c-cyan">Resource: /accounts</div>
+        <span class="c-dim" style="padding:0 12px;">+</span>
+        <div class="ic c-green">Actions: GET, POST, PUT, DELETE</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 9: 6 REST Constraints ==================== -->
+<div class="slide">
+  <p class="label">REST Rules</p>
+  <h2><span class="grad-cyan">6 REST</span> Constraints</h2>
+  <p class="sub">What makes an API "RESTful"?</p>
+  <div class="grid-3 full">
+    <div class="card" style="border-color:rgba(34,211,238,0.3);"><h3 class="c-cyan">1. Client-Server</h3><p class="sm">Separation of concerns. Client handles UI, Server handles data.</p></div>
+    <div class="card" style="border:2px solid var(--yellow);background:rgba(251,191,36,0.04);"><h3 class="c-yellow">2. Stateless &#11088;</h3><p class="sm"><strong>Most important for API design!</strong> Server stores NO client context. Each request has ALL info needed.</p></div>
+    <div class="card" style="border-color:rgba(110,231,183,0.3);"><h3 class="c-green">3. Cacheable</h3><p class="sm">Responses can be cached for performance.</p></div>
+    <div class="card" style="border-color:rgba(96,165,250,0.3);"><h3 class="c-blue">4. Uniform Interface</h3><p class="sm">Consistent way to interact with resources.</p></div>
+    <div class="card" style="border-color:rgba(167,139,250,0.3);"><h3 class="c-purple">5. Layered System</h3><p class="sm">Client doesn't know if talking to server or proxy.</p></div>
+    <div class="card" style="border-color:rgba(136,136,154,0.3);"><h3 class="c-dim">6. Code on Demand</h3><p class="sm">Optional. Server can send executable code.</p></div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 10: Stateless ==================== -->
+<div class="slide">
+  <p class="label">Key Concept</p>
+  <h2><span class="grad-orange">Stateless</span> &mdash; Deep Dive</h2>
+  <div class="grid-2 full">
+    <div class="card" style="border-color:rgba(248,113,113,0.3);">
+      <h3 class="c-red mb-16">&#10007; Stateful (Bad for REST)</h3>
+      <div class="code sm">
+<span class="cm">Request 1:</span> <span class="st">"I am user Raj"</span><br>
+<span class="cm">Server:</span>   <span class="st">"OK, I'll remember you"</span><br><br>
+<span class="cm">Request 2:</span> <span class="st">"Show my balance"</span><br>
+<span class="cm">Server:</span>   <span class="st">"Raj's balance is 50,000"</span> <span class="cm">&larr; remembered</span>
+      </div>
+      <div class="hl hl-red mt-16"><p class="sm" style="color:var(--text);">What if Request 2 goes to a <strong>different server</strong>? That server doesn't know who Raj is!</p></div>
+    </div>
+    <div class="card" style="border-color:rgba(110,231,183,0.3);">
+      <h3 class="c-green mb-16">&#10003; Stateless (REST Way)</h3>
+      <div class="code sm">
+<span class="cm">Request 1:</span> <span class="st">"I am Raj"</span> + <span class="an">Token: xyz123</span><br>
+<span class="cm">Server:</span>   <span class="st">"OK, here's your token"</span><br><br>
+<span class="cm">Request 2:</span> <span class="st">"Show balance"</span> + <span class="an">Token: xyz123</span><br>
+<span class="cm">Server:</span>   Validates token &rarr; <span class="st">"Balance: 50,000"</span>
+      </div>
+      <div class="hl hl-green mt-16"><p class="sm" style="color:var(--text);">Every request is <strong>self-contained</strong>. Any server can handle it.</p></div>
+    </div>
+  </div>
+  <div style="background:rgba(251,191,36,0.06);border:2px solid var(--yellow);border-radius:14px;padding:18px 28px;max-width:700px;margin:24px auto 0;text-align:center;">
+    <p class="sm" style="color:var(--text);"><strong class="c-yellow">Design Implication:</strong> Every request must include auth token! Any server instance can handle any request! Horizontally scalable!</p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 11: HTTP Request ==================== -->
+<div class="slide">
+  <p class="label">Transport</p>
+  <h2><span class="grad-cyan">HTTP</span> &mdash; The Transport Protocol</h2>
+  <p class="sub">REST APIs use HTTP for communication</p>
+  <div class="full" style="max-width:900px;margin:0 auto;">
+    <div class="code" style="font-size:0.9rem;line-height:2;">
+<span class="hl hl-cyan" style="display:block;"><span class="kw">POST</span> <span class="st">/api/v1/transfers</span> HTTP/1.1 <span class="cm">&larr; Method + URL</span></span>
+<span class="hl hl-yellow" style="display:block;"><span class="an">Host:</span> api.bank.com</span>
+<span class="hl hl-yellow" style="display:block;"><span class="an">Content-Type:</span> application/json <span class="cm">&larr; Headers</span></span>
+<span class="hl hl-yellow" style="display:block;"><span class="an">Authorization:</span> Bearer xyz123</span>
+<br>
+<span class="hl hl-green" style="display:block;">{                                <span class="cm">&larr; Body (JSON)</span></span>
+<span class="hl hl-green" style="display:block;">  <span class="an">"from"</span>: <span class="st">"ACC001"</span>,</span>
+<span class="hl hl-green" style="display:block;">  <span class="an">"to"</span>: <span class="st">"ACC002"</span>,</span>
+<span class="hl hl-green" style="display:block;">  <span class="an">"amount"</span>: <span class="num">5000</span></span>
+<span class="hl hl-green" style="display:block;">}</span>
+    </div>
+    <div class="grid-4 mt-24">
+      <div class="hl hl-cyan"><p class="sm" style="color:var(--text);"><strong>1. URL</strong><br>Where to send</p></div>
+      <div class="hl hl-purple"><p class="sm" style="color:var(--text);"><strong>2. Method</strong><br>What action</p></div>
+      <div class="hl hl-yellow"><p class="sm" style="color:var(--text);"><strong>3. Headers</strong><br>Metadata</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);"><strong>4. Body</strong><br>Data payload</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 12: URL Anatomy ==================== -->
+<div class="slide">
+  <p class="label">URL Structure</p>
+  <h2><span class="grad-cyan">Anatomy</span> of an API URL</h2>
+  <div class="full" style="max-width:950px;margin:0 auto;">
+    <div class="code mb-24" style="font-size:0.95rem;text-align:center;padding:24px;">
+<span class="kw">https://</span><span class="ty">api.bank.com</span><span class="c-dim">:443</span><span class="an">/v1</span><span class="st">/accounts/12345</span><span class="c-pink">?status=active&amp;limit=10</span>
+    </div>
+    <table class="tbl mb-24">
+      <thead><tr><th>Component</th><th>Example</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td class="c-purple">Protocol</td><td><span class="mono sm">https://</span></td><td>Secure communication</td></tr>
+        <tr><td class="c-blue">Host</td><td><span class="mono sm">api.bank.com</span></td><td>Server address</td></tr>
+        <tr><td class="c-dim">Port</td><td><span class="mono sm">:443</span></td><td>Door number (default for HTTPS)</td></tr>
+        <tr><td class="c-yellow">Base Path</td><td><span class="mono sm">/v1</span></td><td>API version</td></tr>
+        <tr><td class="c-green">Resource</td><td><span class="mono sm">/accounts/12345</span></td><td>What resource</td></tr>
+        <tr><td class="c-pink">Query Params</td><td><span class="mono sm">?status=active</span></td><td>Filtering / options</td></tr>
+      </tbody>
+    </table>
+    <div class="grid-2">
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);"><strong class="c-green">Path Param:</strong> <span class="ic">/accounts/{accountId}</span><br>Identifies resource &mdash; <strong>required</strong></p></div>
+      <div class="hl hl-pink"><p class="sm" style="color:var(--text);"><strong class="c-pink">Query Param:</strong> <span class="ic">/accounts?status=active</span><br>Filters/options &mdash; optional</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 13: HTTP Methods ==================== -->
+<div class="slide">
+  <p class="label">HTTP Verbs</p>
+  <h2><span class="grad-cyan">HTTP Methods</span> &mdash; The Actions</h2>
+  <div class="full" style="max-width:950px;margin:0 auto;">
+    <table class="tbl mb-24">
+      <thead><tr><th>Method</th><th>CRUD</th><th>Action</th><th>Body?</th><th>Idempotent?</th></tr></thead>
+      <tbody>
+        <tr><td class="c-green" style="font-size:1rem;">GET</td><td>Read</td><td>Fetch data</td><td><span class="badge b-red">NO</span></td><td><span class="badge b-green">YES</span></td></tr>
+        <tr><td class="c-yellow" style="font-size:1rem;">POST</td><td>Create</td><td>Submit new data</td><td><span class="badge b-green">YES</span></td><td><span class="badge b-red">NO</span></td></tr>
+        <tr><td class="c-blue" style="font-size:1rem;">PUT</td><td>Update</td><td>Replace entire resource</td><td><span class="badge b-green">YES</span></td><td><span class="badge b-green">YES</span></td></tr>
+        <tr><td class="c-purple" style="font-size:1rem;">PATCH</td><td>Update</td><td>Partial update</td><td><span class="badge b-green">YES</span></td><td><span class="badge b-yellow">MAYBE</span></td></tr>
+        <tr><td class="c-red" style="font-size:1rem;">DELETE</td><td>Delete</td><td>Remove resource</td><td><span class="badge b-red">Usually NO</span></td><td><span class="badge b-green">YES</span></td></tr>
+        <tr><td class="c-teal" style="font-size:1rem;">HEAD</td><td>&mdash;</td><td>Metadata only</td><td><span class="badge b-red">NO</span></td><td><span class="badge b-green">YES</span></td></tr>
+        <tr><td class="c-orange" style="font-size:1rem;">OPTIONS</td><td>&mdash;</td><td>What permissions on resource</td><td><span class="badge b-red">NO</span></td><td><span class="badge b-green">YES</span></td></tr>
+      </tbody>
+    </table>
+    <div class="hl hl-cyan tc"><p class="sm" style="color:var(--text);"><strong>Memory Trick:</strong> GET = "Give me" &bull; POST = "Process new" &bull; PUT = "Put replacement" &bull; PATCH = "Patch up part" &bull; DELETE = "Delete this"</p></div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 14: Methods Banking Examples ==================== -->
+<div class="slide">
+  <p class="label">Practical</p>
+  <h2><span class="grad-cyan">HTTP Methods</span> &mdash; Banking Examples</h2>
+  <div class="full" style="max-width:900px;margin:0 auto;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);"><span class="ic c-green">GET</span> <span class="mono">/accounts</span> &rarr; List all accounts</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);"><span class="ic c-green">GET</span> <span class="mono">/accounts/12345</span> &rarr; Get specific account</p></div>
+      <div class="hl hl-yellow"><p class="sm" style="color:var(--text);"><span class="ic c-yellow">POST</span> <span class="mono">/accounts</span> &rarr; Create new account<br><span class="c-dim mono" style="margin-left:24px;">Body: {"name": "Raj Kumar", "type": "savings"}</span></p></div>
+      <div class="hl hl-blue"><p class="sm" style="color:var(--text);"><span class="ic c-blue">PUT</span> <span class="mono">/accounts/12345</span> &rarr; Replace entire account record<br><span class="c-dim mono" style="margin-left:24px;">Body: {"name": "Raj Kumar", "type": "current", ...}</span></p></div>
+      <div class="hl hl-purple"><p class="sm" style="color:var(--text);"><span class="ic c-purple">PATCH</span> <span class="mono">/accounts/12345</span> &rarr; Update only account type<br><span class="c-dim mono" style="margin-left:24px;">Body: {"type": "current"}</span></p></div>
+      <div class="hl hl-red"><p class="sm" style="color:var(--text);"><span class="ic c-red">DELETE</span> <span class="mono">/accounts/12345</span> &rarr; Close / remove account</p></div>
+    </div>
+    <div style="background:rgba(251,191,36,0.06);border:2px solid var(--yellow);border-radius:14px;padding:14px 24px;margin-top:20px;text-align:center;">
+      <p class="sm" style="color:var(--text);">&#9888;&#65039; <strong class="c-yellow">Key Insight:</strong> Same URL + different method = different operation!</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 15: Idempotency ==================== -->
+<div class="slide">
+  <p class="label">Critical Concept</p>
+  <h2><span class="grad-orange">Idempotency</span> &mdash; Why It Matters</h2>
+  <p class="sub">Same request multiple times = Same result</p>
+  <div class="full" style="max-width:900px;margin:0 auto;">
+    <div class="grid-2 mb-24">
+      <div class="card" style="border-color:rgba(110,231,183,0.3);">
+        <h3 class="c-green mb-8">Idempotent (Safe to retry)</h3>
+        <div class="code sm"><span class="kw">GET</span> /accounts/123<br><br>Call 1x &rarr; Balance: 50,000<br>Call 5x &rarr; Balance: 50,000<br><span class="cm">Same result every time &#10003;</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(248,113,113,0.3);">
+        <h3 class="c-red mb-8">NOT Idempotent (Dangerous!)</h3>
+        <div class="code sm"><span class="kw">POST</span> /transfers {amount: 1000}<br><br>Call 1x &rarr; Transfer #1 created &#128176;<br>Call 2x &rarr; Transfer #2 created &#128176;&#128176;<br><span class="cm">Duplicate! Money debited twice!</span></div>
+      </div>
+    </div>
+    <div style="background:rgba(251,191,36,0.06);border:2px solid var(--yellow);border-radius:14px;padding:16px 24px;text-align:center;">
+      <p class="sm" style="color:var(--text);"><strong class="c-yellow">Design Consideration:</strong> What happens on network retry? POST might create duplicates (needs idempotency key). GET/PUT/DELETE are safe to retry.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 16: Status Codes Overview ==================== -->
+<div class="slide">
+  <p class="label">Responses</p>
+  <h2><span class="grad-cyan">HTTP Status Codes</span> &mdash; What Happened?</h2>
+  <div class="full" style="max-width:900px;margin:0 auto;">
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+      <div style="background:rgba(136,136,154,0.06);border:1px solid rgba(136,136,154,0.2);border-radius:12px;padding:16px 24px;display:flex;align-items:center;gap:20px;">
+        <span style="font-size:1.8rem;font-weight:900;color:var(--text-dim);min-width:60px;">1xx</span>
+        <div><strong>Informational</strong><p class="sm c-dim">"Hold on..."</p></div>
+      </div>
+      <div style="background:rgba(110,231,183,0.06);border:1px solid rgba(110,231,183,0.2);border-radius:12px;padding:16px 24px;display:flex;align-items:center;gap:20px;">
+        <span style="font-size:1.8rem;font-weight:900;color:var(--green);min-width:60px;">2xx</span>
+        <div><strong class="c-green">Success &#10003;</strong><p class="sm">"All good!"</p></div>
+        <span style="margin-left:auto;font-size:1.5rem;">&#128522;</span>
+      </div>
+      <div style="background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:12px;padding:16px 24px;display:flex;align-items:center;gap:20px;">
+        <span style="font-size:1.8rem;font-weight:900;color:var(--blue);min-width:60px;">3xx</span>
+        <div><strong class="c-blue">Redirection</strong><p class="sm">"Go somewhere else"</p></div>
+        <span style="margin-left:auto;font-size:1.5rem;">&#128073;</span>
+      </div>
+      <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:16px 24px;display:flex;align-items:center;gap:20px;">
+        <span style="font-size:1.8rem;font-weight:900;color:var(--yellow);min-width:60px;">4xx</span>
+        <div><strong class="c-yellow">Client Error</strong><p class="sm">"<strong>YOU</strong> messed up"</p></div>
+        <span style="margin-left:auto;font-size:1.5rem;">&#9757;</span>
+      </div>
+      <div style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:12px;padding:16px 24px;display:flex;align-items:center;gap:20px;">
+        <span style="font-size:1.8rem;font-weight:900;color:var(--red);min-width:60px;">5xx</span>
+        <div><strong class="c-red">Server Error</strong><p class="sm">"<strong>WE</strong> messed up"</p></div>
+        <span style="margin-left:auto;font-size:1.5rem;">&#128293;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 17: Common Status Codes ==================== -->
+<div class="slide">
+  <p class="label">Must Know</p>
+  <h2><span class="grad-cyan">Common Status</span> Codes</h2>
+  <div class="full" style="max-width:950px;margin:0 auto;">
+    <div class="grid-3" style="gap:14px;">
+      <div class="card" style="border-color:rgba(110,231,183,0.3);padding:18px;">
+        <h3 class="c-green sm">Success (2xx)</h3>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+          <div class="hl hl-green" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>200</strong> OK</p></div>
+          <div class="hl hl-green" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>201</strong> Created (POST)</p></div>
+          <div class="hl hl-green" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>204</strong> No Content (DELETE)</p></div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(251,191,36,0.3);padding:18px;">
+        <h3 class="c-yellow sm">Client Errors (4xx)</h3>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+          <div class="hl hl-yellow" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>400</strong> Bad Request</p></div>
+          <div class="hl hl-yellow" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>401</strong> Unauthorized</p></div>
+          <div class="hl hl-yellow" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>403</strong> Forbidden</p></div>
+          <div class="hl hl-yellow" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>404</strong> Not Found</p></div>
+          <div class="hl hl-yellow" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>409</strong> Conflict</p></div>
+          <div class="hl hl-yellow" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>422</strong> Validation Failed</p></div>
+          <div class="hl hl-yellow" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>429</strong> Rate Limited</p></div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(248,113,113,0.3);padding:18px;">
+        <h3 class="c-red sm">Server Errors (5xx)</h3>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+          <div class="hl hl-red" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>500</strong> Internal Error</p></div>
+          <div class="hl hl-red" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>502</strong> Bad Gateway</p></div>
+          <div class="hl hl-red" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>503</strong> Unavailable</p></div>
+          <div class="hl hl-red" style="padding:8px 12px;margin:0;"><p class="sm" style="color:var(--text);"><strong>504</strong> Gateway Timeout</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 18: 401 vs 403 ==================== -->
+<div class="slide">
+  <p class="label">Common Confusion</p>
+  <h2><span class="grad-orange">401 vs 403</span> &mdash; The Bouncer Analogy</h2>
+  <div class="grid-2 full">
+    <div class="card" style="border-color:rgba(251,191,36,0.3);">
+      <h3 style="font-size:1.5rem;" class="c-yellow mb-16">401 Unauthorized</h3>
+      <p class="sm mb-8" style="color:var(--text);font-size:1rem;">"<strong>Who are you?</strong>"</p>
+      <div class="code sm mb-16">You &rarr; &#128682; &rarr; "Show ID please"<br>"I don't have one" / "ID is fake"<br><br><span class="c-red">Result: Can't let you in</span></div>
+      <div class="hl hl-yellow"><p class="sm" style="color:var(--text);"><strong>Fix:</strong> Provide valid token / credentials</p></div>
+    </div>
+    <div class="card" style="border-color:rgba(248,113,113,0.3);">
+      <h3 style="font-size:1.5rem;" class="c-red mb-16">403 Forbidden</h3>
+      <p class="sm mb-8" style="color:var(--text);font-size:1rem;">"I know you, but <strong>NO!</strong>"</p>
+      <div class="code sm mb-16">You &rarr; &#128682; &rarr; "Show ID please"<br>"Here's my valid ID"<br>"You're Raj, but this is VIP area"<br><br><span class="c-red">Result: Access denied</span></div>
+      <div class="hl hl-red"><p class="sm" style="color:var(--text);"><strong>Fix:</strong> Need higher privileges / different role</p></div>
+    </div>
+  </div>
+  <div class="hl hl-cyan mt-24 tc" style="max-width:700px;margin-left:auto;margin-right:auto;">
+    <p class="sm" style="color:var(--text);">No token &rarr; <strong>401</strong> &bull; Expired token &rarr; <strong>401</strong> &bull; Valid token, wrong role &rarr; <strong>403</strong></p>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 19: Headers ==================== -->
+<div class="slide">
+  <p class="label">Metadata</p>
+  <h2><span class="grad-cyan">HTTP Headers</span> &mdash; The Metadata</h2>
+  <div class="full" style="max-width:950px;margin:0 auto;">
+    <div class="grid-2" style="gap:20px;">
+      <div>
+        <h3 class="c-cyan sm mb-16">Request Headers</h3>
+        <table class="tbl">
+          <thead><tr><th>Header</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td class="c-yellow mono" style="font-size:0.78rem;">Content-Type</td><td>Format of body</td></tr>
+            <tr><td class="c-yellow mono" style="font-size:0.78rem;">Accept</td><td>Expected response format</td></tr>
+            <tr><td class="c-yellow mono" style="font-size:0.78rem;">Authorization</td><td>Who you are (Bearer token)</td></tr>
+            <tr><td class="c-yellow mono" style="font-size:0.78rem;">X-Request-ID</td><td>Track individual request</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 class="c-green sm mb-16">Response Headers</h3>
+        <table class="tbl">
+          <thead><tr><th>Header</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td class="c-green mono" style="font-size:0.78rem;">Content-Type</td><td>Response format</td></tr>
+            <tr><td class="c-green mono" style="font-size:0.78rem;">Location</td><td>New resource URL (201)</td></tr>
+            <tr><td class="c-green mono" style="font-size:0.78rem;">X-RateLimit-*</td><td>Calls remaining</td></tr>
+            <tr><td class="c-green mono" style="font-size:0.78rem;">X-Response-Time</td><td>Processing time</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="hl hl-yellow mt-24 tc"><p class="sm" style="color:var(--text);">Headers are <strong>case-insensitive</strong>: "Content-Type" = "content-type"</p></div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 20: Request-Response Cycle ==================== -->
+<div class="slide">
+  <p class="label">Complete Flow</p>
+  <h2><span class="grad-cyan">Request-Response</span> Cycle</h2>
+  <p class="sub">Fund Transfer: Complete API Flow</p>
+  <div class="grid-2 full" style="max-width:950px;margin:0 auto;">
+    <div class="card" style="border-color:rgba(34,211,238,0.3);">
+      <h3 class="c-cyan sm mb-8">&#8594; REQUEST</h3>
+      <div class="code" style="font-size:0.78rem;line-height:1.7;">
+<span class="kw">POST</span> <span class="st">/api/v1/transfers</span><br>
+<span class="an">Content-Type:</span> application/json<br>
+<span class="an">Authorization:</span> Bearer eyJhbGc...<br>
+<br>
+{<br>
+&nbsp;&nbsp;<span class="an">"fromAccount"</span>: <span class="st">"ACC001"</span>,<br>
+&nbsp;&nbsp;<span class="an">"toAccount"</span>: <span class="st">"ACC002"</span>,<br>
+&nbsp;&nbsp;<span class="an">"amount"</span>: <span class="num">5000</span>,<br>
+&nbsp;&nbsp;<span class="an">"remarks"</span>: <span class="st">"Rent payment"</span><br>
+}
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(110,231,183,0.3);">
+      <h3 class="c-green sm mb-8">&#8592; RESPONSE</h3>
+      <div class="code" style="font-size:0.78rem;line-height:1.7;">
+<span class="kw">HTTP/1.1</span> <span class="num">201 Created</span><br>
+<span class="an">Content-Type:</span> application/json<br>
+<span class="an">Location:</span> /transfers/TXN789<br>
+<br>
+{<br>
+&nbsp;&nbsp;<span class="an">"transactionId"</span>: <span class="st">"TXN789"</span>,<br>
+&nbsp;&nbsp;<span class="an">"status"</span>: <span class="st">"SUCCESS"</span>,<br>
+&nbsp;&nbsp;<span class="an">"timestamp"</span>: <span class="st">"2024-01-15T10:30:00Z"</span><br>
+}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 21: JSON ==================== -->
+<div class="slide">
+  <p class="label">Data Format</p>
+  <h2><span class="grad-green">JSON</span> &mdash; The Language APIs Speak</h2>
+  <div class="grid-2 full" style="max-width:950px;margin:0 auto;">
+    <div class="code" style="font-size:0.85rem;line-height:1.9;">
+{<br>
+&nbsp;&nbsp;<span class="an">"accountId"</span>: <span class="st">"ACC12345"</span>,          <span class="cm">&larr; String</span><br>
+&nbsp;&nbsp;<span class="an">"balance"</span>: <span class="num">50000.75</span>,              <span class="cm">&larr; Number</span><br>
+&nbsp;&nbsp;<span class="an">"isActive"</span>: <span class="kw">true</span>,                 <span class="cm">&larr; Boolean</span><br>
+&nbsp;&nbsp;<span class="an">"nominee"</span>: <span class="kw">null</span>,                  <span class="cm">&larr; Null</span><br>
+&nbsp;&nbsp;<span class="an">"transactions"</span>: [                <span class="cm">&larr; Array</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<span class="an">"id"</span>: <span class="st">"TXN001"</span>, <span class="an">"amt"</span>: <span class="num">1000</span>},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<span class="an">"id"</span>: <span class="st">"TXN002"</span>, <span class="an">"amt"</span>: <span class="num">2000</span>}<br>
+&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;<span class="an">"metadata"</span>: {                     <span class="cm">&larr; Object</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="an">"branch"</span>: <span class="st">"Mumbai"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="an">"ifsc"</span>: <span class="st">"BANK0001234"</span><br>
+&nbsp;&nbsp;}<br>
+}
+    </div>
+    <div>
+      <h3 class="c-green sm mb-16">6 Data Types</h3>
+      <div class="hl hl-green mb-8"><p class="sm" style="color:var(--text);"><strong>String</strong> &mdash; <span class="mono">"text in quotes"</span></p></div>
+      <div class="hl hl-orange mb-8"><p class="sm" style="color:var(--text);"><strong>Number</strong> &mdash; <span class="mono">42, 3.14</span> (no quotes)</p></div>
+      <div class="hl hl-purple mb-8"><p class="sm" style="color:var(--text);"><strong>Boolean</strong> &mdash; <span class="mono">true / false</span> (lowercase)</p></div>
+      <div class="hl hl-blue mb-8"><p class="sm" style="color:var(--text);"><strong>Null</strong> &mdash; <span class="mono">null</span> (lowercase)</p></div>
+      <div class="hl hl-cyan mb-8"><p class="sm" style="color:var(--text);"><strong>Array</strong> &mdash; <span class="mono">[item1, item2]</span></p></div>
+      <div class="hl hl-yellow"><p class="sm" style="color:var(--text);"><strong>Object</strong> &mdash; <span class="mono">{"key": "value"}</span></p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 22: JSON Rules ==================== -->
+<div class="slide">
+  <p class="label">Gotchas</p>
+  <h2><span class="grad-green">JSON Rules</span> &amp; Common Mistakes</h2>
+  <div class="full" style="max-width:950px;margin:0 auto;">
+    <table class="tbl mb-24">
+      <thead><tr><th>&#10003; Valid</th><th>&#10007; Invalid</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td class="c-green mono">"name": "Raj"</td><td class="c-red mono">'name': 'Raj'</td><td>Must use double quotes</td></tr>
+        <tr><td class="c-green mono">"amount": 5000</td><td class="c-red mono">"amount": 5,000</td><td>No formatting in numbers</td></tr>
+        <tr><td class="c-green mono">"active": true</td><td class="c-red mono">"active": True</td><td>Booleans are lowercase</td></tr>
+        <tr><td class="c-green mono">"value": null</td><td class="c-red mono">"value": NULL</td><td>null is lowercase</td></tr>
+        <tr><td class="c-green mono">{"a": 1, "b": 2}</td><td class="c-red mono">{"a": 1, "b": 2,}</td><td>No trailing commas!</td></tr>
+      </tbody>
+    </table>
+    <div style="background:rgba(251,191,36,0.06);border:2px solid var(--yellow);border-radius:14px;padding:16px 24px;text-align:center;">
+      <p class="sm" style="color:var(--text);"><strong class="c-yellow">Dev Tip:</strong> Many bugs come from malformed JSON! Missing quotes, trailing commas, wrong types (<span class="mono">"5000"</span> vs <span class="mono">5000</span>). Use <strong>JSONLint.com</strong> to validate.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 23: API Versioning ==================== -->
+<div class="slide">
+  <p class="label">Maintenance</p>
+  <h2><span class="grad-cyan">API</span> Versioning</h2>
+  <p class="sub">Breaking changes need new versions &mdash; old apps keep working</p>
+  <div class="full" style="max-width:900px;margin:0 auto;">
+    <div class="grid-2 mb-24">
+      <div class="code sm"><span class="cm">// V1 response</span><br>{"balance": <span class="num">50000</span>}</div>
+      <div class="code sm"><span class="cm">// V2 response (breaking change!)</span><br>{"balance": {<span class="an">"amount"</span>: <span class="num">50000</span>, <span class="an">"currency"</span>: <span class="st">"INR"</span>}}</div>
+    </div>
+    <div class="grid-3">
+      <div class="card" style="border:2px solid var(--green);background:rgba(110,231,183,0.04);">
+        <h3 class="c-green sm">1. URL Path (Most Common)</h3>
+        <div class="code sm mt-16"><span class="st">/api/v1/accounts</span><br><span class="st">/api/v2/accounts</span></div>
+      </div>
+      <div class="card">
+        <h3 class="c-blue sm">2. Query Parameter</h3>
+        <div class="code sm mt-16"><span class="st">/api/accounts?version=1</span><br><span class="st">/api/accounts?version=2</span></div>
+      </div>
+      <div class="card">
+        <h3 class="c-purple sm">3. Header</h3>
+        <div class="code sm mt-16"><span class="an">Accept:</span> application/<br>vnd.api.v1+json</div>
+      </div>
+    </div>
+    <div class="hl hl-yellow mt-24 tc"><p class="sm" style="color:var(--text);">&#9888;&#65039; Same endpoint, different versions = <strong>maintain backward compatibility!</strong></p></div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 24: Auth vs AuthZ ==================== -->
+<div class="slide">
+  <p class="label">Security</p>
+  <h2><span class="grad-pink">Authentication</span> vs <span class="grad-pink">Authorization</span></h2>
+  <div class="full" style="max-width:950px;margin:0 auto;">
+    <div class="grid-2 mb-24">
+      <div style="background:rgba(34,211,238,0.06);border:2px solid var(--cyan);border-radius:16px;padding:24px;text-align:center;">
+        <h3 style="font-size:1.3rem;" class="c-cyan mb-8">Authentication (AuthN)</h3>
+        <p style="font-size:1.1rem;color:var(--text);font-weight:700;">WHO are you?</p>
+      </div>
+      <div style="background:rgba(244,114,182,0.06);border:2px solid var(--pink);border-radius:16px;padding:24px;text-align:center;">
+        <h3 style="font-size:1.3rem;" class="c-pink mb-8">Authorization (AuthZ)</h3>
+        <p style="font-size:1.1rem;color:var(--text);font-weight:700;">WHAT can you do?</p>
+      </div>
+    </div>
+    <div class="grid-4" style="gap:14px;">
+      <div class="card" style="padding:18px;"><h3 class="c-yellow sm">API Key</h3><div class="code sm mt-16" style="padding:10px;"><span class="an">X-API-Key:</span> abc123</div><p class="sm mt-16">Simple, less secure</p></div>
+      <div class="card" style="padding:18px;"><h3 class="c-blue sm">Basic Auth</h3><div class="code sm mt-16" style="padding:10px;"><span class="an">Authorization:</span><br>Basic base64(u:p)</div><p class="sm mt-16">Sends creds each time</p></div>
+      <div class="card" style="border:2px solid var(--green);padding:18px;"><h3 class="c-green sm">Bearer Token (JWT)</h3><div class="code sm mt-16" style="padding:10px;"><span class="an">Authorization:</span><br>Bearer eyJhbG...</div><p class="sm mt-16"><strong>Most common</strong></p></div>
+      <div class="card" style="padding:18px;"><h3 class="c-purple sm">OAuth 2.0</h3><div class="code sm mt-16" style="padding:10px;">Complex flow for<br>third-party access</div><p class="sm mt-16">"Login with Google"</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 25: JWT ==================== -->
+<div class="slide">
+  <p class="label">JWT</p>
+  <h2><span class="grad-pink">JWT</span> &mdash; JSON Web Token</h2>
+  <div class="full" style="max-width:900px;margin:0 auto;">
+    <div class="code mb-24" style="text-align:center;word-break:break-all;font-size:0.8rem;line-height:1.6;">
+<span class="c-red">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span>.<span class="c-purple">eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlJhaiIsImlhdCI6MTUxNjIzOTAyMn0</span>.<span class="c-cyan">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</span>
+    </div>
+    <div class="grid-3 mb-24">
+      <div class="hl hl-red"><p class="sm" style="color:var(--text);"><strong class="c-red">HEADER</strong><br>Algorithm &amp; type</p></div>
+      <div class="hl hl-purple"><p class="sm" style="color:var(--text);"><strong class="c-purple">PAYLOAD</strong><br>User data &amp; claims</p></div>
+      <div class="hl hl-cyan"><p class="sm" style="color:var(--text);"><strong class="c-cyan">SIGNATURE</strong><br>Verification</p></div>
+    </div>
+    <div class="grid-2">
+      <div class="code" style="font-size:0.82rem;">
+<span class="cm">// Decoded Payload</span><br>
+{<br>
+&nbsp;&nbsp;<span class="an">"sub"</span>: <span class="st">"user123"</span>,       <span class="cm">&larr; User ID</span><br>
+&nbsp;&nbsp;<span class="an">"name"</span>: <span class="st">"Raj Kumar"</span>,<br>
+&nbsp;&nbsp;<span class="an">"role"</span>: <span class="st">"ADMIN"</span>,        <span class="cm">&larr; AuthZ info</span><br>
+&nbsp;&nbsp;<span class="an">"exp"</span>: <span class="num">1516242622</span>       <span class="cm">&larr; Expiration</span><br>
+}
+      </div>
+      <div>
+        <h3 class="c-yellow sm mb-16">Validation Scenarios</h3>
+        <div class="hl hl-yellow mb-8"><p class="sm" style="color:var(--text);">Expired token (exp in past) &rarr; <strong>401</strong></p></div>
+        <div class="hl hl-yellow mb-8"><p class="sm" style="color:var(--text);">Tampered payload &rarr; <strong>401</strong></p></div>
+        <div class="hl hl-red mb-8"><p class="sm" style="color:var(--text);">Wrong role in token &rarr; <strong>403</strong></p></div>
+        <div class="hl hl-green"><p class="sm" style="color:var(--text);">Valid token, correct role &rarr; <strong>200</strong></p></div>
+        <p class="sm c-dim mt-16">Tool: <strong>jwt.io</strong> (decode &amp; inspect)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 26: @RestController ==================== -->
+<div class="slide">
+  <p class="label">Spring Boot REST</p>
+  <h2><span class="grad-green">@RestController</span> &mdash; Building REST APIs</h2>
+  <p class="sub">Spring Boot makes building REST APIs simple</p>
+  <div class="grid-2 full" style="max-width:950px;margin:0 auto;">
+    <div>
+      <h3 class="c-green sm mb-8">@RestController</h3>
+      <div class="code" style="font-size:0.85rem;line-height:1.9;">
+<span class="an">@RestController</span><br>
+<span class="an">@RequestMapping</span>(<span class="st">"/api/v1/accounts"</span>)<br>
+<span class="kw">public class</span> <span class="ty">AccountController</span> {<br><br>
+&nbsp;&nbsp;<span class="an">@GetMapping</span><br>
+&nbsp;&nbsp;<span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Account</span>&gt; getAll() {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> service.findAll();<br>
+&nbsp;&nbsp;}<br><br>
+&nbsp;&nbsp;<span class="an">@GetMapping</span>(<span class="st">"/{id}"</span>)<br>
+&nbsp;&nbsp;<span class="kw">public</span> <span class="ty">Account</span> getById(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="an">@PathVariable</span> <span class="ty">String</span> id) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> service.findById(id);<br>
+&nbsp;&nbsp;}<br>
+}
+      </div>
+    </div>
+    <div>
+      <div class="hl hl-green mb-8"><p class="sm" style="color:var(--text);"><strong>@RestController</strong> = @Controller + @ResponseBody<br>Returns JSON directly, not view names</p></div>
+      <div class="hl hl-cyan mb-8"><p class="sm" style="color:var(--text);"><strong>@RequestMapping</strong> on class = base URL prefix for all methods</p></div>
+      <div class="hl hl-blue mb-8"><p class="sm" style="color:var(--text);"><strong>@GetMapping</strong> / <strong>@PostMapping</strong> / <strong>@PutMapping</strong> / <strong>@DeleteMapping</strong></p></div>
+      <div class="hl hl-purple mb-8"><p class="sm" style="color:var(--text);"><strong>@PathVariable</strong> &mdash; extracts {id} from URL path</p></div>
+      <div class="hl hl-yellow"><p class="sm" style="color:var(--text);"><strong>Spring auto-converts</strong> Java objects to JSON using Jackson (included in starter-web)</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 27: @RequestBody & @ResponseStatus ==================== -->
+<div class="slide">
+  <p class="label">Spring Boot REST</p>
+  <h2><span class="grad-green">@RequestBody</span> &amp; <span class="grad-green">ResponseEntity</span></h2>
+  <div class="grid-2 full" style="max-width:950px;margin:0 auto;">
+    <div>
+      <h3 class="c-yellow sm mb-8">POST &mdash; Create Resource</h3>
+      <div class="code" style="font-size:0.82rem;line-height:1.8;">
+<span class="an">@PostMapping</span><br>
+<span class="kw">public</span> <span class="ty">ResponseEntity</span>&lt;<span class="ty">Account</span>&gt; create(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="an">@Valid</span> <span class="an">@RequestBody</span> <span class="ty">AccountDto</span> dto) {<br><br>
+&nbsp;&nbsp;<span class="ty">Account</span> saved = service.create(dto);<br><br>
+&nbsp;&nbsp;<span class="kw">return</span> <span class="ty">ResponseEntity</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;.status(<span class="ty">HttpStatus</span>.<span class="st">CREATED</span>) <span class="cm">// 201</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;.body(saved);<br>
+}
+      </div>
+    </div>
+    <div>
+      <h3 class="c-blue sm mb-8">PUT &mdash; Update Resource</h3>
+      <div class="code" style="font-size:0.82rem;line-height:1.8;">
+<span class="an">@PutMapping</span>(<span class="st">"/{id}"</span>)<br>
+<span class="kw">public</span> <span class="ty">ResponseEntity</span>&lt;<span class="ty">Account</span>&gt; update(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="an">@PathVariable</span> <span class="ty">String</span> id,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="an">@Valid</span> <span class="an">@RequestBody</span> <span class="ty">AccountDto</span> dto) {<br><br>
+&nbsp;&nbsp;<span class="ty">Account</span> updated = service.update(id, dto);<br><br>
+&nbsp;&nbsp;<span class="kw">return</span> <span class="ty">ResponseEntity</span>.ok(updated);<br>
+}
+      </div>
+    </div>
+  </div>
+  <div class="grid-3 mt-24 full" style="max-width:950px;margin:0 auto;">
+    <div class="hl hl-yellow"><p class="sm" style="color:var(--text);"><strong>@RequestBody</strong><br>Deserializes JSON body &rarr; Java object</p></div>
+    <div class="hl hl-green"><p class="sm" style="color:var(--text);"><strong>ResponseEntity</strong><br>Full control over status code + headers + body</p></div>
+    <div class="hl hl-blue"><p class="sm" style="color:var(--text);"><strong>@Valid</strong><br>Triggers Bean Validation on the DTO</p></div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 28: DELETE & @RequestParam ==================== -->
+<div class="slide">
+  <p class="label">Spring Boot REST</p>
+  <h2><span class="grad-green">DELETE</span>, <span class="grad-green">@RequestParam</span> &amp; <span class="grad-green">@ResponseStatus</span></h2>
+  <div class="grid-2 full" style="max-width:950px;margin:0 auto;">
+    <div>
+      <h3 class="c-red sm mb-8">DELETE &mdash; Remove Resource</h3>
+      <div class="code" style="font-size:0.85rem;line-height:1.9;">
+<span class="an">@DeleteMapping</span>(<span class="st">"/{id}"</span>)<br>
+<span class="an">@ResponseStatus</span>(<span class="ty">HttpStatus</span>.<span class="st">NO_CONTENT</span>)<br>
+<span class="kw">public void</span> delete(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="an">@PathVariable</span> <span class="ty">String</span> id) {<br>
+&nbsp;&nbsp;service.delete(id);<br>
+&nbsp;&nbsp;<span class="cm">// returns 204 No Content</span><br>
+}
+      </div>
+      <div class="hl hl-red mt-16"><p class="sm" style="color:var(--text);"><strong>@ResponseStatus</strong> &mdash; sets the HTTP status code when no ResponseEntity is used</p></div>
+    </div>
+    <div>
+      <h3 class="c-purple sm mb-8">GET with Query Params</h3>
+      <div class="code" style="font-size:0.85rem;line-height:1.9;">
+<span class="cm">// GET /api/v1/accounts?status=active&amp;limit=10</span><br><br>
+<span class="an">@GetMapping</span><br>
+<span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Account</span>&gt; search(<br>
+&nbsp;&nbsp;<span class="an">@RequestParam</span> <span class="ty">String</span> status,<br>
+&nbsp;&nbsp;<span class="an">@RequestParam</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;defaultValue = <span class="st">"20"</span>) <span class="ty">int</span> limit) {<br>
+&nbsp;&nbsp;<span class="kw">return</span> service.search(status, limit);<br>
+}
+      </div>
+      <div class="hl hl-purple mt-16"><p class="sm" style="color:var(--text);"><strong>@RequestParam</strong> &mdash; extracts ?key=value from query string. Supports defaultValue.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 29: REST Exception Handling ==================== -->
+<div class="slide">
+  <p class="label">Spring Boot REST</p>
+  <h2><span class="grad-orange">REST Exception</span> Handling</h2>
+  <p class="sub">Return proper status codes and JSON error responses</p>
+  <div class="grid-2 full" style="max-width:950px;margin:0 auto;">
+    <div class="code" style="font-size:0.82rem;line-height:1.8;">
+<span class="an">@RestControllerAdvice</span><br>
+<span class="kw">public class</span> <span class="ty">ApiExceptionHandler</span> {<br><br>
+&nbsp;&nbsp;<span class="an">@ExceptionHandler</span>(<span class="ty">AccountNotFoundException</span>.<span class="kw">class</span>)<br>
+&nbsp;&nbsp;<span class="an">@ResponseStatus</span>(<span class="ty">HttpStatus</span>.<span class="st">NOT_FOUND</span>)<br>
+&nbsp;&nbsp;<span class="kw">public</span> <span class="ty">Map</span>&lt;<span class="ty">String</span>,<span class="ty">String</span>&gt; handle(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">AccountNotFoundException</span> ex) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> Map.of(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="st">"error"</span>, ex.getMessage(),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="st">"status"</span>, <span class="st">"404"</span>);<br>
+&nbsp;&nbsp;}<br>
+}
+    </div>
+    <div>
+      <div class="hl hl-orange mb-8"><p class="sm" style="color:var(--text);"><strong>@RestControllerAdvice</strong><br>= @ControllerAdvice + @ResponseBody<br>Returns JSON error responses (not views)</p></div>
+      <div class="hl hl-red mb-8"><p class="sm" style="color:var(--text);"><strong>@ResponseStatus(NOT_FOUND)</strong><br>Sets HTTP 404 on the response</p></div>
+      <div class="hl hl-yellow mb-8"><p class="sm" style="color:var(--text);"><strong>Return Map/DTO</strong><br>Auto-serialized to JSON error body</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);"><strong>@ControllerAdvice</strong> &rarr; returns views (HTML)<br><strong>@RestControllerAdvice</strong> &rarr; returns data (JSON)</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 30: Cheat Sheet ==================== -->
+<div class="slide">
+  <p class="label">Reference</p>
+  <h2><span class="grad-cyan">REST API</span> Cheat Sheet</h2>
+  <div class="full" style="max-width:950px;margin:0 auto;">
+    <div class="grid-2" style="gap:16px;">
+      <div class="hl hl-cyan"><p class="sm" style="color:var(--text);"><strong class="c-cyan">Methods:</strong> GET=Read &bull; POST=Create &bull; PUT=Replace &bull; PATCH=Update &bull; DELETE=Remove</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);"><strong class="c-green">Status:</strong> 2xx=Success &bull; 4xx=Client Error &bull; 5xx=Server Error</p></div>
+      <div class="hl hl-yellow"><p class="sm" style="color:var(--text);"><strong class="c-yellow">Headers:</strong> Content-Type: application/json &bull; Authorization: Bearer &lt;token&gt;</p></div>
+      <div class="hl hl-orange"><p class="sm" style="color:var(--text);"><strong class="c-orange">JSON:</strong> Double quotes only &bull; No trailing commas &bull; Booleans/null lowercase</p></div>
+      <div class="hl hl-purple"><p class="sm" style="color:var(--text);"><strong class="c-purple">Stateless:</strong> Every request needs full context &bull; Horizontally scalable</p></div>
+      <div class="hl hl-pink"><p class="sm" style="color:var(--text);"><strong class="c-pink">Auth:</strong> 401 = "Who are you?" &bull; 403 = "No permission" &bull; POST is NOT idempotent</p></div>
+    </div>
+    <div style="background:var(--surface);border:2px solid var(--cyan);border-radius:16px;padding:24px;text-align:center;margin-top:24px;">
+      <p style="font-size:1rem;color:var(--text);"><strong>Spring Boot:</strong> <span class="c-green">@RestController</span> &bull; <span class="c-yellow">@RequestBody</span> &bull; <span class="c-blue">@PathVariable</span> &bull; <span class="c-purple">ResponseEntity</span> &bull; <span class="c-red">@RestControllerAdvice</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 31: Summary ==================== -->
+<div class="slide">
+  <p class="label">Wrap Up</p>
+  <h2><span class="grad-cyan">Key</span> Takeaways</h2>
+  <div class="full" style="max-width:800px;margin:0 auto;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="hl hl-cyan"><p class="sm" style="color:var(--text);">&#10003; <strong>API = Contract</strong> between systems (how to request, what you get back)</p></div>
+      <div class="hl hl-green"><p class="sm" style="color:var(--text);">&#10003; <strong>REST = Architectural style</strong> using HTTP &mdash; Resources (nouns) + Methods (verbs)</p></div>
+      <div class="hl hl-blue"><p class="sm" style="color:var(--text);">&#10003; <strong>HTTP Methods</strong> (CRUD) &mdash; GET, POST, PUT, PATCH, DELETE</p></div>
+      <div class="hl hl-yellow"><p class="sm" style="color:var(--text);">&#10003; <strong>Status Codes</strong> tell the story &mdash; 2xx happy, 4xx your fault, 5xx server fault</p></div>
+      <div class="hl hl-orange"><p class="sm" style="color:var(--text);">&#10003; <strong>JSON</strong> is the universal data format for APIs</p></div>
+      <div class="hl hl-pink"><p class="sm" style="color:var(--text);">&#10003; <strong>Authentication</strong> (who) vs <strong>Authorization</strong> (what) &mdash; JWT is most common</p></div>
+      <div class="hl hl-purple"><p class="sm" style="color:var(--text);">&#10003; <strong>Spring Boot</strong> makes building REST APIs simple &mdash; @RestController + ResponseEntity</p></div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(96,165,250,0.1));border:2px solid var(--cyan);border-radius:16px;padding:24px;text-align:center;margin-top:28px;">
+      <p style="font-size:1.1rem;color:var(--text);"><strong class="c-cyan">Next:</strong> Hands-on! We'll build a REST API for our Money Transfer System using Spring Boot.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SLIDE 32: Homework ==================== -->
+<div class="slide">
+  <p class="label">Practice</p>
+  <h2><span class="grad-green">Homework</span> &mdash; Before Next Session</h2>
+  <div class="grid-2 full" style="max-width:950px;margin:0 auto;">
+    <div>
+      <div class="card mb-24" style="border-color:rgba(34,211,238,0.3);">
+        <h3 class="c-cyan mb-8">1. Install Postman</h3>
+        <p class="sm">Download from <strong>postman.com</strong>. We'll use it to test our REST APIs.</p>
+      </div>
+      <div class="card" style="border-color:rgba(110,231,183,0.3);">
+        <h3 class="c-green mb-8">2. Try These Public APIs in Postman</h3>
+        <div class="code sm" style="margin-top:12px;">
+<span class="kw">GET</span>  <span class="st">jsonplaceholder.typicode.com/posts/1</span><br>
+<span class="kw">GET</span>  <span class="st">jsonplaceholder.typicode.com/users</span><br>
+<span class="kw">POST</span> <span class="st">jsonplaceholder.typicode.com/posts</span><br>
+<span class="cm">Body: {"title":"Test","body":"Hello","userId":1}</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card mb-24" style="border-color:rgba(96,165,250,0.3);">
+        <h3 class="c-blue mb-8">3. Observe &amp; Understand</h3>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+          <div class="hl hl-blue" style="margin:0;padding:8px 12px;"><p class="sm" style="color:var(--text);">Request method, URL, headers</p></div>
+          <div class="hl hl-blue" style="margin:0;padding:8px 12px;"><p class="sm" style="color:var(--text);">Response status code (200, 201)</p></div>
+          <div class="hl hl-blue" style="margin:0;padding:8px 12px;"><p class="sm" style="color:var(--text);">Response JSON structure</p></div>
+          <div class="hl hl-blue" style="margin:0;padding:8px 12px;"><p class="sm" style="color:var(--text);">Think: how would you build this with @RestController?</p></div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(251,191,36,0.3);">
+        <h3 class="c-yellow mb-8">4. Think About Design</h3>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+          <div class="hl hl-yellow" style="margin:0;padding:8px 12px;"><p class="sm" style="color:var(--text);">What endpoints would our MTS need?</p></div>
+          <div class="hl hl-yellow" style="margin:0;padding:8px 12px;"><p class="sm" style="color:var(--text);">Which HTTP methods for each?</p></div>
+          <div class="hl hl-yellow" style="margin:0;padding:8px 12px;"><p class="sm" style="color:var(--text);">What status codes to return?</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .deck -->
+
+<script>
+(function() {
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let cur = 0;
+
+    const dots = document.getElementById('dots');
+    slides.forEach((_, i) => {
+        const d = document.createElement('button');
+        d.className = 'dot' + (i === 0 ? ' active' : '');
+        d.addEventListener('click', () => go(i));
+        dots.appendChild(d);
+    });
+
+    function ui() {
+        slides.forEach((s, i) => { s.classList.remove('active','prev'); if (i===cur) s.classList.add('active'); else if (i<cur) s.classList.add('prev'); });
+        document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i===cur));
+        document.getElementById('progress').style.width = (cur/(total-1))*100+'%';
+        document.getElementById('counter').textContent = (cur+1)+' / '+total;
+    }
+    function go(n) { if (n>=0 && n<total) { cur=n; ui(); } }
+    function next() { go(cur+1); }
+    function prev() { go(cur-1); }
+
+    document.addEventListener('keydown', e => {
+        if (['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)) { e.preventDefault(); next(); }
+        if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
+        if (e.key==='Home') { e.preventDefault(); go(0); }
+        if (e.key==='End') { e.preventDefault(); go(total-1); }
+    });
+
+    let tx=0, ty=0;
+    document.addEventListener('touchstart', e => { tx=e.changedTouches[0].screenX; ty=e.changedTouches[0].screenY; }, {passive:true});
+    document.addEventListener('touchend', e => {
+        const dx=tx-e.changedTouches[0].screenX, dy=ty-e.changedTouches[0].screenY;
+        if (Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>50) { dx>0 ? next() : prev(); }
+    }, {passive:true});
+
+    ui();
+})();
+</script>
+</body>
+</html>
