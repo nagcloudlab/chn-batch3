@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+</head>
+<body class="container">
+
+    <h1 class="display-1">Welcome to MTS</h1>
+    <p>This is the home page of the MTS application.</p>
+    <hr/>
+
+    <ul class="nav justify-content-center">
+        <li class="nav-item">
+            <a class="nav-link" href="transfer">Transfer</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="transfer-history">Transfer History</a>
+        </li>
+    </ul>
+    <hr/>
+
+    <div class="row">
+        <div class="col-6">
+            <div class="card">
+                <div class="card-header">Transfer Status</div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading">Transfer Status</h4>
+                        <p>Status: <span id="status" th:text="${response.status}"></span></p>
+                        <p>Message: <span id="message" th:text="${response.message}"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>

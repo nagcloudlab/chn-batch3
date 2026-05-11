@@ -23,11 +23,8 @@ public class MoneyTransferSystemApplication {
 		logger.info("-".repeat(50));
 
 		// Use
-		// TransferService transferService = context.getBean(TransferService.class);
-		TransactionRepository transactionRepository = context.getBean(TransactionRepository.class);
-		// transferService.transfer(10.0, "A001", "A002");
-		transactionRepository.findAll()
-				.forEach(tx -> logger.info(tx.getId() + ""));
+		TransferService transferService = context.getBean(TransferService.class);
+		transferService.transfer(10.0, "A001", "A002");
 
 		// Destroy..
 		logger.info("-".repeat(50));
