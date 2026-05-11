@@ -1,0 +1,432 @@
+
+
+
+how to run Application?
+-----------------------------
+mvn spring-boot:run
+then open http://localhost:8080 in browser
+
+
+
+What's New in v9
+=================
+1. Spring Web MVC — @Controller, @GetMapping, @PostMapping
+2. Thymeleaf server-side template engine
+3. DTO pattern — TransferRequestDto, TransferResponseDto
+4. Bean Validation — @Valid, @NotBlank, @NotNull, @Positive, BindingResult
+5. PRG pattern — Post/Redirect/Get with RedirectAttributes
+6. Global exception handling — @ControllerAdvice, @ExceptionHandler
+7. @InitBinder for custom type conversion
+8. Transaction history page
+
+
+
+Spring Web MVC
+===============
+
+What is Spring Web MVC?
+-------------------------
+   - Spring's web framework for building server-side rendered web applications
+   - based on the Model-View-Controller (MVC) pattern
+   - uses DispatcherServlet as the front controller
+   - integrates with template engines like Thymeleaf for HTML rendering
+
+
+@Controller
+------------
+   - stereotype annotation marking a class as a web controller
+   - methods return view names (String) — not data directly
+   - Spring resolves the view name to a template (e.g., "transfer-form" -> transfer-form.html)
+
+   e.g.
+     @Controller
+     public class TransferController {
+         // methods return template names
+     }
+
+   Difference from @RestController:
+     @Controller   => returns view names (for server-side rendering)
+     @RestController => returns data directly as JSON (for REST APIs)
+     @RestController = @Controller + @ResponseBody
+
+
+@GetMapping / @PostMapping
+---------------------------
+   - shorthand for @RequestMapping(method = RequestMethod.GET/POST)
+   - cleaner, more readable than @RequestMapping
+
+   e.g.
+     @GetMapping("/transfer")           => handles GET /transfer
+     @PostMapping("/transfer")          => handles POST /transfer
+
+   Same URL, different methods = different handler methods!
+
+
+Model
+------
+   - interface for passing data from controller to view (template)
+   - controller adds attributes to Model, Thymeleaf reads them
+
+   e.g.
+     @GetMapping("/transfer")
+     public String showForm(Model model) {
+         model.addAttribute("transferRequest", new TransferRequestDto());
+         return "transfer-form";   // view name
+     }
+
+   In Thymeleaf template:
+     th:object="${transferRequest}"   => binds to the model attribute
+     th:field="*{amount}"            => binds to the field
+
+
+
+Thymeleaf
+==========
+
+What is Thymeleaf?
+--------------------
+   - server-side Java template engine for HTML
+   - Spring Boot auto-configures it with spring-boot-starter-thymeleaf
+   - templates live in src/main/resources/templates/
+   - static files (CSS, JS, images) live in src/main/resources/static/
+
+
+Key Thymeleaf Attributes
+--------------------------
+   th:action="@{/transfer}"        => form action URL
+   th:object="${transferRequest}"   => binds form to DTO object
+   th:field="*{fromAccountNumber}" => binds input to DTO field
+   th:text="${message}"             => outputs text content
+   th:if="${condition}"             => conditional rendering
+   th:each="item : ${list}"        => loop over a collection
+   th:errors="*{fieldName}"        => shows validation error for a field
+   th:classappend="condition ? 'class'" => conditionally add CSS class
+
+   @{...} => URL expressions (context-aware)
+   ${...} => variable expressions (model attributes)
+   *{...} => selection expressions (relative to th:object)
+
+
+Template Resolution
+---------------------
+   Controller returns "transfer-form"
+   => Thymeleaf looks for src/main/resources/templates/transfer-form.html
+   => renders HTML and sends to browser
+
+   Static files (index.html) in src/main/resources/static/
+   => served directly by Spring Boot without a controller
+
+
+
+DTO Pattern (Data Transfer Object)
+====================================
+
+TransferRequestDto
+--------------------
+   @Setter
+   @Getter
+   public class TransferRequestDto {
+
+       @NotBlank(message = "From account number is required")
+       private String fromAccountNumber;
+
+       @NotBlank(message = "To account number is required")
+       private String toAccountNumber;
+
+       @NotNull(message = "Amount is required")
+       @Positive(message = "Amount must be greater than zero")
+       private Double amount;
+   }
+
+   => separates web layer data from entity layer
+   => validation annotations on DTO, not on entity
+   => Double (wrapper) instead of double (primitive) so null is possible for @NotNull
+
+
+TransferResponseDto
+---------------------
+   @Getter
+   @Setter
+   public class TransferResponseDto {
+       private String status;
+       private String message;
+   }
+
+
+
+Bean Validation (Jakarta Validation)
+======================================
+
+Dependency
+-----------
+   spring-boot-starter-validation
+   => pulls in Hibernate Validator (Jakarta Bean Validation implementation)
+
+
+Validation Annotations
+------------------------
+   @NotBlank   => String must not be null, empty, or whitespace only
+   @NotNull    => field must not be null (works with wrapper types like Double)
+   @Positive   => number must be > 0
+   @Min(value) => number must be >= value
+   @Max(value) => number must be <= value
+   @Size(min, max) => collection/string size between min and max
+   @Email      => must be valid email format
+   @Pattern(regexp) => must match regex pattern
+
+
+@Valid + BindingResult
+------------------------
+   @PostMapping("/transfer")
+   public String processTransfer(
+           @Valid @ModelAttribute("transferRequest") TransferRequestDto request,
+           BindingResult bindingResult) {
+
+       if (bindingResult.hasErrors()) {
+           return "transfer-form";   // re-render form with errors
+       }
+       // process transfer...
+   }
+
+   => @Valid triggers validation on the DTO
+   => BindingResult MUST be immediately after the @Valid parameter
+   => if validation fails, BindingResult.hasErrors() returns true
+   => return the form view directly (not redirect) to preserve error messages
+   => Thymeleaf displays errors with th:errors="*{fieldName}"
+
+
+@InitBinder
+-------------
+   @InitBinder
+   public void initBinder(WebDataBinder binder) {
+       binder.registerCustomEditor(Double.class,
+               new CustomNumberEditor(Double.class, true));
+   }
+
+   => registers custom type editors for data binding
+   => CustomNumberEditor(Double.class, true) => allows empty string -> null
+   => without this, empty string -> Double conversion throws exception
+   => with this, empty string -> null -> @NotNull catches it properly
+
+
+
+PRG Pattern (Post/Redirect/Get)
+=================================
+
+What is PRG?
+--------------
+   - design pattern to prevent duplicate form submissions
+   - POST processes the data and redirects (302) to a GET page
+   - browser follows redirect with GET -> shows success page
+   - if user refreshes, they refresh the GET page (safe), not the POST
+
+   Flow:
+     1. User submits form (POST /transfer)
+     2. Controller processes, then returns "redirect:/transfer/success"
+     3. Browser follows redirect (GET /transfer/success)
+     4. User refreshes -> repeats GET (no duplicate transfer!)
+
+
+RedirectAttributes
+--------------------
+   - carries data across a redirect
+   - flash attributes survive one redirect, then are removed
+   - used to pass success/error messages to the redirected page
+
+   e.g.
+     redirectAttributes.addFlashAttribute("successMessage",
+             "Successfully transferred 500.00 from A001 to A002");
+     return "redirect:/transfer/success";
+
+   In the target controller:
+     model.containsAttribute("successMessage") => true (for this request only)
+
+
+
+Global Exception Handling
+==========================
+
+@ControllerAdvice
+-------------------
+   - centralized exception handling for all controllers
+   - contains @ExceptionHandler methods
+   - catches exceptions thrown by any controller method
+
+   @ControllerAdvice
+   public class GlobalExceptionHandler {
+
+       @ExceptionHandler(AccountNotFoundException.class)
+       public String handleAccountNotFound(AccountNotFoundException ex,
+               RedirectAttributes redirectAttributes) {
+           redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+           return "redirect:/transfer";
+       }
+
+       @ExceptionHandler(InsufficientBalanceException.class)
+       public String handleInsufficientBalance(InsufficientBalanceException ex,
+               RedirectAttributes redirectAttributes) {
+           redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+           return "redirect:/transfer";
+       }
+
+       @ExceptionHandler(BindException.class)
+       public String handleBindException(BindException ex,
+               RedirectAttributes redirectAttributes) {
+           // extract field error messages and show them
+           redirectAttributes.addFlashAttribute("errorMessage", ...);
+           return "redirect:/transfer";
+       }
+
+       @ExceptionHandler(Exception.class)
+       public String handleGenericException(Exception ex,
+               RedirectAttributes redirectAttributes) {
+           redirectAttributes.addFlashAttribute("errorMessage",
+                   "An unexpected error occurred.");
+           return "redirect:/transfer";
+       }
+   }
+
+   Order matters:
+     - most specific exceptions first (AccountNotFoundException)
+     - most generic last (Exception)
+     - Spring matches the most specific handler
+
+
+Custom Error Page
+-------------------
+   - src/main/resources/templates/error.html
+   - Spring Boot auto-uses this for unhandled errors
+   - has access to: ${status}, ${error}, ${message}
+
+
+
+v9 Project Structure
+=====================
+
+   src/main/java/com/npci/
+     MoneyTransferSystemApplication.java   => @SpringBootApplication main class
+     web/
+       TransferController.java             => @Controller (GET/POST /transfer, history)
+       GlobalExceptionHandler.java         => @ControllerAdvice (exception handling)
+     dto/
+       TransferRequestDto.java             => form DTO with validation annotations
+       TransferResponseDto.java            => response DTO
+     service/
+       TransferService.java                => interface
+       TransferServiceImpl.java            => @Service @Transactional
+       FooService.java                     => demonstrates propagation
+     repository/
+       AccountRepository.java             => JpaRepository<Account, String>
+       TransactionRepository.java         => JpaRepository + @Query
+     entity/
+       Account.java                       => @Entity JPA
+       Transaction.java                   => @Entity @ManyToOne
+       TransactionType.java               => enum DEPOSIT/WITHDRAWAL
+     exception/
+       AccountNotFoundException.java      => extends RuntimeException
+       InsufficientBalanceException.java  => extends RuntimeException
+
+   src/main/resources/
+     application.properties               => npci.location=chennai
+     application.yml                      => datasource, jpa, hibernate config
+     static/
+       index.html                         => landing page (served directly)
+     templates/
+       transfer-form.html                 => Thymeleaf form with validation
+       transfer-status.html               => success page
+       transfer-history.html              => transaction history search + table
+       error.html                         => custom error page
+
+
+
+Spring Annotations Summary (covered so far — v1 through v9)
+=============================================================
+
+   DI & Wiring            : @Bean, @Component, @Autowired, @Primary, @Qualifier
+   Stereotypes            : @Repository, @Service, @Controller, @Configuration
+   Scope & Lifecycle      : @Scope, @Lazy, @PostConstruct, @PreDestroy
+   Configuration          : @Value, @PropertySource, @Profile, @Conditional
+   Events                 : @EventListener, ApplicationEvent, ApplicationEventPublisher
+   Spring Boot Config     : @ConfigurationProperties, @EnableConfigurationProperties
+   Auto-Configuration     : @ConditionalOnProperty, @ConditionalOnClass,
+                            @ConditionalOnBean, @ConditionalOnMissingBean
+   Lombok                 : @Getter, @Setter, @NoArgsConstructor, @AllArgsConstructor,
+                            @Data, @Builder
+   Testing                : @SpringBootTest, @Test
+   Spring Boot            : @SpringBootApplication
+   JPA Entities           : @Entity, @Table, @Id, @Column, @GeneratedValue,
+                            @ManyToOne, @JoinColumn, @Enumerated, @Temporal
+   Spring Data JPA        : JpaRepository, @Query (JPQL)
+   Transactions           : @Transactional (isolation, rollbackFor, noRollbackFor,
+                            timeout, readOnly, propagation)
+   Web MVC (v9)           : @Controller, @GetMapping, @PostMapping,
+                            @ModelAttribute, @RequestParam,
+                            @InitBinder, Model, RedirectAttributes
+   Validation (v9)        : @Valid, @NotBlank, @NotNull, @Positive,
+                            BindingResult
+   Exception Handling (v9): @ControllerAdvice, @ExceptionHandler, BindException
+   Thymeleaf (v9)         : th:action, th:object, th:field, th:text,
+                            th:if, th:each, th:errors, th:classappend
+
+
+
+
+--------
+design the REST api for todos-management system
+--------
+
+1. know the resource(s) and their relationships
+   - Resources: Todo , User, Project
+   - Relationships:
+     - User can have many Todos (one-to-many)
+     - Project can have many Todos (one-to-many)
+     - Todo belongs to one User and one Project (many-to-one)
+2. define the endpoints for each resource
+   - User Endpoints:
+     - POST /api/v1/users : create a new user
+     - GET /api/v1/users : get all users
+     - GET /api/v1/users/{id} : get user by id
+     - PUT /api/v1/users/{id} : update user by id
+     - DELETE /api/v1/users/{id} : delete user by id
+   - Project Endpoints:
+     - POST /api/v1/projects : create a new project
+     - GET /api/v1/projects : get all projects
+     - GET /api/v1/projects/{id} : get project by id
+     - PUT /api/v1/projects/{id} : update project by id
+     - DELETE /api/v1/projects/{id} : delete project by id    
+   - Todo Endpoints:
+     - POST /api/v1/todos : create a new todo
+     - GET /api/v1/todos : get all todos
+     - GET /api/v1/todos/{id} : get todo by id
+     - PUT /api/v1/todos/{id} : update todo by id
+     - DELETE /api/v1/todos/{id} : delete todo by id
+     - GET /api/v1/users/{userId}/todos : get all todos for a specific user
+     - GET /api/v1/projects/{projectId}/todos : get all todos for a specific project
+3. define the request and response formats (JSON)
+   - User JSON:
+     {
+       "id": 1,
+       "name": "John Doe",
+       "email": "j@example.com",
+     }
+   - Project JSON:
+     {
+       "id": 1,
+       "name": "Project Alpha",
+       "description": "First project"
+     }
+   - Todo JSON:
+     {
+       "id": 1,
+       "title": "Buy groceries",
+       "description": "Milk, Bread, Eggs",
+       "completed": false,
+       "userId": 1,
+       "projectId": 1
+     }
+4. consider pagination, filtering, and sorting for list endpoints
+   - GET /api/v1/todos?completed=false&page=0&size=10
+   - GET /api/v1/todos?userId=1&sort=title,asc
+5. implement authentication and authorization if needed (e.g., JWT, OAuth2)
+   - POST /api/v1/auth/login : authenticate user and return JWT token
+   - Secure endpoints with @PreAuthorize or @Secured annotations 

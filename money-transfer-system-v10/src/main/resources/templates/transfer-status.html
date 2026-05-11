@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <title>MTS - Transfer Successful</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f0f1a; --surface: #161625; --surface2: #1c1c30;
+            --border: #2a2a45; --text: #e2e4f0; --text-dim: #8888a8;
+            --green: #6ee7b7; --blue: #60a5fa; --purple: #a78bfa; --teal: #2dd4bf;
+        }
+        body {
+            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 100px 20px 40px;
+        }
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            display: flex; align-items: center; gap: 24px;
+            padding: 16px 40px; background: rgba(15,15,26,0.9); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border); z-index: 10;
+        }
+        .nav a { color: var(--text-dim); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .nav a:hover { color: var(--green); }
+        .nav .logo {
+            font-size: 1.4rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-right: auto;
+        }
+
+        .success-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+            padding: 48px 40px; max-width: 520px; width: 100%; text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .check-circle {
+            width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--green), var(--teal));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; color: var(--bg);
+            animation: pop 0.5s ease;
+        }
+        @keyframes pop {
+            0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); }
+        }
+        .success-card h1 {
+            font-size: 1.8rem; font-weight: 800; margin-bottom: 12px;
+            color: var(--green);
+        }
+        .success-card .message {
+            color: var(--text-dim); font-size: 1rem; margin-bottom: 32px; line-height: 1.6;
+        }
+
+        .actions { display: flex; gap: 12px; justify-content: center; }
+        .btn {
+            padding: 14px 28px; border-radius: 14px; font-family: 'Inter', sans-serif;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer; text-decoration: none;
+            transition: all 0.3s; border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--green), var(--teal));
+            color: var(--bg);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(110,231,183,0.25); }
+        .btn-secondary {
+            background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim);
+        }
+        .btn-secondary:hover { border-color: var(--purple); color: var(--purple); }
+    </style>
+</head>
+<body>
+
+<div class="nav">
+    <a href="/" class="logo">MTS</a>
+    <a href="/transfer">Transfer</a>
+    <a href="/transfer-history">History</a>
+</div>
+
+<div class="success-card">
+    <div class="check-circle">&#10003;</div>
+    <h1>Transfer Successful</h1>
+    <p class="message" th:text="${successMessage}">Transfer completed successfully.</p>
+    <div class="actions">
+        <a href="/transfer" class="btn btn-primary">New Transfer</a>
+        <a href="/transfer-history" class="btn btn-secondary">View History</a>
+    </div>
+</div>
+
+</body>
+</html>

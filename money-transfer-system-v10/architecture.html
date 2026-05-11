@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Money Transfer System v9 - Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #0f0f1a; --surface: #161625; --surface2: #1c1c30;
+    --border: #2a2a45; --text: #e2e4f0; --text-dim: #8888a8;
+    --green: #6ee7b7; --blue: #60a5fa; --purple: #a78bfa; --pink: #f472b6;
+    --yellow: #fbbf24; --orange: #fb923c; --red: #f87171; --teal: #2dd4bf;
+    --cyan: #22d3ee; --accent: #22d3ee; --accent2: #818cf8;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--purple)); z-index: 1000; transition: width 0.4s; }
+#slide-counter { position: fixed; top: 14px; right: 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-dim); z-index: 1000; background: var(--surface2); padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border); }
+#nav-dots { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 7px; z-index: 1000; }
+.nav-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); cursor: pointer; border: none; padding: 0; transition: all 0.3s; }
+.nav-dot.active { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); transform: scale(1.3); }
+.nav-dot:hover { background: var(--blue); }
+.deck { position: relative; width: 100vw; height: 100vh; }
+.slide { position: absolute; inset: 0; padding: 56px 72px; opacity: 0; transform: translateX(50px); transition: opacity 0.5s, transform 0.5s; pointer-events: none; overflow-y: auto; display: flex; flex-direction: column; }
+.slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+.slide.prev { transform: translateX(-50px); }
+.slide::-webkit-scrollbar { width: 5px; } .slide::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 8px; line-height: 1.1; }
+h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; }
+h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+p, li { font-size: 0.92rem; line-height: 1.7; color: var(--text-dim); }
+.gradient-text { background: linear-gradient(135deg, var(--cyan), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.subtitle { font-size: 1.15rem; color: var(--text-dim); margin-bottom: 28px; }
+.tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; justify-content: center; }
+.tag { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; padding: 5px 14px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--border); color: var(--cyan); }
+.kw { color: var(--purple); } .ty { color: var(--blue); } .an { color: var(--yellow); } .st { color: var(--green); } .cm { color: var(--text-dim); }
+.hl-green { border-left: 3px solid var(--green); background: rgba(110,231,183,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 5px 0; }
+.hl-yellow { border-left: 3px solid var(--yellow); background: rgba(251,191,36,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 5px 0; }
+.hl-blue { border-left: 3px solid var(--blue); background: rgba(96,165,250,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 5px 0; }
+.hl-pink { border-left: 3px solid var(--pink); background: rgba(244,114,182,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 5px 0; }
+.hl-red { border-left: 3px solid var(--red); background: rgba(248,113,113,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 5px 0; }
+.hl-cyan { border-left: 3px solid var(--cyan); background: rgba(34,211,238,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 5px 0; }
+.hl-purple { border-left: 3px solid var(--purple); background: rgba(167,139,250,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 5px 0; }
+.hl-orange { border-left: 3px solid var(--orange); background: rgba(251,146,60,0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 5px 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; transition: border-color 0.3s, transform 0.2s; }
+.card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+.code-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.8; overflow-x: auto; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+.flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+.flow-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; font-weight: 600; font-size: 0.85rem; text-align: center; }
+.flow-arrow { font-size: 1.3rem; color: var(--text-dim); padding: 0 8px; }
+.mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; } .mb-32 { margin-bottom: 32px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
+.small { font-size: 0.82rem; } .mono { font-family: 'JetBrains Mono', monospace; }
+.inline-code { font-family: 'JetBrains Mono', monospace; background: var(--surface2); padding: 2px 8px; border-radius: 6px; font-size: 0.82rem; border: 1px solid var(--border); }
+.timeline { display: flex; align-items: center; justify-content: center; gap: 0; margin: 28px 0; flex-wrap: wrap; }
+.timeline-node { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.timeline-circle { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.75rem; border: 2px solid var(--border); background: var(--surface); color: var(--text-dim); }
+.timeline-circle.highlight { border-color: var(--cyan); background: linear-gradient(135deg, var(--cyan), var(--purple)); color: var(--bg); box-shadow: 0 0 16px rgba(34,211,238,0.3); }
+.timeline-label { font-size: 0.68rem; color: var(--text-dim); text-align: center; max-width: 70px; }
+.timeline-line { width: 24px; height: 2px; background: var(--border); margin-bottom: 24px; }
+.arch-layer { display: flex; justify-content: center; gap: 14px; margin: 6px 0; flex-wrap: wrap; }
+.arch-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.82rem; font-weight: 600; text-align: center; min-width: 120px; }
+.arch-arrow-down { text-align: center; font-size: 1.2rem; color: var(--text-dim); margin: 3px 0; }
+.cmp-table { width: 100%; max-width: 950px; border-collapse: separate; border-spacing: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
+.cmp-table th { background: var(--surface2); padding: 12px 18px; font-size: 0.78rem; font-weight: 700; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+.cmp-table td { background: var(--surface); padding: 11px 18px; font-size: 0.82rem; border-top: 1px solid var(--border); color: var(--text-dim); }
+.cmp-table td:first-child { color: var(--text); font-family: 'Inter', sans-serif; font-weight: 500; }
+.cmp-table tr:hover td { background: var(--surface2); }
+.card-icon { font-size: 1.6rem; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+<div id="nav-dots"></div>
+
+<div class="deck">
+
+<!-- SLIDE 1: Title -->
+<div class="slide active">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+    <p class="mono small mb-16" style="color:var(--cyan);">v9</p>
+    <h1 style="font-size:3.2rem;" class="mb-16"><span class="gradient-text">Money Transfer System v9</span></h1>
+    <p class="subtitle" style="max-width:650px;">Spring Web MVC | Thymeleaf | Validation | Exception Handling</p>
+    <div class="tags">
+      <span class="tag">@Controller</span> <span class="tag">@GetMapping</span> <span class="tag">@PostMapping</span>
+      <span class="tag">Thymeleaf</span> <span class="tag">@Valid</span> <span class="tag">BindingResult</span>
+      <span class="tag">@ControllerAdvice</span> <span class="tag">PRG Pattern</span>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: Evolution -->
+<div class="slide">
+  <h2><span class="gradient-text">Evolution</span> Timeline</h2>
+  <p class="mb-32" style="color:var(--text-dim);">From raw Java to a full web application</p>
+  <div class="timeline">
+    <div class="timeline-node"><div class="timeline-circle">v1</div><div class="timeline-label">Problems</div></div><div class="timeline-line"></div>
+    <div class="timeline-node"><div class="timeline-circle">v2</div><div class="timeline-label">DI</div></div><div class="timeline-line"></div>
+    <div class="timeline-node"><div class="timeline-circle">v3</div><div class="timeline-label">Spring DI</div></div><div class="timeline-line"></div>
+    <div class="timeline-node"><div class="timeline-circle">v4</div><div class="timeline-label">AOP</div></div><div class="timeline-line"></div>
+    <div class="timeline-node"><div class="timeline-circle">v5</div><div class="timeline-label">JDBC</div></div><div class="timeline-line"></div>
+    <div class="timeline-node"><div class="timeline-circle">v6</div><div class="timeline-label">Boot</div></div><div class="timeline-line"></div>
+    <div class="timeline-node"><div class="timeline-circle">v7</div><div class="timeline-label">Config</div></div><div class="timeline-line"></div>
+    <div class="timeline-node"><div class="timeline-circle">v8</div><div class="timeline-label">JPA</div></div>
+    <div class="timeline-line" style="background:var(--cyan);"></div>
+    <div class="timeline-node"><div class="timeline-circle highlight">v9</div><div class="timeline-label" style="color:var(--cyan);font-weight:700;">Web MVC</div></div>
+  </div>
+  <div class="mt-24" style="max-width:700px;margin:0 auto;">
+    <div class="hl-cyan"><strong style="color:var(--cyan);">v9 Focus:</strong> <span style="color:var(--text);">Add a web UI with <span class="inline-code">@Controller</span>, <span class="inline-code">Thymeleaf</span> templates, form validation with <span class="inline-code">@Valid</span> + <span class="inline-code">BindingResult</span>, PRG pattern, and centralized exception handling with <span class="inline-code">@ControllerAdvice</span>.</span></div>
+  </div>
+</div>
+
+<!-- SLIDE 3: What's New -->
+<div class="slide">
+  <h2><span class="gradient-text">What's New</span> in v9</h2>
+  <p class="mb-24" style="color:var(--text-dim);">From command-line to browser — seven additions</p>
+  <div class="grid-4">
+    <div class="card"><div class="card-icon">&#127760;</div><h3 style="color:var(--cyan);">@Controller</h3><p class="small">Spring Web MVC controller returning Thymeleaf views</p></div>
+    <div class="card"><div class="card-icon">&#128196;</div><h3 style="color:var(--green);">Thymeleaf</h3><p class="small">Server-side template engine for HTML rendering</p></div>
+    <div class="card"><div class="card-icon">&#128230;</div><h3 style="color:var(--blue);">DTOs</h3><p class="small">TransferRequestDto + TransferResponseDto separate web from domain</p></div>
+    <div class="card"><div class="card-icon">&#9989;</div><h3 style="color:var(--yellow);">@Valid</h3><p class="small">Bean Validation — @NotBlank, @NotNull, @Positive + BindingResult</p></div>
+    <div class="card"><div class="card-icon">&#128260;</div><h3 style="color:var(--purple);">PRG Pattern</h3><p class="small">Post/Redirect/Get prevents duplicate form submissions</p></div>
+    <div class="card"><div class="card-icon">&#9888;</div><h3 style="color:var(--red);">@ControllerAdvice</h3><p class="small">Global exception handling — redirects with flash error messages</p></div>
+    <div class="card"><div class="card-icon">&#128295;</div><h3 style="color:var(--orange);">@InitBinder</h3><p class="small">Custom type conversion — empty string to null for Double fields</p></div>
+    <div class="card"><div class="card-icon">&#128202;</div><h3 style="color:var(--pink);">History Page</h3><p class="small">Transaction history search with Thymeleaf table rendering</p></div>
+  </div>
+</div>
+
+<!-- SLIDE 4: MVC Flow -->
+<div class="slide">
+  <h2><span class="gradient-text">Spring Web MVC</span> Request Flow</h2>
+  <p class="mb-24" style="color:var(--text-dim);">How a browser request becomes an HTML response</p>
+  <div class="flow mb-24">
+    <div class="flow-box" style="border-color:var(--cyan);">&#127760; <span style="color:var(--cyan);">Browser</span></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box" style="border-color:var(--purple);"><span style="color:var(--purple);">DispatcherServlet</span></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box" style="border-color:var(--blue);">&#9881; <span style="color:var(--blue);">@Controller</span></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box" style="border-color:var(--green);">&#128230; <span style="color:var(--green);">Model</span></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box" style="border-color:var(--orange);">&#128196; <span style="color:var(--orange);">Thymeleaf</span></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box" style="border-color:var(--cyan);">&#127760; <span style="color:var(--cyan);">HTML</span></div>
+  </div>
+  <div class="grid-2" style="max-width:900px;margin:0 auto;">
+    <div class="code-box"><span class="an">@GetMapping</span>(<span class="st">"/transfer"</span>)<br><span class="kw">public</span> <span class="ty">String</span> showForm(<span class="ty">Model</span> model) {<br>&nbsp;&nbsp;model.addAttribute(<span class="st">"transferRequest"</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">new</span> <span class="ty">TransferRequestDto</span>());<br>&nbsp;&nbsp;<span class="kw">return</span> <span class="st">"transfer-form"</span>;<br>&nbsp;&nbsp;<span class="cm">// resolves to templates/transfer-form.html</span><br>}</div>
+    <div>
+      <div class="hl-cyan mb-8"><p class="small" style="color:var(--text);"><strong>@Controller</strong> — returns view names (not data)</p></div>
+      <div class="hl-blue mb-8"><p class="small" style="color:var(--text);"><strong>Model</strong> — passes data to the template</p></div>
+      <div class="hl-green mb-8"><p class="small" style="color:var(--text);"><strong>Thymeleaf</strong> — renders HTML from template + model</p></div>
+      <div class="hl-purple"><p class="small" style="color:var(--text);"><strong>@Controller vs @RestController</strong><br>@Controller = view names<br>@RestController = JSON data directly</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: Validation -->
+<div class="slide">
+  <h2><span class="gradient-text">Bean Validation</span> &mdash; @Valid + BindingResult</h2>
+  <p class="mb-24" style="color:var(--text-dim);">Server-side validation with inline error messages</p>
+  <div class="grid-2" style="max-width:950px;margin:0 auto;">
+    <div>
+      <h3 style="color:var(--yellow);" class="mb-8">TransferRequestDto</h3>
+      <div class="code-box"><span class="an">@NotBlank</span>(message = <span class="st">"From account is required"</span>)<br><span class="kw">private</span> <span class="ty">String</span> fromAccountNumber;<br><br><span class="an">@NotBlank</span>(message = <span class="st">"To account is required"</span>)<br><span class="kw">private</span> <span class="ty">String</span> toAccountNumber;<br><br><span class="an">@NotNull</span>(message = <span class="st">"Amount is required"</span>)<br><span class="an">@Positive</span>(message = <span class="st">"Amount must be > 0"</span>)<br><span class="kw">private</span> <span class="ty">Double</span> amount; <span class="cm">// wrapper!</span></div>
+    </div>
+    <div>
+      <h3 style="color:var(--blue);" class="mb-8">Controller</h3>
+      <div class="code-box"><span class="an">@PostMapping</span>(<span class="st">"/transfer"</span>)<br><span class="kw">public</span> <span class="ty">String</span> process(<br>&nbsp;&nbsp;<span class="an">@Valid</span> <span class="an">@ModelAttribute</span> <span class="ty">TransferRequestDto</span> req,<br>&nbsp;&nbsp;<span class="ty">BindingResult</span> result) {<br><br>&nbsp;&nbsp;<span class="kw">if</span> (result.hasErrors()) {<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="st">"transfer-form"</span>;<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// re-render with errors</span><br>&nbsp;&nbsp;}<br>&nbsp;&nbsp;<span class="cm">// process transfer...</span><br>}</div>
+    </div>
+  </div>
+  <div class="grid-3 mt-24" style="max-width:950px;margin:0 auto;">
+    <div class="hl-yellow"><p class="small" style="color:var(--text);"><strong>@Valid</strong> triggers validation</p></div>
+    <div class="hl-blue"><p class="small" style="color:var(--text);"><strong>BindingResult</strong> must follow @Valid param</p></div>
+    <div class="hl-green"><p class="small" style="color:var(--text);"><strong>Return view</strong> directly (not redirect) to keep errors</p></div>
+  </div>
+</div>
+
+<!-- SLIDE 6: PRG Pattern -->
+<div class="slide">
+  <h2><span class="gradient-text">PRG Pattern</span> &mdash; Post/Redirect/Get</h2>
+  <p class="mb-24" style="color:var(--text-dim);">Prevents duplicate form submissions on browser refresh</p>
+  <div style="max-width:800px;margin:0 auto;">
+    <div class="flow mb-24">
+      <div class="flow-box" style="border-color:var(--yellow);"><span style="color:var(--yellow);">POST /transfer</span><br><span class="small" style="color:var(--text-dim);">Process form</span></div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-box" style="border-color:var(--purple);"><span style="color:var(--purple);">302 Redirect</span><br><span class="small" style="color:var(--text-dim);">redirect:/transfer/success</span></div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-box" style="border-color:var(--green);"><span style="color:var(--green);">GET /transfer/success</span><br><span class="small" style="color:var(--text-dim);">Show success page</span></div>
+    </div>
+    <div class="grid-2">
+      <div class="code-box"><span class="cm">// Controller — success path</span><br>redirectAttributes.addFlashAttribute(<br>&nbsp;&nbsp;<span class="st">"successMessage"</span>,<br>&nbsp;&nbsp;<span class="st">"Transferred 500 from A001 to A002"</span>);<br><span class="kw">return</span> <span class="st">"redirect:/transfer/success"</span>;</div>
+      <div>
+        <div class="hl-green mb-8"><p class="small" style="color:var(--text);"><strong>RedirectAttributes</strong> — flash attributes survive one redirect</p></div>
+        <div class="hl-yellow mb-8"><p class="small" style="color:var(--text);"><strong>User refreshes?</strong> Repeats GET (safe!) not POST</p></div>
+        <div class="hl-purple"><p class="small" style="color:var(--text);"><strong>Flash attributes</strong> auto-removed after consumption</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: Exception Handling -->
+<div class="slide">
+  <h2><span class="gradient-text">@ControllerAdvice</span> &mdash; Global Exception Handling</h2>
+  <p class="mb-24" style="color:var(--text-dim);">Centralized error handling for all controllers</p>
+  <div class="grid-2" style="max-width:950px;margin:0 auto;">
+    <div class="code-box" style="font-size:0.78rem;"><span class="an">@ControllerAdvice</span><br><span class="kw">public class</span> <span class="ty">GlobalExceptionHandler</span> {<br><br>&nbsp;&nbsp;<span class="an">@ExceptionHandler</span>(<span class="ty">AccountNotFoundException</span>.<span class="kw">class</span>)<br>&nbsp;&nbsp;<span class="kw">public</span> <span class="ty">String</span> handle(<span class="ty">AccountNotFoundException</span> ex,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">RedirectAttributes</span> ra) {<br>&nbsp;&nbsp;&nbsp;&nbsp;ra.addFlashAttribute(<span class="st">"errorMessage"</span>, ex.getMessage());<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="st">"redirect:/transfer"</span>;<br>&nbsp;&nbsp;}<br><br>&nbsp;&nbsp;<span class="an">@ExceptionHandler</span>(<span class="ty">InsufficientBalanceException</span>.<span class="kw">class</span>)<br>&nbsp;&nbsp;<span class="cm">// ... same pattern</span><br><br>&nbsp;&nbsp;<span class="an">@ExceptionHandler</span>(<span class="ty">BindException</span>.<span class="kw">class</span>)<br>&nbsp;&nbsp;<span class="cm">// ... extracts field errors</span><br><br>&nbsp;&nbsp;<span class="an">@ExceptionHandler</span>(<span class="ty">Exception</span>.<span class="kw">class</span>)<br>&nbsp;&nbsp;<span class="cm">// ... generic fallback</span><br>}</div>
+    <div>
+      <div class="hl-red mb-8"><p class="small" style="color:var(--text);"><strong>AccountNotFoundException</strong> &rarr; flash error &rarr; redirect to form</p></div>
+      <div class="hl-orange mb-8"><p class="small" style="color:var(--text);"><strong>InsufficientBalanceException</strong> &rarr; flash error &rarr; redirect to form</p></div>
+      <div class="hl-yellow mb-8"><p class="small" style="color:var(--text);"><strong>BindException</strong> &rarr; extracts field error messages &rarr; redirect</p></div>
+      <div class="hl-pink mb-8"><p class="small" style="color:var(--text);"><strong>Exception</strong> &rarr; generic fallback &rarr; "unexpected error"</p></div>
+      <div class="hl-cyan mt-24"><p class="small" style="color:var(--text);"><strong>Order matters:</strong> Most specific exceptions first, generic Exception last. Spring matches the most specific handler.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: @InitBinder -->
+<div class="slide">
+  <h2><span class="gradient-text">@InitBinder</span> &mdash; Custom Type Conversion</h2>
+  <p class="mb-24" style="color:var(--text-dim);">Why empty string &rarr; Double fails, and how to fix it</p>
+  <div class="grid-2" style="max-width:900px;margin:0 auto;">
+    <div class="card" style="border-color:rgba(248,113,113,0.3);">
+      <h3 style="color:var(--red);" class="mb-8">The Problem</h3>
+      <div class="code-box small">HTML: &lt;input type="number" value=""&gt;<br>Browser sends: amount=<br>Spring tries: "" &rarr; <span class="ty">Double</span><br><span style="color:var(--red);">NumberFormatException!</span><br><br><span class="cm">Controller never runs.</span><br><span class="cm">@ExceptionHandler(Exception.class) catches it.</span><br><span class="cm">User sees: "unexpected error"</span></div>
+    </div>
+    <div class="card" style="border-color:rgba(110,231,183,0.3);">
+      <h3 style="color:var(--green);" class="mb-8">The Fix</h3>
+      <div class="code-box small"><span class="an">@InitBinder</span><br><span class="kw">public void</span> initBinder(<span class="ty">WebDataBinder</span> binder) {<br>&nbsp;&nbsp;binder.registerCustomEditor(<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">Double</span>.<span class="kw">class</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">new</span> <span class="ty">CustomNumberEditor</span>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ty">Double</span>.<span class="kw">class</span>, <span class="st">true</span>));<br>&nbsp;&nbsp;<span class="cm">// true = allow empty</span><br>}</div>
+      <div class="hl-green mt-16"><p class="small" style="color:var(--text);">Now: "" &rarr; null &rarr; @NotNull catches it &rarr; "Amount is required"</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: v8 vs v9 -->
+<div class="slide">
+  <h2><span class="gradient-text">v8 vs v9</span> &mdash; Side by Side</h2>
+  <p class="mb-24" style="color:var(--text-dim);">From command-line to web browser</p>
+  <table class="cmp-table" style="margin:0 auto;">
+    <thead><tr><th style="width:25%;">Concern</th><th style="width:37%;color:var(--orange);">v8 (CLI)</th><th style="width:38%;color:var(--cyan);">v9 (Web)</th></tr></thead>
+    <tbody>
+      <tr><td>User Interface</td><td style="color:var(--orange);">main() + console output</td><td style="color:var(--cyan);">Browser + Thymeleaf HTML</td></tr>
+      <tr><td>Entry Point</td><td style="color:var(--orange);">SpringApplication.run() + getBean()</td><td style="color:var(--cyan);">@Controller handles HTTP requests</td></tr>
+      <tr><td>Starters</td><td style="color:var(--orange);">spring-boot-starter-data-jpa</td><td style="color:var(--cyan);">+ starter-web + starter-thymeleaf + starter-validation</td></tr>
+      <tr><td>Input</td><td style="color:var(--orange);">Hardcoded in main()</td><td style="color:var(--cyan);">HTML form &rarr; TransferRequestDto</td></tr>
+      <tr><td>Validation</td><td style="color:var(--orange);">Service-layer checks only</td><td style="color:var(--cyan);">@Valid + BindingResult + inline errors</td></tr>
+      <tr><td>Error Handling</td><td style="color:var(--orange);">Exceptions logged to console</td><td style="color:var(--cyan);">@ControllerAdvice &rarr; flash error messages</td></tr>
+      <tr><td>Output</td><td style="color:var(--orange);">Logger output in terminal</td><td style="color:var(--cyan);">Success page + transaction history table</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SLIDE 10: Architecture -->
+<div class="slide">
+  <h2><span class="gradient-text">v9 Architecture</span></h2>
+  <p class="mb-16" style="color:var(--text-dim);">Full-stack web application with validation and exception handling</p>
+  <div style="max-width:900px;margin:0 auto;">
+    <div class="arch-layer">
+      <div class="arch-box" style="border-color:var(--cyan);background:rgba(34,211,238,0.06);min-width:400px;">
+        <span style="color:var(--cyan);">&#127760; Browser</span><br><span class="small" style="color:var(--text-dim);">index.html | transfer-form | transfer-status | transfer-history</span>
+      </div>
+    </div>
+    <div class="arch-arrow-down">&darr; HTTP GET/POST</div>
+    <div class="grid-2" style="gap:14px;">
+      <div class="arch-box" style="border:2px solid var(--blue);background:rgba(96,165,250,0.06);">
+        <span style="color:var(--blue);">TransferController</span><br>
+        <span class="small" style="color:var(--text-dim);">@Controller @Valid @InitBinder</span><br>
+        <span class="small" style="color:var(--text-dim);">GET/POST /transfer | /transfer-history</span>
+      </div>
+      <div class="arch-box" style="border:2px solid var(--red);background:rgba(248,113,113,0.06);">
+        <span style="color:var(--red);">GlobalExceptionHandler</span><br>
+        <span class="small" style="color:var(--text-dim);">@ControllerAdvice @ExceptionHandler</span><br>
+        <span class="small" style="color:var(--text-dim);">AccountNotFound | InsufficientBalance</span>
+      </div>
+    </div>
+    <div class="arch-arrow-down">&darr;</div>
+    <div class="arch-layer">
+      <div class="arch-box" style="border-color:var(--green);">
+        <span style="color:var(--green);">TransferServiceImpl</span><br><span class="small" style="color:var(--text-dim);">@Service @Transactional</span>
+      </div>
+      <div class="arch-box" style="border-color:var(--pink);">
+        <span style="color:var(--pink);">FooService</span><br><span class="small" style="color:var(--text-dim);">Propagation.REQUIRED</span>
+      </div>
+    </div>
+    <div class="arch-arrow-down">&darr;</div>
+    <div class="arch-layer">
+      <div class="arch-box" style="border-color:var(--teal);"><span style="color:var(--teal);">AccountRepository</span><br><span class="small" style="color:var(--text-dim);">JpaRepository</span></div>
+      <div class="arch-box" style="border-color:var(--teal);"><span style="color:var(--teal);">TransactionRepository</span><br><span class="small" style="color:var(--text-dim);">JpaRepository + @Query</span></div>
+    </div>
+    <div class="arch-arrow-down">&darr;</div>
+    <div class="arch-layer">
+      <div class="arch-box" style="border-color:var(--text-dim);"><span style="color:var(--text-dim);">PostgreSQL</span><br><span class="small" style="color:var(--text-dim);">accounts + transactions</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: Thymeleaf Key Features -->
+<div class="slide">
+  <h2><span class="gradient-text">Thymeleaf</span> Key Attributes</h2>
+  <p class="mb-24" style="color:var(--text-dim);">Template engine syntax reference</p>
+  <table class="cmp-table" style="margin:0 auto;max-width:900px;">
+    <thead><tr><th>Attribute</th><th>Purpose</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--cyan);">th:action</td><td>Form action URL</td><td class="mono small">th:action="@{/transfer}"</td></tr>
+      <tr><td style="color:var(--green);">th:object</td><td>Bind form to DTO</td><td class="mono small">th:object="${transferRequest}"</td></tr>
+      <tr><td style="color:var(--blue);">th:field</td><td>Bind input to field</td><td class="mono small">th:field="*{amount}"</td></tr>
+      <tr><td style="color:var(--yellow);">th:text</td><td>Output text</td><td class="mono small">th:text="${successMessage}"</td></tr>
+      <tr><td style="color:var(--purple);">th:if</td><td>Conditional rendering</td><td class="mono small">th:if="${errorMessage}"</td></tr>
+      <tr><td style="color:var(--pink);">th:each</td><td>Loop iteration</td><td class="mono small">th:each="tx : ${transactions}"</td></tr>
+      <tr><td style="color:var(--red);">th:errors</td><td>Validation errors</td><td class="mono small">th:errors="*{amount}"</td></tr>
+      <tr><td style="color:var(--orange);">th:classappend</td><td>Conditional CSS class</td><td class="mono small">th:classappend="${err} ? 'error'"</td></tr>
+    </tbody>
+  </table>
+  <div class="grid-3 mt-24" style="max-width:900px;margin:0 auto;">
+    <div class="hl-cyan"><p class="small" style="color:var(--text);"><strong>@{...}</strong> URL expressions</p></div>
+    <div class="hl-green"><p class="small" style="color:var(--text);"><strong>${...}</strong> Variable expressions</p></div>
+    <div class="hl-blue"><p class="small" style="color:var(--text);"><strong>*{...}</strong> Selection expressions</p></div>
+  </div>
+</div>
+
+<!-- SLIDE 12: All Annotations -->
+<div class="slide">
+  <h2><span class="gradient-text">All Annotations</span> &mdash; v1 through v9</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;max-width:1100px;width:100%;">
+    <div class="card" style="padding:14px;border-color:rgba(110,231,183,0.3);"><h3 style="color:var(--green);font-size:0.75rem;">DI &amp; Wiring</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--yellow);">@Bean @Component @Autowired @Primary @Qualifier</p></div>
+    <div class="card" style="padding:14px;border-color:rgba(96,165,250,0.3);"><h3 style="color:var(--blue);font-size:0.75rem;">Stereotypes</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--yellow);">@Repository @Service @Controller @Configuration</p></div>
+    <div class="card" style="padding:14px;border-color:rgba(167,139,250,0.3);"><h3 style="color:var(--purple);font-size:0.75rem;">Configuration</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--yellow);">@Value @PropertySource @Profile @Conditional</p></div>
+    <div class="card" style="padding:14px;border-color:rgba(251,146,60,0.3);"><h3 style="color:var(--orange);font-size:0.75rem;">JPA Entities</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--teal);">@Entity @Table @Id @Column @GeneratedValue @ManyToOne @JoinColumn</p></div>
+    <div class="card" style="padding:14px;border-color:rgba(251,191,36,0.3);"><h3 style="color:var(--yellow);font-size:0.75rem;">Transactions</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--text-dim);">@Transactional isolation rollbackFor propagation</p></div>
+    <div class="card" style="padding:14px;border-color:rgba(244,114,182,0.3);"><h3 style="color:var(--pink);font-size:0.75rem;">Auto-Config</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--yellow);">@ConditionalOnProperty @ConditionalOnClass @ConditionalOnBean</p></div>
+    <div class="card" style="padding:14px;border:2px solid var(--cyan);background:rgba(34,211,238,0.04);"><h3 style="color:var(--cyan);font-size:0.75rem;">Web MVC (v9)</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--cyan);">@Controller @GetMapping @PostMapping @ModelAttribute @RequestParam @InitBinder</p></div>
+    <div class="card" style="padding:14px;border:2px solid var(--yellow);background:rgba(251,191,36,0.04);"><h3 style="color:var(--yellow);font-size:0.75rem;">Validation (v9)</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--yellow);">@Valid @NotBlank @NotNull @Positive BindingResult</p></div>
+    <div class="card" style="padding:14px;border:2px solid var(--red);background:rgba(248,113,113,0.04);"><h3 style="color:var(--red);font-size:0.75rem;">Exception Handling (v9)</h3><p class="mono" style="font-size:0.7rem;line-height:1.8;color:var(--red);">@ControllerAdvice @ExceptionHandler BindException</p></div>
+  </div>
+</div>
+
+<!-- SLIDE 13: Summary -->
+<div class="slide">
+  <h2><span class="gradient-text">Summary</span></h2>
+  <p class="mb-24" style="color:var(--text-dim);">v9 completes the journey to a full web application</p>
+  <div class="grid-4" style="gap:14px;max-width:1000px;margin:0 auto;">
+    <div class="card" style="padding:16px;text-align:center;"><div style="font-size:1.3rem;margin-bottom:6px;">&#127760;</div><h3 style="color:var(--cyan);font-size:0.8rem;">@Controller</h3><p class="small" style="color:var(--text-dim);font-size:0.72rem;">Web MVC returning views</p></div>
+    <div class="card" style="padding:16px;text-align:center;"><div style="font-size:1.3rem;margin-bottom:6px;">&#128196;</div><h3 style="color:var(--green);font-size:0.8rem;">Thymeleaf</h3><p class="small" style="color:var(--text-dim);font-size:0.72rem;">Server-side HTML templates</p></div>
+    <div class="card" style="padding:16px;text-align:center;"><div style="font-size:1.3rem;margin-bottom:6px;">&#9989;</div><h3 style="color:var(--yellow);font-size:0.8rem;">@Valid</h3><p class="small" style="color:var(--text-dim);font-size:0.72rem;">Bean validation + BindingResult</p></div>
+    <div class="card" style="padding:16px;text-align:center;"><div style="font-size:1.3rem;margin-bottom:6px;">&#128260;</div><h3 style="color:var(--purple);font-size:0.8rem;">PRG</h3><p class="small" style="color:var(--text-dim);font-size:0.72rem;">RedirectAttributes flash</p></div>
+    <div class="card" style="padding:16px;text-align:center;"><div style="font-size:1.3rem;margin-bottom:6px;">&#9888;</div><h3 style="color:var(--red);font-size:0.8rem;">@ControllerAdvice</h3><p class="small" style="color:var(--text-dim);font-size:0.72rem;">Global exception handling</p></div>
+    <div class="card" style="padding:16px;text-align:center;"><div style="font-size:1.3rem;margin-bottom:6px;">&#128295;</div><h3 style="color:var(--orange);font-size:0.8rem;">@InitBinder</h3><p class="small" style="color:var(--text-dim);font-size:0.72rem;">Custom type conversion</p></div>
+    <div class="card" style="padding:16px;text-align:center;"><div style="font-size:1.3rem;margin-bottom:6px;">&#128230;</div><h3 style="color:var(--blue);font-size:0.8rem;">DTOs</h3><p class="small" style="color:var(--text-dim);font-size:0.72rem;">Separate web from domain</p></div>
+    <div class="card" style="padding:16px;text-align:center;"><div style="font-size:1.3rem;margin-bottom:6px;">&#128202;</div><h3 style="color:var(--pink);font-size:0.8rem;">History</h3><p class="small" style="color:var(--text-dim);font-size:0.72rem;">Transaction history page</p></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:24px;">
+    <span style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:var(--red);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:600;">v1</span><span class="small" style="color:var(--text-dim);">&rarr;</span>
+    <span style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);color:var(--orange);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:600;">v2</span><span class="small" style="color:var(--text-dim);">&rarr;</span>
+    <span style="background:rgba(110,231,183,0.1);border:1px solid rgba(110,231,183,0.3);color:var(--green);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:600;">v3</span><span class="small" style="color:var(--text-dim);">&rarr;</span>
+    <span style="background:rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.3);color:var(--accent2);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:600;">v4</span><span class="small" style="color:var(--text-dim);">&rarr;</span>
+    <span style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);color:var(--blue);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:600;">v5</span><span class="small" style="color:var(--text-dim);">&rarr;</span>
+    <span style="background:rgba(110,231,183,0.1);border:1px solid rgba(110,231,183,0.3);color:var(--green);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:600;">v6</span><span class="small" style="color:var(--text-dim);">&rarr;</span>
+    <span style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);color:var(--orange);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:600;">v7</span><span class="small" style="color:var(--text-dim);">&rarr;</span>
+    <span style="background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.3);color:var(--teal);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:600;">v8</span><span class="small" style="color:var(--text-dim);">&rarr;</span>
+    <span style="background:rgba(34,211,238,0.15);border:2px solid var(--cyan);color:var(--cyan);padding:4px 10px;border-radius:16px;font-size:0.72rem;font-weight:800;">v9 Web</span>
+  </div>
+</div>
+
+</div><!-- end .deck -->
+
+<script>
+(function() {
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let cur = 0;
+    const dots = document.getElementById('nav-dots');
+    slides.forEach((_, i) => { const d = document.createElement('button'); d.className = 'nav-dot' + (i===0?' active':''); d.addEventListener('click', () => go(i)); dots.appendChild(d); });
+    function ui() {
+        slides.forEach((s, i) => { s.classList.remove('active','prev'); if(i===cur) s.classList.add('active'); else if(i<cur) s.classList.add('prev'); });
+        document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i===cur));
+        document.getElementById('progress-bar').style.width = (cur/(total-1))*100+'%';
+        document.getElementById('slide-counter').textContent = (cur+1)+' / '+total;
+    }
+    function go(n) { if(n>=0&&n<total){cur=n;ui();} }
+    document.addEventListener('keydown', e => {
+        if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();go(cur+1);}
+        if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1);}
+        if(e.key==='Home'){e.preventDefault();go(0);} if(e.key==='End'){e.preventDefault();go(total-1);}
+    });
+    let tx=0,ty=0;
+    document.addEventListener('touchstart',e=>{tx=e.changedTouches[0].screenX;ty=e.changedTouches[0].screenY;},{passive:true});
+    document.addEventListener('touchend',e=>{const dx=tx-e.changedTouches[0].screenX,dy=ty-e.changedTouches[0].screenY;if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50){dx>0?go(cur+1):go(cur-1);}},{passive:true});
+    ui();
+})();
+</script>
+</body>
+</html>
