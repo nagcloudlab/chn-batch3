@@ -33,3 +33,4 @@ microservices/cassandra-lab/cassandra-node-*/
 # Build output
 **/target/
 **/.mvn/
+*.pid
