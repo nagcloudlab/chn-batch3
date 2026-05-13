@@ -64,6 +64,12 @@ for %%B in (101 102 103) do (
         powershell -Command "(Get-Content '!CONF!') -replace '#advertised.listeners=PLAINTEXT://your.host.name:9092', 'advertised.listeners=PLAINTEXT://localhost:!PORT!' | Set-Content '!CONF!'"
         powershell -Command "(Get-Content '!CONF!') -replace 'log.dirs=/tmp/kafka-logs', 'log.dirs=C:/tmp/kafka-logs-%%B' | Set-Content '!CONF!'"
 
+        REM Patch ZooKeeper dataDir (only in broker 101, which runs ZooKeeper)
+        if "%%B"=="101" (
+            set "ZK_CONF=kafka-%%B\config\zookeeper.properties"
+            powershell -Command "(Get-Content '!ZK_CONF!') -replace 'dataDir=/tmp/zookeeper', 'dataDir=C:/tmp/zookeeper' | Set-Content '!ZK_CONF!'"
+        )
+
         echo   kafka-%%B: broker.id=%%B, port=!PORT!, advertised=localhost:!PORT!
     )
 )
