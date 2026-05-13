@@ -29,8 +29,6 @@ spring:
       hibernate:
         format_sql: true
 
-# Spring kafka Producer configuration:
-
   kafka:
     producer:
       bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
@@ -39,12 +37,10 @@ spring:
       properties:
         spring.json.add.type.headers: false
 
-# Cassandra configuration (uncomment when Cassandra is enabled)
-#  data:
-#    cassandra:
-#      contact-points: localhost:9042,localhost:9043,localhost:9044
-#      local-datacenter: datacenter1
-#      keyspace-name: mts
-#      schema-action: none
-#      request:
-#        consistency: LOCAL_QUORUM
+  cassandra:
+#    contact-points: localhost:9042,localhost:9043
+    local-datacenter: datacenter1
+    keyspace-name: mts
+    schema-action: none
+    request:
+      consistency: LOCAL_QUORUM

@@ -29,6 +29,7 @@ public class TransferEventConsumer {
 
         logger.info("All notifications sent for eventId={}", event.getEventId());
         logger.info("==========================================");
+        // commit offset
     }
 
     private void sendSmsNotification(TransferEvent event) {
