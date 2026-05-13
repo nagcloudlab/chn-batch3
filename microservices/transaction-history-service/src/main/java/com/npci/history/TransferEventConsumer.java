@@ -21,7 +21,7 @@ public class TransferEventConsumer {
         this.repository = repository;
     }
 
-    // @KafkaListener(topics = "transfer-events", groupId = "history-group")
+    @KafkaListener(topics = "transfer-events", groupId = "history-group")
     public void onTransferEvent(ConsumerRecord<String, TransferEvent> record) {
         TransferEvent event = record.value();
 

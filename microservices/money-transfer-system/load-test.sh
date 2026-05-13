@@ -3,7 +3,7 @@
 # Load test script for money transfer REST API
 # Generates 100 money transfer requests to test system performance
 
-BASE_URL="http://localhost:8181/api/v1/transfers"
+BASE_URL="http://localhost:9090/api/v1/transfers"
 COUNT=100
 DELAY=0.1  # Delay between requests in seconds (adjustable)
 
