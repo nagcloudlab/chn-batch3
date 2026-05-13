@@ -81,6 +81,7 @@ else
 
         sed -i '' "s|broker.id=0|broker.id=${BROKER_ID}|g" "$CONF"
         sed -i '' "s|#listeners=PLAINTEXT://:9092|listeners=PLAINTEXT://:${PORT}|g" "$CONF"
+        sed -i '' "s|#advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://localhost:${PORT}|g" "$CONF"
         sed -i '' "s|log.dirs=/tmp/kafka-logs|log.dirs=/tmp/kafka-logs-${BROKER_ID}|g" "$CONF"
 
         echo -e "${GREEN}  kafka-${BROKER_ID}: broker.id=${BROKER_ID}, port=${PORT}, logs=/tmp/kafka-logs-${BROKER_ID}${NC}"

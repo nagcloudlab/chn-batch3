@@ -61,9 +61,10 @@ for %%B in (101 102 103) do (
 
         powershell -Command "(Get-Content '!CONF!') -replace 'broker.id=0', 'broker.id=%%B' | Set-Content '!CONF!'"
         powershell -Command "(Get-Content '!CONF!') -replace '#listeners=PLAINTEXT://:9092', 'listeners=PLAINTEXT://:!PORT!' | Set-Content '!CONF!'"
+        powershell -Command "(Get-Content '!CONF!') -replace '#advertised.listeners=PLAINTEXT://your.host.name:9092', 'advertised.listeners=PLAINTEXT://localhost:!PORT!' | Set-Content '!CONF!'"
         powershell -Command "(Get-Content '!CONF!') -replace 'log.dirs=/tmp/kafka-logs', 'log.dirs=C:/tmp/kafka-logs-%%B' | Set-Content '!CONF!'"
 
-        echo   kafka-%%B: broker.id=%%B, port=!PORT!
+        echo   kafka-%%B: broker.id=%%B, port=!PORT!, advertised=localhost:!PORT!
     )
 )
 
