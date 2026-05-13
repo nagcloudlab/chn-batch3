@@ -1,34 +1,9 @@
-
-
-debug: true
-
 server:
   port: 8181
-
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: method
 
 spring:
   application:
     name: money-transfer-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/mydatabase
-    username: postgres
-    password: mysecretpassword
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
   kafka:
     producer:
       bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
@@ -42,10 +17,8 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka/
 
-  cassandra:
-#    contact-points: localhost:9042,localhost:9043
-    local-datacenter: datacenter1
-    keyspace-name: mts
-    schema-action: none
-    request:
-      consistency: LOCAL_QUORUM
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html

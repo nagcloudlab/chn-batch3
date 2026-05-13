@@ -1,20 +1,14 @@
 package com.npci.rest;
 
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.npci.dto.TransferRequestDto;
 import com.npci.dto.TransferResponseDto;
-import com.npci.entity.Transaction;
 import com.npci.service.TransferService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,8 +20,7 @@ import jakarta.validation.Valid;
 @Tag(name = "Transfers", description = "Money transfer endpoints")
 public class TransferApiController {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-            .getLogger(TransferApiController.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TransferApiController.class);
 
     private final TransferService transferService;
 
@@ -57,22 +50,6 @@ public class TransferApiController {
                 transferRequest.getToAccountNumber()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @GetMapping("/history")
-    @Operation(summary = "Get transaction history for an account")
-    public ResponseEntity<Map<String, Object>> getTransactionHistory(
-            @RequestParam String accountNumber) {
-        logger.info("Fetching transaction history for account: {}", accountNumber);
-
-        List<Transaction> transactions = transferService.getTransactionHistory(accountNumber);
-
-        Map<String, Object> response = Map.of(
-                "accountNumber", accountNumber,
-                "count", transactions.size(),
-                "transactions", transactions);
-
-        return ResponseEntity.ok(response);
     }
 
 }
