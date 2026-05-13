@@ -29,7 +29,7 @@ start "Kafka-103" /min cmd /c "cd /d %cd%\kafka-103 && bin\windows\kafka-server-
 timeout /t 5 /nobreak >nul
 
 echo [5/5] Starting Kafka UI on port 8080...
-start "Kafka-UI" /min cmd /c "cd /d %cd%\kafka-ui && java -Dspring.config.additional-location=application.yml -jar kafka-ui-api-v0.7.2.jar"
+start "Kafka-UI" /min cmd /c "cd /d %cd%\kafka-ui && java --add-opens java.rmi/javax.rmi.ssl=ALL-UNNAMED -Dspring.config.additional-location=application.yml -jar kafka-ui-api-v0.7.2.jar"
 timeout /t 3 /nobreak >nul
 
 echo.

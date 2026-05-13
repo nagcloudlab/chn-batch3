@@ -47,7 +47,7 @@ echo -e "${GREEN}  Broker 103 started.${NC}"
 # --- 5. Kafka UI ---
 echo -e "\n${YELLOW}[5/5] Starting Kafka UI on port 8080...${NC}"
 cd "$KAFKA_UI"
-nohup java -Dspring.config.additional-location=application.yml -jar kafka-ui-api-v0.7.2.jar > kafka-ui.log 2>&1 &
+nohup java --add-opens java.rmi/javax.rmi.ssl=ALL-UNNAMED -Dspring.config.additional-location=application.yml -jar kafka-ui-api-v0.7.2.jar > kafka-ui.log 2>&1 &
 echo $! > kafka-ui.pid
 sleep 2
 echo -e "${GREEN}  Kafka UI started (PID: $(cat kafka-ui.pid)).${NC}"
