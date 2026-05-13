@@ -15,7 +15,7 @@ springdoc:
 
 spring:
   application:
-    name: money-transfer-system-v7
+    name: money-transfer-service
   datasource:
     url: jdbc:postgresql://localhost:5432/mydatabase
     username: postgres
@@ -36,6 +36,11 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
 
   cassandra:
 #    contact-points: localhost:9042,localhost:9043
